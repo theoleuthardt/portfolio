@@ -1,5 +1,3 @@
 export const Works = () => {
-    return (
-        <></>
-    );
+  return <div>Works</div>;
 };

@@ -1,5 +1,3 @@
 export const Feedbacks = () => {
-    return (
-        <></>
-    );
+  return <div>Feedbacks</div>;
 };

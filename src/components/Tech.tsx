@@ -1,5 +1,3 @@
 export const Tech = () => {
-    return (
-        <></>
-    );
+  return <div>Tech</div>;
 };
