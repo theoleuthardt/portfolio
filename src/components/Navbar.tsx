@@ -1,13 +1,17 @@
-import { useState } from "react";
+import { useState, MutableRefObject } from "react";
 import { Link } from "react-router-dom";
 
 import { styles } from "../styles.ts";
 import { navLinks } from "../constants";
 import { logo_me, menu, close } from "../assets";
 
-export const Navbar = () => {
-  const [active, setActive] = useState("");
-  const [toggle, setToggle] = useState(false);
+export interface ref {
+  projectsRef: MutableRefObject<HTMLDivElement | null>
+}
+
+export const Navbar = ({projectsRef}:ref) => {
+  const [active, setActive] = useState<string>("");
+  const [toggle, setToggle] = useState<boolean>(false);
 
   return (
     <nav
@@ -23,7 +27,9 @@ export const Navbar = () => {
           }}
         >
           <img src={logo_me} alt="Logo" className="w-9 h-9 object-contain" />
-          <p className="text-white text-[18px] font-bold cursor-pointer sm:block hidden">
+          <p className="text-white rainbowText text-[18px] font-bold 
+          cursor-pointer sm:block hidden"
+          >
             Theo.
           </p>
         </Link>
@@ -33,10 +39,15 @@ export const Navbar = () => {
               key={link.id}
               className={`${
                 active === link.title ? "text-white" : "text-secondary"
-              } hover:bg-gradient-to-r from-indigo-500 from-10% via-sky-500 
-              via-30% to-emerald-500 to-90% hover:text-transparent hover:bg-clip-text 
-              text-[18px] font-medium cursor-pointer`}
-              onClick={() => setActive(link.title)}
+              } rainbowText text-[18px] font-medium cursor-pointer`}
+              onClick={() => {
+                setActive(link.title);
+                if (link.title === "Projects" && projectsRef) {
+                  projectsRef.current?.scrollIntoView({ behavior: 'smooth' });
+                } else if (link.title === "Home") {
+                  scrollTo(0, 0);
+                }
+              }}
             >
               {link.title === "Github" ? (
                 <a href="https://github.com/theoleuthardt" target="_blank" 
