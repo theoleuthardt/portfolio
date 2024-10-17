@@ -33,7 +33,9 @@ export const Navbar = () => {
               key={link.id}
               className={`${
                 active === link.title ? "text-white" : "text-secondary"
-              } hover:text-white text-[18px] font-medium cursor-pointer`}
+              } hover:bg-gradient-to-r from-indigo-500 from-10% via-sky-500 
+              via-30% to-emerald-500 to-90% hover:text-transparent hover:bg-clip-text 
+              text-[18px] font-medium cursor-pointer`}
               onClick={() => setActive(link.title)}
             >
               {link.title === "Github" ? (
