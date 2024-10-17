@@ -74,7 +74,7 @@ jobs:
         working-directory: ${{ env.BUILD_PATH }}
       - name: Build with Node
         run: |
-          ${{ steps.detect-package-manager.outputs.runner }} run build --if-present
+          ${{ steps.detect-package-manager.outputs.manager }} run build --if-present
         working-directory: ${{ env.BUILD_PATH }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
