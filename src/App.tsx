@@ -1,32 +1,20 @@
 import { BrowserRouter } from "react-router-dom";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { AnimatedBackground } from "animated-backgrounds";
 import {
-  About,
-  Contact,
-  Experience,
-  Feedbacks,
   Hero,
-  Navbar,
-  Tech,
-  Works,
+  Navbar
 } from "./components";
 
 const App = () => {
   return (
     <BrowserRouter>
-      <div className="relative z-0 bg-primary">
+      <div className="relative z-0 bg-transparent">
+        <AnimatedBackground animationName="auroraBorealis"/>
         <div className="bg-hero-pattern bg-cover bg-no-repeat bg-center">
           <Navbar />
-          <Hero />
-        </div>
-        <About />
-        <Experience />
-        <Tech />
-        <Works />
-        <Feedbacks />
-        <div className="relative z-0">
-          <Contact />
+          <div className="flex justify-center items-center min-h-screen">
+            <Hero />
+          </div>
         </div>
       </div>
     </BrowserRouter>
