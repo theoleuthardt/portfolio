@@ -10,13 +10,13 @@ on:
   workflow_dispatch:
     inputs:
         question:
-          description: 'ASTRO TO THE MOON?'
+          description: 'React on top?'
           required: false
-          default: 'TURBO'
+          default: 'FR'
           type: choice
           options:
-            - 'TURBO'
-            - 'WAIT'
+            - 'FR'
+            - 'FR FR'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -84,7 +84,7 @@ jobs:
   deploy:
     environment:
       name: github-pages
-      url: https://theocloud.dev/
+      url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     runs-on: ubuntu-latest
     name: Deploy
