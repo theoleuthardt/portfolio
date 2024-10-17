@@ -6,6 +6,34 @@ on:
   pull_request:
     branches: [ "master" ]
 
+# Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+    inputs:
+        question:
+          description: 'ASTRO TO THE MOON?'
+          required: false
+          default: 'TURBO'
+          type: choice
+          options:
+            - 'TURBO'
+            - 'WAIT'
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+env:
+  BUILD_PATH: "." # default value when not using subfolders
+  # BUILD_PATH: subfolder
+
 jobs:
   build:
     name: Build
