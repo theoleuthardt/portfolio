@@ -76,7 +76,7 @@ export const Navbar = ({ projectsRef }: ref) => {
             onClick={() => setToggle(!toggle)}
           />
           <div
-            className={`${!toggle ? "hidden" : "flex"} p-6 black-gradient absolute top-20 right-0 mx-4 my-2 
+            className={`${!toggle ? "hidden" : "flex"} p-6 bg-transparent absolute top-20 right-0 mx-4 my-2 
             min-w-[140px] z-10 rounded-xl`}
           >
             <ul className="list-none flex justify-end items-start flex-col gap-4">
@@ -85,13 +85,31 @@ export const Navbar = ({ projectsRef }: ref) => {
                   key={link.id}
                   className={`${
                     active === link.title ? "text-white" : "text-secondary"
-                  } font-poppins font-medium text-[16px] hover:text-white cursor-pointer`}
+                  } font-poppins font-medium text-[18px] rainbowText cursor-pointer`}
                   onClick={() => {
                     setActive(link.title);
-                    setToggle(!toggle);
+                    if (link.title === "Projects" && projectsRef) {
+                      projectsRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                      });
+                      setToggle(!toggle);
+                    } else if (link.title === "Home") {
+                      scrollTo(0, 0);
+                      setToggle(!toggle);
+                    }
                   }}
                 >
-                  <a href={`#${link.id}`}>{link.title}</a>
+                  {link.title === "Github" ? (
+                    <a
+                      href="https://github.com/theoleuthardt"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {link.title}
+                    </a>
+                  ) : (
+                    <a href={`#${link.id}`}>{link.title}</a>
+                  )}
                 </li>
               ))}
             </ul>

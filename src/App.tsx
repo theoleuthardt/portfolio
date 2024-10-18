@@ -14,11 +14,14 @@ const App = () => {
           <Navbar projectsRef={projectsRef} />
           <div
             className="flex justify-center items-center justify-items-center 
-                       mt-[18rem]"
+                       mt-[20rem]"
           >
             <Hero />
           </div>
-          <div className="flex justify-center items-center mt-[40rem] mb-[15rem]">
+          <div
+            className="flex justify-center items-center mt-[60rem] 
+            lg:mb-[15rem] md:mb-[15rem] sm:mb-[15rem] mb-[10rem]"
+          >
             <Projects projectsRef={projectsRef} />
           </div>
         </div>
