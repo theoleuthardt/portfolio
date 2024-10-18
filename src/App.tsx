@@ -19,8 +19,8 @@ const App = () => {
             <Hero />
           </div>
           <div
-            className="flex justify-center items-center mt-[62rem] 
-            lg:mb-[15rem] md:mb-[15rem] sm:mb-[15rem] mb-[8rem]"
+            className="flex justify-center items-center mt-[50rem]
+          lg:mb-[9rem] md:mb-[9rem] sm:mb-[8rem] mb-[7rem]"
           >
             <Projects projectsRef={projectsRef} />
           </div>
