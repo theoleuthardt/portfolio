@@ -1,9 +1,5 @@
-import { MutableRefObject } from "react";
+import React from "react";
 import { projects } from "../constants";
-
-export interface ref {
-  projectsRef: MutableRefObject<HTMLDivElement | null>;
-}
 
 export const Projects = ({
   projectsRef,
