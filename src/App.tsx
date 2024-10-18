@@ -1,25 +1,27 @@
 import { BrowserRouter } from "react-router-dom";
 import { AnimatedBackground } from "animated-backgrounds";
-import {
-  Hero,
-  Navbar,
-  Projects
-} from "./components";
+import { Hero, Navbar, Projects } from "./components";
 import { useRef } from "react";
 
 const App = () => {
   const projectsRef = useRef<HTMLDivElement>(null);
-  
+
   return (
     <BrowserRouter>
       <div className="relative z-0 bg-transparent">
-        <AnimatedBackground animationName="auroraBorealis"/>
+        <AnimatedBackground animationName="auroraBorealis" />
         <div className="bg-hero-pattern bg-cover bg-no-repeat bg-center">
-          <Navbar projectsRef={projectsRef}/>
-          <div className="flex justify-center items-center min-h-screen">
+          <Navbar projectsRef={projectsRef} />
+          <div
+            className="flex justify-center items-center justify-items-center 
+                       mt-[20rem]"
+          >
             <Hero />
           </div>
-          <div className="flex justify-center items-center mt-[40rem] mb-[15rem]">
+          <div
+            className="flex justify-center items-center mt-[60rem] 
+            lg:mb-[15rem] md:mb-[15rem] sm:mb-[15rem] mb-[10rem]"
+          >
             <Projects projectsRef={projectsRef} />
           </div>
         </div>

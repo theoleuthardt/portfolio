@@ -2,8 +2,10 @@ import Typewriter from "typewriter-effect";
 
 export const Hero = () => {
   return (
-    <div 
-      className="w-96 flex justify-items-center text-white text-[75px] font-bold cursor-pointer sm:block"
+    <div
+      className="lg:w-[48rem] md:w-[40rem] sm:w-[30rem] w-[20rem]
+      h-auto lg:text-8xl md:text-7xl sm:text-6xl text-6xl text-white text-center 
+      font-bold cursor-pointer"
     >
       <Typewriter
         onInit={(typewriter) => {

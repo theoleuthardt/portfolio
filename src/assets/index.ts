@@ -5,11 +5,4 @@ import close from "./close.svg";
 import backlog from "./backlog-icon.svg";
 import godot from "./godot.png";
 
-export {
-  logo_me,
-  github,
-  menu,
-  close,
-  backlog,
-  godot
-};
+export { logo_me, github, menu, close, backlog, godot };
