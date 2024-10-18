@@ -6,10 +6,10 @@ import { navLinks } from "../constants";
 import { logo_me, menu, close } from "../assets";
 
 export interface ref {
-  projectsRef: MutableRefObject<HTMLDivElement | null>
+  projectsRef: MutableRefObject<HTMLDivElement | null>;
 }
 
-export const Navbar = ({projectsRef}:ref) => {
+export const Navbar = ({ projectsRef }: ref) => {
   const [active, setActive] = useState<string>("");
   const [toggle, setToggle] = useState<boolean>(false);
 
@@ -27,7 +27,8 @@ export const Navbar = ({projectsRef}:ref) => {
           }}
         >
           <img src={logo_me} alt="Logo" className="w-9 h-9 object-contain" />
-          <p className="text-white rainbowText text-[18px] font-bold 
+          <p
+            className="text-white rainbowText text-[18px] font-bold 
           cursor-pointer sm:block hidden"
           >
             Theo.
@@ -43,15 +44,17 @@ export const Navbar = ({projectsRef}:ref) => {
               onClick={() => {
                 setActive(link.title);
                 if (link.title === "Projects" && projectsRef) {
-                  projectsRef.current?.scrollIntoView({ behavior: 'smooth' });
+                  projectsRef.current?.scrollIntoView({ behavior: "smooth" });
                 } else if (link.title === "Home") {
                   scrollTo(0, 0);
                 }
               }}
             >
               {link.title === "Github" ? (
-                <a href="https://github.com/theoleuthardt" target="_blank" 
-                   rel="noopener noreferrer"
+                <a
+                  href="https://github.com/theoleuthardt"
+                  target="_blank"
+                  rel="noopener noreferrer"
                 >
                   {link.title}
                 </a>
