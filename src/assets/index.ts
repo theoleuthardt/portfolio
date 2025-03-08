@@ -4,5 +4,18 @@ import menu from "./menu.svg";
 import close from "./close.svg";
 import backlog from "./backlog-icon.svg";
 import godot from "./godot.png";
+import toolbox from "./toolbox.svg";
+import network from "./network.png";
+import snakexp from "./snakexp.png";
 
-export { logo_me, github, menu, close, backlog, godot };
+export {
+  logo_me,
+  github,
+  menu,
+  close,
+  backlog,
+  godot,
+  toolbox,
+  network,
+  snakexp,
+};

@@ -23,13 +23,12 @@ export const Projects = ({
           <div
             key={project.id}
             className="w-[20rem] flex items-center gap-4 bg-white bg-opacity-20 #
-            p-4 rounded-xl hover:bg-opacity-30 transition-all"
+            p-4 rounded-xl hover:bg-opacity-30 transform transition-transform duration-200 
+            hover:scale-105 cursor-pointer"
           >
             <img src={project.icon} alt="backlogIcon" className="w-10 h-10" />
             <div className="text-white text-[18px] font-bold">
-              <a href={project.link} className="rainbowText">
-                {project.title}
-              </a>
+              <a href={project.link}>{project.title}</a>
             </div>
           </div>
         ))}
