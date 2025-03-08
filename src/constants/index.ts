@@ -34,7 +34,7 @@ export const projects = [
   },
   {
     id: "network-interaction",
-    title: "Network Interaction in GoLang",
+    title: "Network Interaction",
     link: "https://github.com/theoleuthardt/network-interaction",
     icon: network,
   },
@@ -46,7 +46,7 @@ export const projects = [
   },
   {
     id: "grow-green",
-    title: "Grow Green Game",
+    title: "Grow Green",
     link: "https://github.com/AlexInABox/grow-green/releases",
     icon: godot,
   },
