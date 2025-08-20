@@ -1,6 +1,6 @@
-/** @type {import('tailwindcss').Config} */
-/*eslint-env node*/
-module.exports = {
+import type { Config } from 'tailwindcss'
+
+export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   mode: "jit",
   theme: {
@@ -22,4 +22,5 @@ module.exports = {
     },
   },
   plugins: [],
-};
+} satisfies Config
+

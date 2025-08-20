@@ -9,7 +9,7 @@ export const Projects = ({
   return (
     <div
       ref={projectsRef}
-      className="w-[60rem] h-auto p-6 flex justify-center items-center 
+      className="w-[40rem] sm:w-[20rem] h-auto p-6 flex justify-center items-center
       flex-col gap-6 bg-transparent"
     >
       <h2
@@ -18,21 +18,22 @@ export const Projects = ({
       >
         Projects:
       </h2>
-      <div className="flex flex-col sm:flex-row gap-10">
-        {projects.map((project) => (
-          <div
-            key={project.id}
-            className="w-[20rem] flex items-center gap-4 bg-white bg-opacity-20 #
-            p-4 rounded-xl hover:bg-opacity-30 transition-all"
-          >
-            <img src={project.icon} alt="backlogIcon" className="w-10 h-10" />
-            <div className="text-white text-[18px] font-bold">
-              <a href={project.link} className="rainbowText">
-                {project.title}
-              </a>
+      <div className="flex justify-center items-center">
+        <div className="lg:w-[60rem] md:w-[50rem] flex flex-col items-center sm:flex-col sm:items-center lg:grid lg:grid-cols-3 gap-10">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="w-[20rem] flex items-center gap-4 bg-white bg-opacity-20
+        p-4 rounded-xl hover:bg-opacity-30 transform transition-transform duration-200
+        hover:scale-105 cursor-pointer"
+            >
+              <img src={project.icon} alt="backlogIcon" className="w-10 h-10" />
+              <div className="text-white text-[18px] font-bold">
+                <a href={project.link}>{project.title}</a>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

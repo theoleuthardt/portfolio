@@ -1,5 +1,4 @@
 import { useState, MutableRefObject } from "react";
-import { Link } from "react-router-dom";
 
 import { styles } from "../styles.ts";
 import { navLinks } from "../constants";
@@ -7,9 +6,10 @@ import { logo_me, menu, close } from "../assets";
 
 export interface ref {
   projectsRef: MutableRefObject<HTMLDivElement | null>;
+  careerpathRef: MutableRefObject<HTMLDivElement | null>;
 }
 
-export const Navbar = ({ projectsRef }: ref) => {
+export const Navbar = ({ projectsRef, careerpathRef }: ref) => {
   const [active, setActive] = useState<string>("");
   const [toggle, setToggle] = useState<boolean>(false);
 
@@ -18,44 +18,41 @@ export const Navbar = ({ projectsRef }: ref) => {
       className={`${styles.paddingX} w-full flex items-center py-5 fixed top-0 z-20 bg-transparent`}
     >
       <div className="w-full flex justify-between items-center max-w-7xl mx-auto">
-        <Link
-          to="/"
-          className="flex items-center gap-2"
-          onClick={() => {
-            setActive("");
-            window.scrollTo(0, 0);
-          }}
-        >
+        <div className="flex items-center gap-2">
           <img src={logo_me} alt="Logo" className="w-9 h-9 object-contain" />
-          <p
-            className="text-white rainbowText text-[18px] font-bold 
-          cursor-pointer sm:block hidden"
-          >
+          <p className="text-white text-[18px] font-bold sm:block hidden">
             Theo.
           </p>
-        </Link>
+        </div>
         <ul className="list-none hidden sm:flex flex-row gap-10">
           {navLinks.map((link) => (
             <li
               key={link.id}
               className={`${
-                active === link.title ? "text-white" : "text-secondary"
+                active === link.title &&
+                link.type in ["page_link", "scroll_link"]
+                  ? "text-white"
+                  : "text-secondary"
               } rainbowText text-[18px] font-medium cursor-pointer`}
               onClick={() => {
                 setActive(link.title);
                 if (link.title === "Projects" && projectsRef) {
-                  projectsRef.current?.scrollIntoView({ behavior: "smooth" });
+                  projectsRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
+                } else if (link.title === "Career Path" && careerpathRef) {
+                  careerpathRef.current?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center",
+                  });
                 } else if (link.title === "Home") {
                   scrollTo(0, 0);
                 }
               }}
             >
-              {link.title === "Github" ? (
-                <a
-                  href="https://github.com/theoleuthardt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+              {link.type === "external_link" ? (
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
                   {link.title}
                 </a>
               ) : (
@@ -76,10 +73,10 @@ export const Navbar = ({ projectsRef }: ref) => {
             onClick={() => setToggle(!toggle)}
           />
           <div
-            className={`${!toggle ? "hidden" : "flex"} p-6 bg-transparent absolute top-20 right-0 mx-4 my-2 
+            className={`${!toggle ? "hidden" : "flex"} p-1 bg-transparent absolute top-10 right-0 mx-4 my-4 
             min-w-[140px] z-10 rounded-xl`}
           >
-            <ul className="list-none flex justify-end items-start flex-col gap-4">
+            <ul className="list-none flex justify-end items-start flex-col gap-2">
               {navLinks.map((link) => (
                 <li
                   key={link.id}
@@ -93,8 +90,16 @@ export const Navbar = ({ projectsRef }: ref) => {
                         behavior: "smooth",
                       });
                       setToggle(!toggle);
+                    } else if (link.title === "Career Path" && careerpathRef) {
+                      careerpathRef.current?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "center",
+                      });
+                      setToggle(!toggle);
                     } else if (link.title === "Home") {
                       scrollTo(0, 0);
+                      setToggle(!toggle);
+                    } else {
                       setToggle(!toggle);
                     }
                   }}
