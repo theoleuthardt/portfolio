@@ -48,12 +48,8 @@ export const Navbar = ({ projectsRef, careerpathRef }: ref) => {
                 }
               }}
             >
-              {link.title === "Github" ? (
-                <a
-                  href="https://github.com/theoleuthardt"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+              {link.type === "external_link" ? (
+                <a href={link.href} target="_blank" rel="noopener noreferrer">
                   {link.title}
                 </a>
               ) : (

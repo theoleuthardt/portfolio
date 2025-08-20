@@ -4,18 +4,24 @@ export const navLinks = [
   {
     id: "home",
     title: "Home",
+    type: "page_link",
   },
   {
     id: "projects",
     title: "Projects",
+    type: "scroll_link",
   },
   {
     id: "github",
     title: "Github",
+    href: "https://github.com/theoleuthardt",
+    type: "external_link",
   },
   {
     id: "alexinabox",
     title: "AlexInABox",
+    href: "https://alexinabox.de",
+    type: "external_link",
   },
 ];
 
