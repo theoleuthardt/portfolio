@@ -5,22 +5,23 @@ import { useRef } from "react";
 
 const App = () => {
   const projectsRef = useRef<HTMLDivElement>(null);
+  const careerpathRef = useRef<HTMLDivElement>(null);
 
   return (
     <BrowserRouter>
       <div className="relative z-0 bg-transparent">
         <AnimatedBackground animationName="auroraBorealis" />
         <div className="bg-hero-pattern bg-cover bg-no-repeat bg-center">
-          <Navbar projectsRef={projectsRef} />
+          <Navbar projectsRef={projectsRef} careerpathRef={careerpathRef} />
           <div
             className="flex justify-center items-center justify-items-center 
-                       mt-[20rem]"
+                       mt-[18rem]"
           >
-            <Hero />
+            <Hero projectsRef={projectsRef} />
           </div>
           <div
             className="flex justify-center items-center mt-[50rem]
-          lg:mb-[9rem] md:mb-[9rem] sm:mb-[8rem] mb-[7rem]"
+            lg:mb-[16rem] md:mb-[14rem] sm:mb-[13rem] mb-[12rem]"
           >
             <Projects projectsRef={projectsRef} />
           </div>

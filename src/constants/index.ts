@@ -1,13 +1,9 @@
-import { backlog, godot, network, snakexp, toolbox } from "../assets";
+import { godot, network, snakexp, toolbox } from "../assets";
 
 export const navLinks = [
   {
     id: "home",
     title: "Home",
-  },
-  {
-    id: "careerpath",
-    title: "Career Path",
   },
   {
     id: "projects",
@@ -17,15 +13,13 @@ export const navLinks = [
     id: "github",
     title: "Github",
   },
+  {
+    id: "alexinabox",
+    title: "AlexInABox",
+  },
 ];
 
 export const projects = [
-  {
-    id: "backlog-manager",
-    title: "Backlog Manager",
-    link: "https://bm.theocloud.dev",
-    icon: backlog,
-  },
   {
     id: "werkzeugkiste",
     title: "Werkzeugkiste",
