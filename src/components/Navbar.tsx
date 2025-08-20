@@ -29,7 +29,10 @@ export const Navbar = ({ projectsRef, careerpathRef }: ref) => {
             <li
               key={link.id}
               className={`${
-                active === link.title ? "text-white" : "text-secondary"
+                active === link.title &&
+                link.type in ["page_link", "scroll_link"]
+                  ? "text-white"
+                  : "text-secondary"
               } rainbowText text-[18px] font-medium cursor-pointer`}
               onClick={() => {
                 setActive(link.title);
