@@ -1,4 +1,4 @@
-import { godot, network, snakexp, toolbox } from "../assets";
+import { godot, network, toolbox, dinosaur, docker, python } from "../assets";
 
 export const navLinks = [
   {
@@ -39,10 +39,22 @@ export const projects = [
     icon: network,
   },
   {
-    id: "snake-xp",
-    title: "SnakeXP",
-    link: "https://github.com/theoleuthardt/SnakeXP",
-    icon: snakexp,
+    id: "homelab-docker-compose",
+    title: "Homelab Docker",
+    link: "https://github.com/theoleuthardt/homelab-docker-compose",
+    icon: docker,
+  },
+  {
+    id: "python-best-practices",
+    title: "Python Best Practices",
+    link: "https://github.com/theoleuthardt/python-best-practices",
+    icon: python,
+  },
+  {
+    id: "dino-game",
+    title: "Dino Game",
+    link: "https://github.com/theoleuthardt/DinoGame",
+    icon: dinosaur,
   },
   {
     id: "grow-green",
