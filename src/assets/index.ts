@@ -6,7 +6,9 @@ import backlog from "./backlog-icon.svg";
 import godot from "./godot.png";
 import toolbox from "./toolbox.svg";
 import network from "./network.png";
-import snakexp from "./snakexp.png";
+import dinosaur from "./dinosaur-game.png";
+import docker from "./docker.png";
+import python from "./python.png";
 
 export {
   logo_me,
@@ -17,5 +19,7 @@ export {
   godot,
   toolbox,
   network,
-  snakexp,
+  dinosaur,
+  docker,
+  python,
 };
