@@ -23,6 +23,12 @@ export const navLinks = [
     href: "https://alexinabox.de",
     type: "external_link",
   },
+  {
+    id: "lagopodus",
+    title: "Lagopodus",
+    href: "https://lagopodus.github.io/portfolio/",
+    type: "external_link",
+  },
 ];
 
 export const projects = [
