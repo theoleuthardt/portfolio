@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ROOM } from "../layout";
 import { RACK } from "../rack/geometry";
-import { MODEL_PROPS } from "./placement";
+import { MODEL_PROPS, PROP_MODELS } from "./placement";
 
 describe("MODEL_PROPS", () => {
   it("places every prop inside the room", () => {
@@ -30,20 +30,12 @@ describe("MODEL_PROPS", () => {
   });
 
   it("only uses models that exist in public/models", () => {
-    const models = [
-      "metal_office_desk",
-      "worn_metal_rack",
-      "plastic_crate_01",
-      "power_box_01",
-      "tool_cart",
-      "metal_toolbox",
-      "utility_box_01",
-      "industrial_storage_cart",
-      "hanging_industrial_lamp",
-      "plastic_crate_03",
-    ];
+    const files = Object.keys(import.meta.glob("/public/models/*.glb"));
+    for (const model of PROP_MODELS) {
+      expect(files).toContain(`/public/models/${model}.glb`);
+    }
     for (const prop of MODEL_PROPS) {
-      expect(models).toContain(prop.model);
+      expect(PROP_MODELS).toContain(prop.model);
     }
   });
 

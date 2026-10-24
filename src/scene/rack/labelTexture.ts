@@ -35,9 +35,12 @@ export function labelTexture(text: string): CanvasTexture {
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
   texture.anisotropy = 8;
-  void document.fonts?.load(FONT).then(() => {
-    draw(canvas, text);
-    texture.needsUpdate = true;
-  });
+  void document.fonts?.load(FONT).then(
+    () => {
+      draw(canvas, text);
+      texture.needsUpdate = true;
+    },
+    () => undefined,
+  );
   return texture;
 }

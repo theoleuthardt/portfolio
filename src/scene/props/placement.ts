@@ -1,17 +1,21 @@
 import { ROOM } from "../layout";
 
 /** The CC0 models in `public/models/` (see docs/ASSETS.md). */
-export type PropModel =
-  | "metal_office_desk"
-  | "worn_metal_rack"
-  | "plastic_crate_01"
-  | "power_box_01"
-  | "tool_cart"
-  | "metal_toolbox"
-  | "utility_box_01"
-  | "industrial_storage_cart"
-  | "hanging_industrial_lamp"
-  | "plastic_crate_03";
+export const PROP_MODELS = [
+  "metal_office_desk",
+  "worn_metal_rack",
+  "plastic_crate_01",
+  "plastic_crate_03",
+  "power_box_01",
+  "tool_cart",
+  "metal_toolbox",
+  "utility_box_01",
+  "industrial_storage_cart",
+  "hanging_industrial_lamp",
+] as const;
+
+/** One of {@link PROP_MODELS}. */
+export type PropModel = (typeof PROP_MODELS)[number];
 
 /** One placed model in scene space; models stand on their origin. */
 export interface ModelProp {
@@ -21,8 +25,11 @@ export interface ModelProp {
 }
 
 const FLOOR = ROOM.floor;
-const CRATE_HEIGHT = 0.264;
-const DESK_TOP = FLOOR + 0.79;
+const CRATE_01_HEIGHT = 0.264;
+const CRATE_03_HEIGHT = 0.266;
+
+/** Height of the workbench top (metal_office_desk is 0.787 m tall). */
+export const DESK_TOP = FLOOR + 0.787;
 const CART_TOP = FLOOR + 0.96;
 
 /** Where the models stand in the lab. */
@@ -40,7 +47,7 @@ export const MODEL_PROPS: readonly ModelProp[] = [
   { model: "plastic_crate_01", position: [6.05, FLOOR, -4.7], rotationY: 0.3 },
   {
     model: "plastic_crate_01",
-    position: [6.1, FLOOR + CRATE_HEIGHT, -4.72],
+    position: [6.1, FLOOR + CRATE_01_HEIGHT, -4.72],
     rotationY: 0.1,
   },
   {
@@ -101,7 +108,7 @@ export const MODEL_PROPS: readonly ModelProp[] = [
   },
   {
     model: "plastic_crate_03",
-    position: [-4.85, FLOOR + CRATE_HEIGHT, -10.62],
+    position: [-4.85, FLOOR + CRATE_03_HEIGHT, -10.62],
     rotationY: 0.05,
   },
   { model: "plastic_crate_01", position: [-4.3, FLOOR, -11], rotationY: -0.4 },

@@ -5,7 +5,7 @@ import { InstancedBoxes, type Point3 } from "../environment/InstancedBoxes";
 import { evenlySpaced, ROOM } from "../layout";
 import { RACK } from "../rack/geometry";
 import { CatmullRomCurve3, Vector3 } from "three";
-import { MODEL_PROPS, type PropModel } from "./placement";
+import { DESK_TOP, MODEL_PROPS, type PropModel } from "./placement";
 import {
   crtScreenTexture,
   hazardStripesTexture,
@@ -15,7 +15,6 @@ import {
 } from "./propTextures";
 
 const MODELS = [...new Set(MODEL_PROPS.map((prop) => prop.model))];
-const DESK_TOP = ROOM.floor + 0.79;
 const urlOf = (model: PropModel) =>
   `${import.meta.env.BASE_URL}models/${model}.glb`;
 
@@ -53,8 +52,10 @@ function DeskMonitors() {
 }
 
 /** A row of dark racks in the haze at the back of the lab. */
+const BACK_RACK_XS = evenlySpaced(-3.2, 3.2, 5);
+
 function BackgroundRacks() {
-  const xs = evenlySpaced(-3.2, 3.2, 5);
+  const xs = BACK_RACK_XS;
   const leds = useMemo<Point3[]>(
     () =>
       xs.flatMap((x, rack) =>
