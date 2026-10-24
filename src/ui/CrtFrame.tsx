@@ -5,7 +5,10 @@ export interface CrtFrameProps {
   children: ReactNode;
 }
 
-/** Housing and curved glass of the CRT monitor around the terminal. */
+/**
+ * Housing and curved glass of the CRT monitor around the terminal, with a
+ * bottom strip that carries the model plate and the power LED.
+ */
 export function CrtFrame({ children }: CrtFrameProps) {
   return (
     <div className="crt">
@@ -13,10 +16,13 @@ export function CrtFrame({ children }: CrtFrameProps) {
         {children}
         <span className="crt-roll" aria-hidden="true" />
       </div>
-      <span className="crt-label" aria-hidden="true">
-        THEO-TERM 3270
-      </span>
-      <span className="crt-led" aria-hidden="true" />
+      <div className="crt-strip" aria-hidden="true">
+        <span className="crt-plate">THEO-TERM 3270</span>
+        <span className="crt-power">
+          <span className="crt-led" />
+          PWR
+        </span>
+      </div>
     </div>
   );
 }

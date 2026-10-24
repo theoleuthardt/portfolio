@@ -30,6 +30,21 @@ export function TerminalOutput({ line, onRun }: TerminalOutputProps) {
           ))}
         </p>
       );
+    case "command":
+      return (
+        <p className="my-1 grid items-baseline gap-x-3 sm:grid-cols-[11rem_1fr]">
+          <button
+            type="button"
+            className="crt-chip justify-self-start"
+            onClick={() => onRun(line.name)}
+          >
+            {line.usage}
+          </button>
+          <span className="pl-3 text-phosphor-dim sm:pl-0">
+            {line.description}
+          </span>
+        </p>
+      );
     case "project":
       return (
         <p>
