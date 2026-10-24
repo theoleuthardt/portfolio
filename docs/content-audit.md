@@ -1,114 +1,114 @@
-# Content-Audit des Bestandsportfolios
+# Content audit of the existing portfolio
 
-Stand: 2026-10-24, Commit `cbad1ca` auf `master`. Grundlage für den Umbau zum interaktiven Terminal/HUD-Portfolio mit Three.js-Rack-Szene (Epics #17, #18).
+As of 2026-10-24, commit `cbad1ca` on `master`. Basis for the rebuild into an interactive terminal/HUD portfolio with a Three.js rack scene (epics #17, #18).
 
-Bewertung: **behalten** (unverändert übernehmen), **überarbeiten** (Inhalt bleibt, Umsetzung ändert sich), **verwerfen** (fällt weg).
+Rating: **keep** (take over unchanged), **rework** (content stays, implementation changes), **drop** (removed).
 
-## 1. Seiten und Abschnitte
+## 1. Pages and sections
 
-Die Seite ist eine einzige Scroll-Seite ohne echte Routen.
+The site is a single scroll page without real routes.
 
-| Abschnitt     | Inhalt                                                                                  | Bewertung    | Begründung                                                                                                                                                                      |
-| ------------- | --------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hero          | Typewriter „Hii! I'm Theo.“ → „Welcome to my Portfolio!“, Button „Explore my projects!“ | überarbeiten | Begrüßung und Tippeffekt passen zum Terminal. Sie werden zur Boot-Sequenz bzw. zum MOTD des Terminals, ohne die Bibliothek.                                                     |
-| Projects      | Raster mit 6 Projektkarten (Icon und Titel, Link)                                       | überarbeiten | Die Projekte sind der Kern. Sie werden Rack-Module in der 3D-Szene und der Befehl `projects` im Terminal. Bisher gibt es nur einen Titel ohne Beschreibung und ohne Tech-Stack. |
-| Impressum     | Name, Adresse, Telefon, E-Mail (Komponente wird nicht gerendert)                        | verwerfen    | Laut Vorgabe raus (#21). Sie wird ohnehin nirgends angezeigt.                                                                                                                   |
-| „Career Path“ | nur `careerpathRef` und Navbar-Zweige, kein Abschnitt                                   | verwerfen    | Toter Code, den es nie als Abschnitt gab. Ob ein `about`/`cv`-Befehl kommt, siehe offene Fragen.                                                                                |
+| Section       | Content                                                                                 | Rating | Reason                                                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hero          | Typewriter "Hii! I'm Theo." → "Welcome to my Portfolio!", button "Explore my projects!" | rework | The greeting and typing effect fit the terminal. They become the terminal's boot sequence / MOTD, without the library.                                              |
+| Projects      | Grid of 6 project cards (icon and title, link)                                          | rework | The projects are the core. They become rack modules in the 3D scene and the `projects` command in the terminal. So far only a title, no description, no tech stack. |
+| Impressum     | Name, address, phone, e-mail (component is never rendered)                              | drop   | Removed as requested (#21). It is not shown anywhere anyway.                                                                                                        |
+| "Career Path" | only `careerpathRef` and navbar branches, no section                                    | drop   | Dead code; the section never existed. Whether an `about`/`cv` command comes, see open questions.                                                                    |
 
-## 2. Inhalte (`src/constants/index.ts`)
+## 2. Content (`src/constants/index.ts`)
 
 ### Navigation (`navLinks`)
 
-| Eintrag    | Ziel                          | Bewertung    | Begründung                                                                           |
-| ---------- | ----------------------------- | ------------ | ------------------------------------------------------------------------------------ |
-| Home       | Scroll nach oben              | überarbeiten | Wird zu `clear` bzw. `home` im Terminal.                                             |
-| Projects   | Scroll zum Abschnitt          | überarbeiten | Wird zu `projects` und zum Kamerafokus aufs Rack.                                    |
-| Github     | github.com/theoleuthardt      | behalten     | Wichtigster Link für ein Entwicklerportfolio, geplant als `contact`/`socials`.       |
-| AlexInABox | alexinabox.de                 | behalten     | Freundes- bzw. Partnerportfolio, geplant als Befehl `friends` statt Hauptnavigation. |
-| Lagopodus  | lagopodus.github.io/portfolio | behalten     | Wie AlexInABox.                                                                      |
+| Entry      | Target                        | Rating | Reason                                                                         |
+| ---------- | ----------------------------- | ------ | ------------------------------------------------------------------------------ |
+| Home       | scroll to top                 | rework | Becomes `clear` / `home` in the terminal.                                      |
+| Projects   | scroll to section             | rework | Becomes `projects` and the camera focus on the rack.                           |
+| Github     | github.com/theoleuthardt      | keep   | Most important link for a developer portfolio, planned as `contact`/`socials`. |
+| AlexInABox | alexinabox.de                 | keep   | Friend's portfolio, planned as a `friends` command instead of main navigation. |
+| Lagopodus  | lagopodus.github.io/portfolio | keep   | Same as AlexInABox.                                                            |
 
-### Projekte (`projects`)
+### Projects (`projects`)
 
-| Projekt               | Link                         | Bewertung    | Begründung                                                                     |
-| --------------------- | ---------------------------- | ------------ | ------------------------------------------------------------------------------ |
-| Werkzeugkiste         | toolbox.theocloud.dev        | überarbeiten | Live-Projekt. Braucht Beschreibung und Stack.                                  |
-| Network Interaction   | GitHub                       | überarbeiten | Passt thematisch perfekt zum Rack (Netzwerk-Modul). Braucht eine Beschreibung. |
-| Homelab Docker        | GitHub                       | überarbeiten | Passt zur Rack/Homelab-Szene. Braucht eine Beschreibung.                       |
-| Python Best Practices | GitHub                       | überarbeiten | Braucht eine Beschreibung. Das Icon ist viel zu groß (siehe Assets).           |
-| Dino Game             | GitHub                       | überarbeiten | Braucht eine Beschreibung. Eignet sich als Easter Egg (`play dino`).           |
-| Grow Green            | GitHub Releases (AlexInABox) | überarbeiten | Gemeinschaftsprojekt. Die Rolle sollte genannt werden.                         |
+| Project               | Link                         | Rating | Reason                                                               |
+| --------------------- | ---------------------------- | ------ | -------------------------------------------------------------------- |
+| Werkzeugkiste         | toolbox.theocloud.dev        | rework | Live project. Needs a description and stack.                         |
+| Network Interaction   | GitHub                       | rework | Fits the rack theme perfectly (network module). Needs a description. |
+| Homelab Docker        | GitHub                       | rework | Fits the rack/homelab scene. Needs a description.                    |
+| Python Best Practices | GitHub                       | rework | Needs a description. The icon is far too large (see assets).         |
+| Dino Game             | GitHub                       | rework | Needs a description. Works as an easter egg (`play dino`).           |
+| Grow Green            | GitHub Releases (AlexInABox) | rework | Joint project. The role should be stated.                            |
 
-Projekte, die auf GitHub existieren, aber hier fehlen (zum Beispiel Backlog Manager, für den sogar schon `backlog-icon.svg` im Repo liegt), stehen unter den offenen Fragen.
+Projects that exist on GitHub but are missing here (for example Backlog Manager, whose `backlog-icon.svg` is already in the repo) are listed under the open questions.
 
-## 3. Komponenten
+## 3. Components
 
-| Datei                          | Zweck                                    | Bewertung    | Begründung                                                                                                                                                                                                                                                                                             |
-| ------------------------------ | ---------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `src/App.tsx`                  | Layout, `AnimatedBackground`, Refs       | überarbeiten | Wird zu Canvas plus Terminal-Overlay. `BrowserRouter` ohne Routen und die Klasse `bg-hero-pattern` ohne Definition fallen weg.                                                                                                                                                                         |
-| `src/components/Navbar.tsx`    | Desktop- und Mobile-Navigation           | verwerfen    | Navigation läuft künftig über das Terminal (Befehle und klickbare Vorschläge). Außerdem fehlerhaft: `link.type in [...]` prüft Array-Indizes und ist immer `false`. Das Mobile-Menü baut für AlexInABox und Lagopodus `#id`-Anker statt externer Links. Die Logik ist doppelt und hängt an den Titeln. |
-| `src/components/Hero.tsx`      | Typewriter-Hero                          | verwerfen    | Ersetzt durch die Boot-Sequenz des Terminals (siehe Seiten).                                                                                                                                                                                                                                           |
-| `src/components/Projects.tsx`  | Projektraster                            | überarbeiten | Datenmodell bleibt, die Darstellung wird ein Rack plus Terminal-Ausgabe. Alle Bilder haben das Alt-Attribut `alt="backlogIcon"`, die Breiten sind vertauscht (`w-[40rem] sm:w-[20rem]`) und Links haben weder `target` noch `rel`.                                                                     |
-| `src/components/Button.tsx`    | Glas-Button                              | verwerfen    | Wird im Terminal-Design nicht gebraucht. Er wird zudem doppelt exportiert (named und default).                                                                                                                                                                                                         |
-| `src/components/Impressum.tsx` | Impressum                                | verwerfen    | #21.                                                                                                                                                                                                                                                                                                   |
-| `src/components/index.ts`      | Barrel-Export                            | überarbeiten | Wird an die neuen Komponenten angepasst.                                                                                                                                                                                                                                                               |
-| `src/styles.ts`                | Tailwind-Klassenstrings                  | verwerfen    | Nur `paddingX` wird benutzt. Ersetzt durch Design-Tokens (#30).                                                                                                                                                                                                                                        |
-| `src/index.css`                | Poppins-Import, Gradients, `rainbowText` | verwerfen    | Bis auf `rainbowText` ist kein Gradient in Gebrauch. Neue Typo (Monospace) und Effekte kommen aus #30.                                                                                                                                                                                                 |
-| `tailwind.config.ts`           | Farben, Schatten, Breakpoint `xs`        | überarbeiten | Tailwind bleibt, Farben und Typografie werden durch Tokens ersetzt.                                                                                                                                                                                                                                    |
-| `src/types/*.d.ts`             | Modul-Deklarationen                      | verwerfen    | Werden mit `animated-backgrounds` und `typewriter-effect` überflüssig.                                                                                                                                                                                                                                 |
-| `index.html`                   | Titel „Theo“, Favicon                    | überarbeiten | Es fehlen Meta-Description, Open-Graph-Tags, `theme-color` und eine `noscript`-Alternative. `lang="en"` muss zur Sprachentscheidung passen.                                                                                                                                                            |
+| File                           | Purpose                                  | Rating | Reason                                                                                                                                                                                                                                                                                              |
+| ------------------------------ | ---------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/App.tsx`                  | Layout, `AnimatedBackground`, refs       | rework | Becomes canvas plus terminal overlay. `BrowserRouter` without routes and the undefined class `bg-hero-pattern` go away.                                                                                                                                                                             |
+| `src/components/Navbar.tsx`    | Desktop and mobile navigation            | drop   | Navigation moves to the terminal (commands and clickable suggestions). It is also buggy: `link.type in [...]` checks array indices and is always `false`; the mobile menu builds `#id` anchors instead of external links for AlexInABox and Lagopodus; the logic is duplicated and keyed on titles. |
+| `src/components/Hero.tsx`      | Typewriter hero                          | drop   | Replaced by the terminal boot sequence (see sections).                                                                                                                                                                                                                                              |
+| `src/components/Projects.tsx`  | Project grid                             | rework | The data model stays; the presentation becomes a rack plus terminal output. Every image has `alt="backlogIcon"`, the widths are swapped (`w-[40rem] sm:w-[20rem]`), and links have neither `target` nor `rel`.                                                                                      |
+| `src/components/Button.tsx`    | Glass button                             | drop   | Not needed in the terminal design. It is also exported twice (named and default).                                                                                                                                                                                                                   |
+| `src/components/Impressum.tsx` | Impressum                                | drop   | #21.                                                                                                                                                                                                                                                                                                |
+| `src/components/index.ts`      | Barrel export                            | rework | Adjusted to the new components.                                                                                                                                                                                                                                                                     |
+| `src/styles.ts`                | Tailwind class strings                   | drop   | Only `paddingX` is used. Replaced by design tokens (#30).                                                                                                                                                                                                                                           |
+| `src/index.css`                | Poppins import, gradients, `rainbowText` | drop   | Except for `rainbowText`, no gradient is used. New typography (monospace) and effects come from #30.                                                                                                                                                                                                |
+| `tailwind.config.ts`           | Colours, shadow, breakpoint `xs`         | rework | Tailwind stays; colours and typography are replaced by tokens.                                                                                                                                                                                                                                      |
+| `src/types/*.d.ts`             | Module declarations                      | drop   | Become obsolete with `animated-backgrounds` and `typewriter-effect`.                                                                                                                                                                                                                                |
+| `index.html`                   | Title "Theo", favicon                    | rework | Missing meta description, Open Graph tags, `theme-color` and a `noscript` alternative. `lang="en"` has to match the language decision.                                                                                                                                                              |
 
 ## 4. Assets
 
-| Datei                                                       | Größe                 | Nutzung                 | Bewertung    | Begründung                                                                                                                          |
-| ----------------------------------------------------------- | --------------------- | ----------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `src/assets/logo_me.png`                                    | 84 KB, 256×256        | Navbar, Favicon         | überarbeiten | Behalten als Avatar/Favicon, aber als WebP und mit eigenen Favicon-Größen.                                                          |
-| `public/logo_me.png`                                        | 84 KB                 | ungenutzt               | verwerfen    | Duplikat von `src/assets/logo_me.png`.                                                                                              |
-| `src/assets/python.png`                                     | **821 KB**, 3000×3000 | Projekt-Icon (40×40 px) | überarbeiten | Rund 79 % der Bytes in `src/assets/` (821 von 1 038 KB). Auf ein Icon in passender Größe oder ein SVG verkleinern.                  |
-| `src/assets/godot.png`                                      | 102 KB, 2048×2048     | Projekt-Icon            | überarbeiten | Wie python.png.                                                                                                                     |
-| `src/assets/docker.png`, `network.png`, `dinosaur-game.png` | 1–8 KB                | Projekt-Icons           | überarbeiten | Größe ist in Ordnung. Im Rack werden sie Texturen bzw. Labels, ein einheitlicher Stil wäre gut.                                     |
-| `src/assets/toolbox.svg`                                    | 2 KB                  | Projekt-Icon            | behalten     | Ist bereits ein SVG.                                                                                                                |
-| `src/assets/backlog-icon.svg`                               | 2 KB                  | ungenutzt               | überarbeiten | Behalten, falls Backlog Manager als Projekt dazukommt (offene Frage). Sonst verwerfen.                                              |
-| `src/assets/github.png`                                     | 11 KB                 | ungenutzt               | verwerfen    | Nicht referenziert. Wird künftig ein SVG-Icon, falls gebraucht.                                                                     |
-| `src/assets/menu.svg`, `close.svg`                          | 1 KB                  | Burger-Menü             | verwerfen    | Fallen mit der Navbar weg.                                                                                                          |
-| Google Fonts „Poppins“ (extern)                             | –                     | global                  | verwerfen    | Wird von `fonts.googleapis.com` geladen und überträgt dabei IP-Adressen an Google. Die neue Monospace-Schrift wird selbst gehostet. |
+| File                                                        | Size                  | Usage                   | Rating | Reason                                                                                                                   |
+| ----------------------------------------------------------- | --------------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `src/assets/logo_me.png`                                    | 84 KB, 256×256        | Navbar, favicon         | rework | Keep as avatar/favicon, but as WebP and with proper favicon sizes.                                                       |
+| `public/logo_me.png`                                        | 84 KB                 | unused                  | drop   | Duplicate of `src/assets/logo_me.png`.                                                                                   |
+| `src/assets/python.png`                                     | **821 KB**, 3000×3000 | Project icon (40×40 px) | rework | About 79 % of the bytes in `src/assets/` (821 of 1,038 KB). Shrink to an icon of fitting size or an SVG.                 |
+| `src/assets/godot.png`                                      | 102 KB, 2048×2048     | Project icon            | rework | Same as python.png.                                                                                                      |
+| `src/assets/docker.png`, `network.png`, `dinosaur-game.png` | 1–8 KB                | Project icons           | rework | Size is fine. In the rack they become textures or labels; a consistent style would help.                                 |
+| `src/assets/toolbox.svg`                                    | 2 KB                  | Project icon            | keep   | Already an SVG.                                                                                                          |
+| `src/assets/backlog-icon.svg`                               | 2 KB                  | unused                  | rework | Keep if Backlog Manager joins as a project (open question), otherwise drop.                                              |
+| `src/assets/github.png`                                     | 11 KB                 | unused                  | drop   | Not referenced. Becomes an SVG icon if needed.                                                                           |
+| `src/assets/menu.svg`, `close.svg`                          | 1 KB                  | Burger menu             | drop   | Go away with the navbar.                                                                                                 |
+| Google Fonts "Poppins" (external)                           | –                     | global                  | drop   | Loaded from `fonts.googleapis.com`, which sends visitors' IP addresses to Google. The new monospace font is self-hosted. |
 
-## 5. Abhängigkeiten
+## 5. Dependencies
 
-Direkte Abhängigkeiten aus `package.json`, installierte Versionen laut `npm outdated` nach `npm ci` (ohne `--all`, also ohne transitive Pakete). Die CVE-Bewertung folgt in #22, Major-Updates nur nach Rückfrage.
+Direct dependencies from `package.json`, installed versions according to `npm outdated` after `npm ci` (without `--all`, so no transitive packages). The CVE assessment follows in #22; major updates only after asking.
 
-| Paket                                                         | Version          | Bewertung    | Begründung                                                                                                                                            |
-| ------------------------------------------------------------- | ---------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `react`, `react-dom`                                          | 18.3.1           | behalten     | Basis. Ob auf React 19 gewechselt wird, entscheidet sich bei #22 und #18 (aktuelles `@react-three/fiber` setzt React 19 voraus, siehe Hinweis unten). |
-| `animated-backgrounds`                                        | 1.1.0            | verwerfen    | Wird durch die Three.js-Szene ersetzt.                                                                                                                |
-| `typewriter-effect`                                           | 2.22.0           | verwerfen    | Der Tippeffekt des Terminals ist ein paar Zeilen eigener Code und testbar.                                                                            |
-| `framer-motion`                                               | 11.18.2          | verwerfen    | Nirgends importiert.                                                                                                                                  |
-| `react-router-dom`                                            | 6.30.1           | verwerfen    | Nur ein `BrowserRouter` ohne Routen. Deep Links wie `/projects` lassen sich später gezielt neu bewerten.                                              |
-| `tailwindcss`, `postcss`, `autoprefixer`                      | 3.4 / 8.5 / 10.4 | behalten     | Bleiben für das UI-Overlay.                                                                                                                           |
-| `vite`, `@vitejs/plugin-react`, `typescript`                  | 7.1 / 4.7 / 5.9  | behalten     | Stack-Entscheidung: Vite.                                                                                                                             |
-| `eslint` 8, `@typescript-eslint/*` 7, `eslint-plugin-react-*` | –                | überarbeiten | ESLint 8 ist End-of-Life. Ein Wechsel auf ESLint 9 mit Flat Config wäre ein Major-Update (Rückfrage in #22).                                          |
-| `prettier`                                                    | 3.3.3            | behalten     | Bisher ohne Skript. `format`/`format:check` kommen mit #23/#25.                                                                                       |
-| neu: `three`, `@react-three/fiber`, `@react-three/drei`       | –                | neu          | Für #18, vorher `npm audit`.                                                                                                                          |
-| neu: `vitest`, `@testing-library/react`, `jsdom`              | –                | neu          | Für #24.                                                                                                                                              |
+| Package                                                       | Version          | Rating | Reason                                                                                                            |
+| ------------------------------------------------------------- | ---------------- | ------ | ----------------------------------------------------------------------------------------------------------------- |
+| `react`, `react-dom`                                          | 18.3.1           | keep   | Foundation. The move to React 19 happens in #33 (current `@react-three/fiber` requires React 19, see note below). |
+| `animated-backgrounds`                                        | 1.1.0            | drop   | Replaced by the Three.js scene.                                                                                   |
+| `typewriter-effect`                                           | 2.22.0           | drop   | The terminal's typing effect is a few lines of own, testable code.                                                |
+| `framer-motion`                                               | 11.18.2          | drop   | Not imported anywhere.                                                                                            |
+| `react-router-dom`                                            | 6.30.1           | drop   | Only a `BrowserRouter` without routes. Deep links like `/projects` can be re-evaluated later.                     |
+| `tailwindcss`, `postcss`, `autoprefixer`                      | 3.4 / 8.5 / 10.4 | keep   | Stay for the UI overlay.                                                                                          |
+| `vite`, `@vitejs/plugin-react`, `typescript`                  | 7.1 / 4.7 / 5.9  | keep   | Stack decision: Vite.                                                                                             |
+| `eslint` 8, `@typescript-eslint/*` 7, `eslint-plugin-react-*` | –                | rework | ESLint 8 is end of life. Moving to ESLint 9 with flat config is a major update (asked in #22).                    |
+| `prettier`                                                    | 3.3.3            | keep   | No script so far. `format`/`format:check` come with #23/#25.                                                      |
+| new: `three`, `@react-three/fiber`, `@react-three/drei`       | –                | new    | For #18, `npm audit` first.                                                                                       |
+| new: `vitest`, `@testing-library/react`, `jsdom`              | –                | new    | For #24.                                                                                                          |
 
-Hinweis: `@react-three/fiber` v9 verlangt React 19, v8 läuft mit React 18. Ob auf React 19 gewechselt wird, ist eine Major-Entscheidung und wird bei #22 bzw. vor #18 abgefragt.
+Note: `@react-three/fiber` v9 requires React 19, v8 runs on React 18. Moving to React 19 is a major decision and was asked in #22.
 
-## 6. Build, Tooling und CI
+## 6. Build, tooling and CI
 
-| Punkt                             | Befund                                                                                                                   | Bewertung                                         |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
-| `npm run build`                   | grün, JS 224 KB (71 KB gzip)                                                                                             | behalten                                          |
-| `npm run lint`                    | grün                                                                                                                     | behalten                                          |
-| Tests                             | keine                                                                                                                    | überarbeiten → Vitest und TDD (#24)               |
-| `npm audit`                       | 19 Findings (1 low, 3 moderate, 15 high)                                                                                 | überarbeiten → #22                                |
-| `.github/workflows/portfolio.yml` | Deployt bei jedem Push auf `master` nach GitHub Pages, ohne Lint und Tests, mit Node 20 und toter Paketmanager-Erkennung | überarbeiten → #25, #28                           |
-| `CNAME`                           | `theocloud.dev`                                                                                                          | behalten (Deployment-Ziel wird in #28 abgestimmt) |
-| `README.md`                       | nur „Small Portfolio“                                                                                                    | überarbeiten                                      |
-| `vite.config.ts`                  | Kommentar-Link aus dem Template                                                                                          | überarbeiten (Kommentar-Regel)                    |
+| Item                              | Finding                                                                                                                   | Rating                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `npm run build`                   | green, JS 224 KB (71 KB gzip)                                                                                             | keep                                   |
+| `npm run lint`                    | green                                                                                                                     | keep                                   |
+| Tests                             | none                                                                                                                      | rework → Vitest and TDD (#24)          |
+| `npm audit`                       | 19 findings (1 low, 3 moderate, 15 high)                                                                                  | rework → #22                           |
+| `.github/workflows/portfolio.yml` | Deploys to GitHub Pages on every push to `master`, without lint or tests, on Node 20, with dead package-manager detection | rework → #25, #28                      |
+| `CNAME`                           | `theocloud.dev`                                                                                                           | keep (deployment target agreed in #28) |
+| `README.md`                       | only "Small Portfolio"                                                                                                    | rework                                 |
+| `vite.config.ts`                  | template comment link                                                                                                     | rework (comment rule)                  |
 
-## 7. Offene Fragen an Theo
+## 7. Open questions for Theo
 
-1. **Projektauswahl:** Sollen weitere Projekte rein, etwa Backlog Manager (Icon liegt schon im Repo), und gibt es Projekte, die rausfallen?
-2. **Projekttexte:** Liefert Theo die Kurzbeschreibungen (1–2 Sätze, Stack, Rolle), oder soll ich Entwürfe aus den READMEs der Repos schreiben, die Theo dann freigibt?
-3. **About/CV:** Soll es einen Befehl `about` bzw. `whoami` mit Text über Theo geben (Ausbildung, Stack, Interessen)? Wenn ja, mit welchen Inhalten?
-4. **Kontakt:** Welche Kanäle sollen sichtbar sein (GitHub, E-Mail, LinkedIn, …)?
-5. **Sprache:** Englisch (wie bisher), Deutsch oder beides mit einem Befehl `lang`?
+1. **Project selection:** Should more projects be added, such as Backlog Manager (its icon is already in the repo), and are there projects that should go?
+2. **Project texts:** Will Theo write the short descriptions (1–2 sentences, stack, role), or should I draft them from the repositories' READMEs for Theo to approve?
+3. **About/CV:** Should there be an `about` / `whoami` command with text about Theo (education, stack, interests)? If so, with which content?
+4. **Contact:** Which channels should be visible (GitHub, e-mail, LinkedIn, …)?
+5. **Language:** English (as before), German, or both with a `lang` command?
