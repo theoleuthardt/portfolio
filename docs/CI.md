@@ -15,6 +15,10 @@ The CI job runs on the Node version from `.nvmrc`, with the npm cache keyed on `
 
 Secret scanning and push protection are enabled: GitHub scans the repository for leaked credentials and rejects pushes that contain a recognised secret.
 
+## Dependabot
+
+`.github/dependabot.yml` checks npm packages and GitHub Actions every Monday at 06:00 (Europe/Berlin). Minor and patch updates arrive as one grouped PR per ecosystem; every major update gets its own PR. All Dependabot PRs carry the `dependencies` label and go through the same CI, review and merge gate. Major updates are merged only after Theo has agreed (see `CLAUDE.md` → Dependencies).
+
 ## Merge gate
 
 A PR is merged only when `gh pr view <n> --json mergeable` reports `MERGEABLE` and every check of `gh pr checks <n>` is green. A failing check is fixed at its cause; checks are never skipped or disabled.
@@ -30,5 +34,4 @@ npm audit --audit-level=high
 
 ## Planned
 
-- Dependabot for weekly update PRs (#27)
 - Deployment only after green CI (#28)
