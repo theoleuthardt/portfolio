@@ -5,7 +5,7 @@ import React, { useState } from "react";
 export const Hero = ({
   projectsRef,
 }: {
-  projectsRef: React.RefObject<HTMLDivElement>;
+  projectsRef: React.RefObject<HTMLDivElement | null>;
 }) => {
   const [showButton, setShowButton] = useState(false);
 

@@ -4,7 +4,7 @@ import { projects } from "../constants";
 export const Projects = ({
   projectsRef,
 }: {
-  projectsRef: React.RefObject<HTMLDivElement>;
+  projectsRef: React.RefObject<HTMLDivElement | null>;
 }) => {
   return (
     <div
