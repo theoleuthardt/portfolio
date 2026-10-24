@@ -9,7 +9,7 @@ export const Projects = ({
   return (
     <div
       ref={projectsRef}
-      className="w-[40rem] sm:w-[20rem] h-auto p-6 flex justify-center items-center
+      className="w-160 sm:w-[20rem] h-auto p-6 flex justify-center items-center
       flex-col gap-6 bg-transparent"
     >
       <h2
@@ -19,13 +19,13 @@ export const Projects = ({
         Projects:
       </h2>
       <div className="flex justify-center items-center">
-        <div className="lg:w-[60rem] md:w-[50rem] flex flex-col items-center sm:flex-col sm:items-center lg:grid lg:grid-cols-3 gap-10">
+        <div className="lg:w-240 md:w-200 flex flex-col items-center sm:flex-col sm:items-center lg:grid lg:grid-cols-3 gap-10">
           {projects.map((project) => (
             <a
               key={project.id}
               href={project.link}
-              className="w-[20rem] flex items-center gap-4 bg-white bg-opacity-20
-        p-4 rounded-xl hover:bg-opacity-30 transform transition-transform duration-200
+              className="w-[20rem] flex items-center gap-4 bg-white/20
+        p-4 rounded-xl hover:bg-white/30 transform transition-transform duration-200
         hover:scale-105 cursor-pointer"
             >
               <img src={project.icon} alt="" className="w-10 h-10" />

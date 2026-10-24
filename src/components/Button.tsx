@@ -14,8 +14,8 @@ export const Button = ({
   className = "",
 }: buttonProps) => {
   const baseStyles =
-    "flex items-center gap-4 bg-white bg-opacity-20 p-4 rounded-xl " +
-    "hover:bg-opacity-30 transform transition-transform duration-200 " +
+    "flex items-center gap-4 bg-white/20 p-4 rounded-xl " +
+    "hover:bg-white/30 transform transition-transform duration-200 " +
     "hover:scale-105 cursor-pointer";
 
   const styles = `${baseStyles} ${className}`;
