@@ -6,7 +6,7 @@ import { Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
 import { cameraPosition, LAB_RIG } from "./cameraRig";
 import { LabEnvironment } from "./environment/Environment";
-import { connectorPoints } from "./rack/connector";
+import { connectorPoints, toScreen } from "./rack/connector";
 import {
   approach,
   focusPose,
@@ -75,24 +75,24 @@ function Connector({
     if (!element) {
       return;
     }
-    const anchor = document
-      .querySelector('[aria-label="terminal input"]')
-      ?.getBoundingClientRect();
-    if (!slot || !anchor) {
+    if (!slot) {
       element.setAttribute("points", "");
       return;
     }
+    const anchor = document
+      .querySelector('[aria-label="terminal input"]')
+      ?.getBoundingClientRect();
     camera.updateMatrixWorld();
     point.set(...moduleFront(slot, SLIDE_OUT)).project(camera);
+    const module = toScreen(point, size);
     element.setAttribute(
       "points",
-      connectorPoints(
-        { x: anchor.right, y: anchor.top + anchor.height / 2 },
-        {
-          x: ((point.x + 1) / 2) * size.width,
-          y: ((1 - point.y) / 2) * size.height,
-        },
-      ),
+      anchor && module
+        ? connectorPoints(
+            { x: anchor.right, y: anchor.top + anchor.height / 2 },
+            module,
+          )
+        : "",
     );
   });
   return null;
