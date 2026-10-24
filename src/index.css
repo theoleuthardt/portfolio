@@ -1,9 +1,31 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
-
 @import "tailwindcss";
 
 @theme {
+  --color-void: #020403;
+  --color-haze: #06231c;
+  --color-bezel: #141816;
+  --color-glass: #031008;
+  --color-line: #1d5a2c;
+  --color-phosphor: #33ff66;
+  --color-phosphor-dim: #1d9a3f;
+  --color-text: #b8f5c8;
+  --color-neon: #2ef2c0;
+  --color-ceiling: #c8ffe9;
+  --color-amber: #ffb000;
+  --color-alert: #ff3b3b;
+  --color-pink: #ff3d8b;
   --color-secondary: #aaa6c3;
+
+  --font-terminal: "VT323", ui-monospace, monospace;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --text-terminal: 1.25rem;
+  --text-terminal--line-height: 1.3;
+  --text-terminal-sm: 1.125rem;
+  --text-terminal-sm--line-height: 1.3;
+  --text-hud: 0.6875rem;
+  --text-hud--letter-spacing: 0.2em;
+  --text-screen-title: 1.375rem;
 }
 
 @layer base {
@@ -11,9 +33,16 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: "Poppins", sans-serif;
+    font-family: var(--font-mono);
     scroll-behavior: smooth;
     color-scheme: dark;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-phosphor);
+    outline-offset: 2px;
+    box-shadow: 0 0 12px
+      color-mix(in srgb, var(--color-phosphor) 60%, transparent);
   }
 }
 
