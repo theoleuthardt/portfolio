@@ -25,11 +25,12 @@ function markBooted(): void {
 
 /**
  * Number of boot steps reached. Counts up one step at a time on the first
- * visit of a session; shows everything at once with reduced motion, for
- * returning visitors and after any key press or pointer press. When the
+ * visit of a session; jumps as far as allowed at once with reduced motion,
+ * for returning visitors and after any key press or pointer press. When the
  * browser blocks session storage, every visit counts as the first one.
- * While `hold` is set the count stops one step before the end, so the last
- * step waits for the 3D scene. Once complete, the boot stays complete.
+ * While `hold` is set the count stops one step before the end for everyone,
+ * including reduced motion and returning visitors, so the last step reflects
+ * the real loading of the 3D scene. Once complete, the boot stays complete.
  */
 export function useBootSequence(total: number, hold = false): number {
   const reducedMotion = usePrefersReducedMotion();
