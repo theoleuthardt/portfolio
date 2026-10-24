@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type RefObject } from "react";
 import { isPhoneViewport } from "../scene/device";
 import { RackFallback } from "./RackFallback";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
@@ -16,6 +16,8 @@ export interface SceneLayerProps {
   openProjectId?: string;
   /** Called when a rack module is clicked. */
   onSelectProject?: (projectId: string) => void;
+  /** SVG polyline for the HUD line from the prompt to the focused module. */
+  connector?: RefObject<SVGPolylineElement | null>;
 }
 
 /**
@@ -28,6 +30,7 @@ export function SceneLayer({
   onReady,
   openProjectId,
   onSelectProject,
+  connector,
 }: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
@@ -42,6 +45,7 @@ export function SceneLayer({
               onReady={onReady}
               openProjectId={openProjectId}
               onSelectProject={onSelectProject}
+              connector={connector}
             />
           </Suspense>
         </SceneErrorBoundary>

@@ -1,10 +1,13 @@
 import { Environment, Lightformer, SpotLight } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { lazy, Suspense, useEffect, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo, type RefObject } from "react";
+import { rackSlots, type RackSlot } from "../content/rack";
 import { Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
 import { cameraPosition, LAB_RIG } from "./cameraRig";
 import { LabEnvironment } from "./environment/Environment";
+import { connectorPoints } from "./rack/connector";
+import { approach, focusPose, moduleFront, type FocusPose } from "./rack/focus";
 import { Rack } from "./rack/Rack";
 import { ROOM } from "./layout";
 
@@ -15,15 +18,75 @@ const MINT = "#c8ffe9";
 const NEON = "#2ef2c0";
 const TARGET = new Vector3(0, 0.6, 0);
 const BEAM_ZS = [2, -3.5, -9];
+const SLOTS = rackSlots();
 
-function CameraRig({ reducedMotion }: { reducedMotion: boolean }) {
+interface CameraRigProps {
+  reducedMotion: boolean;
+  focus?: FocusPose;
+}
+
+function CameraRig({ reducedMotion, focus }: CameraRigProps) {
   const next = useMemo(() => new Vector3(), []);
+  const lookAt = useMemo(() => TARGET.clone(), []);
+  const goal = useMemo(() => new Vector3(), []);
   useFrame(({ camera, clock, pointer }, delta) => {
-    next.set(
-      ...cameraPosition(LAB_RIG, clock.elapsedTime, pointer, reducedMotion),
+    if (focus) {
+      next.set(...focus.position);
+      goal.set(...focus.target);
+    } else {
+      next.set(
+        ...cameraPosition(LAB_RIG, clock.elapsedTime, pointer, reducedMotion),
+      );
+      goal.copy(TARGET);
+    }
+    const speed = reducedMotion ? Infinity : focus ? 3.2 : 2;
+    camera.position.set(
+      approach(camera.position.x, next.x, delta, speed),
+      approach(camera.position.y, next.y, delta, speed),
+      approach(camera.position.z, next.z, delta, speed),
     );
-    camera.position.lerp(next, reducedMotion ? 1 : 1 - Math.exp(-delta * 2));
-    camera.lookAt(TARGET);
+    lookAt.set(
+      approach(lookAt.x, goal.x, delta, speed),
+      approach(lookAt.y, goal.y, delta, speed),
+      approach(lookAt.z, goal.z, delta, speed),
+    );
+    camera.lookAt(lookAt);
+  });
+  return null;
+}
+
+/** Keeps the HUD line from the terminal prompt to the focused module up to date. */
+function Connector({
+  line,
+  slot,
+}: {
+  line?: RefObject<SVGPolylineElement | null>;
+  slot?: RackSlot;
+}) {
+  const point = useMemo(() => new Vector3(), []);
+  useFrame(({ camera, size }) => {
+    const element = line?.current;
+    if (!element) {
+      return;
+    }
+    const anchor = document
+      .querySelector('[aria-label="terminal input"]')
+      ?.getBoundingClientRect();
+    if (!slot || !anchor) {
+      element.setAttribute("points", "");
+      return;
+    }
+    point.set(...moduleFront(slot)).project(camera);
+    element.setAttribute(
+      "points",
+      connectorPoints(
+        { x: anchor.right, y: anchor.top + anchor.height / 2 },
+        {
+          x: ((point.x + 1) / 2) * size.width,
+          y: ((1 - point.y) / 2) * size.height,
+        },
+      ),
+    );
   });
   return null;
 }
@@ -101,6 +164,8 @@ export interface SceneProps {
   openProjectId?: string;
   /** Called when a rack module is clicked. */
   onSelectProject?: (projectId: string) => void;
+  /** SVG polyline the scene draws the HUD line into, from prompt to module. */
+  connector?: RefObject<SVGPolylineElement | null>;
 }
 
 /**
@@ -112,8 +177,14 @@ export default function Scene({
   onReady,
   openProjectId,
   onSelectProject,
+  connector,
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const focusedSlot = SLOTS.find((slot) => slot.id === openProjectId);
+  const focus = useMemo(
+    () => (focusedSlot ? focusPose(focusedSlot) : undefined),
+    [focusedSlot],
+  );
   return (
     <Canvas
       className="!absolute inset-0"
@@ -169,7 +240,8 @@ export default function Scene({
       <Suspense fallback={null}>
         <PostEffects />
       </Suspense>
-      <CameraRig reducedMotion={reducedMotion} />
+      <CameraRig reducedMotion={reducedMotion} focus={focus} />
+      <Connector line={connector} slot={focusedSlot} />
     </Canvas>
   );
 }
