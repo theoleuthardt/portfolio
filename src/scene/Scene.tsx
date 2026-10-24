@@ -7,7 +7,13 @@ import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
 import { cameraPosition, LAB_RIG } from "./cameraRig";
 import { LabEnvironment } from "./environment/Environment";
 import { connectorPoints } from "./rack/connector";
-import { approach, focusPose, moduleFront, type FocusPose } from "./rack/focus";
+import {
+  approach,
+  focusPose,
+  moduleFront,
+  SLIDE_OUT,
+  type FocusPose,
+} from "./rack/focus";
 import { Rack } from "./rack/Rack";
 import { ROOM } from "./layout";
 
@@ -76,7 +82,8 @@ function Connector({
       element.setAttribute("points", "");
       return;
     }
-    point.set(...moduleFront(slot)).project(camera);
+    camera.updateMatrixWorld();
+    point.set(...moduleFront(slot, SLIDE_OUT)).project(camera);
     element.setAttribute(
       "points",
       connectorPoints(

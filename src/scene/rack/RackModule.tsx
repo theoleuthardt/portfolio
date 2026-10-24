@@ -5,7 +5,7 @@ import type { RackSlot } from "../../content/rack";
 import { InstancedBoxes, type Point3 } from "../environment/InstancedBoxes";
 import { evenlySpaced } from "../layout";
 import { usePbr } from "../environment/usePbr";
-import { approach } from "./focus";
+import { approach, SLIDE_OUT } from "./focus";
 import { blinkLevel, RACK, slotCenterY } from "./geometry";
 import { labelTexture } from "./labelTexture";
 
@@ -14,7 +14,6 @@ const AMBER = new Color("#ffb000");
 const OFF = new Color("#06140b");
 const FACE_WIDTH = RACK.width - 0.12;
 const FRONT = RACK.depth / 2;
-const SLIDE_OUT = 0.32;
 
 /** Props of {@link RackModule}. */
 export interface RackModuleProps {

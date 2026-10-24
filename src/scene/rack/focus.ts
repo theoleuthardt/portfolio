@@ -18,14 +18,17 @@ function facing(): [number, number] {
   return [Math.sin(RACK.rotationY), Math.cos(RACK.rotationY)];
 }
 
-/** Centre of a module's front plate in scene space. */
-export function moduleFront(slot: RackSlot): Vector3 {
+/** How far an open module slides out of the rack. */
+export const SLIDE_OUT = 0.32;
+
+/**
+ * Centre of a module's front plate in scene space, `slidOut` metres in front
+ * of its closed position.
+ */
+export function moduleFront(slot: RackSlot, slidOut = 0): Vector3 {
   const [fx, fz] = facing();
-  return [
-    RACK.x + (RACK.depth / 2) * fx,
-    slotCenterY(slot),
-    RACK.z + (RACK.depth / 2) * fz,
-  ];
+  const reach = RACK.depth / 2 + slidOut;
+  return [RACK.x + reach * fx, slotCenterY(slot), RACK.z + reach * fz];
 }
 
 /**

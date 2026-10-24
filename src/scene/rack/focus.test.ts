@@ -20,6 +20,17 @@ describe("moduleFront", () => {
   });
 });
 
+describe("moduleFront of an ejected module", () => {
+  it("lies further out by the slide-out distance", () => {
+    const closed = moduleFront(flashi);
+    const ejected = moduleFront(flashi, 0.32);
+    expect(
+      Math.hypot(ejected[0] - closed[0], ejected[2] - closed[2]),
+    ).toBeCloseTo(0.32);
+    expect(ejected[1]).toBeCloseTo(closed[1]);
+  });
+});
+
 describe("focusPose", () => {
   const pose = focusPose(flashi);
 
