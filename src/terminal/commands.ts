@@ -89,7 +89,7 @@ const registry = new Map<string, Command>(
         if (name === undefined) {
           return {
             lines: [
-              { kind: "error", text: "open: which project?" },
+              { kind: "text", text: "open which project?" },
               { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
             ],
           };

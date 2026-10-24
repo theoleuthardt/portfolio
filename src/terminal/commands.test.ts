@@ -50,10 +50,13 @@ describe("run", () => {
     });
   });
 
-  it("asks for a project name when open has no argument", () => {
+  it("offers the projects as a question when open has no argument", () => {
     const result = run("open", context);
     expect(result.action).toBeUndefined();
-    expect(result.lines[0].kind).toBe("error");
+    expect(result.lines).toEqual([
+      { kind: "text", text: "open which project?" },
+      { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
+    ]);
   });
 
   it("suggests the closest project for a misspelled name", () => {
