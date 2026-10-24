@@ -2,6 +2,7 @@ import {
   useEffect,
   useEffectEvent,
   useImperativeHandle,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -30,7 +31,11 @@ import { BootScreen } from "./BootScreen";
 import { CrtFrame } from "./CrtFrame";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
-import { useBootSequence } from "./useBootSequence";
+import {
+  BOOT_GLIDE_MS,
+  useBootPhase,
+  useBootSequence,
+} from "./useBootSequence";
 
 const projectIds = projects.map((project) => project.id);
 const promptFor = (cwd: Cwd = "~") => `guest@theocloud:${cwd}$`;
@@ -106,10 +111,32 @@ export function Terminal({
   const logRef = useRef<HTMLDivElement>(null);
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
+  const phase = useBootPhase(booted);
+  const splash = useRef<HTMLDivElement>(null);
+  const splashTop = useRef<number | null>(null);
+
+  useLayoutEffect(() => {
+    const block = splash.current;
+    if (block === null) {
+      return;
+    }
+    if (phase === "splash") {
+      splashTop.current = block.getBoundingClientRect().top;
+    } else if (phase === "glide" && splashTop.current !== null) {
+      const delta = splashTop.current - block.getBoundingClientRect().top;
+      splashTop.current = null;
+      block.animate?.(
+        [{ transform: `translateY(${delta}px)` }, { transform: "none" }],
+        { duration: BOOT_GLIDE_MS, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
+      );
+    }
+  }, [phase]);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
+    if (phase === "ready") {
+      inputRef.current?.focus();
+    }
+  }, [phase]);
 
   useEffect(() => {
     logRef.current?.scrollTo?.({ top: logRef.current.scrollHeight });
@@ -245,13 +272,18 @@ export function Terminal({
     )?.id;
 
   const linesOf = (entry: LogEntry) =>
-    entry.command === undefined && !booted ? [] : entry.lines;
+    entry.command === undefined && phase !== "ready" ? [] : entry.lines;
 
   return (
     <CrtFrame>
       <div
         ref={logRef}
-        className="crt-text h-full overflow-y-auto"
+        data-boot-phase={phase}
+        className={
+          phase === "splash"
+            ? "crt-text boot-splash h-full overflow-y-auto"
+            : "crt-text h-full overflow-y-auto"
+        }
         onClick={() => {
           if (window.getSelection()?.isCollapsed !== false) {
             inputRef.current?.focus();
@@ -269,7 +301,9 @@ export function Terminal({
             return (
               <div key={entry.id} className="mb-2">
                 {entry.command === undefined ? (
-                  <BootScreen reached={bootReached} />
+                  <div ref={splash}>
+                    <BootScreen reached={bootReached} />
+                  </div>
                 ) : (
                   <Prompt command={entry.command} cwd={entry.cwd} />
                 )}
@@ -281,31 +315,33 @@ export function Terminal({
             );
           })}
         </div>
-        <label className="crt-prompt">
-          <span className="text-phosphor-dim">{promptFor(session.cwd)}</span>
-          <span className="crt-edit">
-            <EditLine line={{ text: input, cursor }} focused={focused} />
-            <input
-              ref={inputRef}
-              aria-label="terminal input"
-              className="crt-input"
-              value={input}
-              onChange={(event) => {
-                setInput(event.target.value);
-                syncCursor(event.target);
-                setOptions([]);
-              }}
-              onSelect={(event) => syncCursor(event.currentTarget)}
-              onKeyUp={(event) => syncCursor(event.currentTarget)}
-              onFocus={() => setFocused(true)}
-              onBlur={() => setFocused(false)}
-              onKeyDown={onKeyDown}
-              autoComplete="off"
-              autoCapitalize="off"
-              spellCheck={false}
-            />
-          </span>
-        </label>
+        {phase === "ready" ? (
+          <label className="crt-prompt">
+            <span className="text-phosphor-dim">{promptFor(session.cwd)}</span>
+            <span className="crt-edit">
+              <EditLine line={{ text: input, cursor }} focused={focused} />
+              <input
+                ref={inputRef}
+                aria-label="terminal input"
+                className="crt-input"
+                value={input}
+                onChange={(event) => {
+                  setInput(event.target.value);
+                  syncCursor(event.target);
+                  setOptions([]);
+                }}
+                onSelect={(event) => syncCursor(event.currentTarget)}
+                onKeyUp={(event) => syncCursor(event.currentTarget)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                onKeyDown={onKeyDown}
+                autoComplete="off"
+                autoCapitalize="off"
+                spellCheck={false}
+              />
+            </span>
+          </label>
+        ) : null}
         {options.length > 0 ? (
           <p className="text-phosphor-dim">{options.join(" ")}</p>
         ) : null}

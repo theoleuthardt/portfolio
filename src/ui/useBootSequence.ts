@@ -70,3 +70,31 @@ export function useBootSequence(total: number, hold = false): number {
   }
   return hold ? Math.min(reached, total - 1) : reached;
 }
+
+/** How long the boot splash takes to glide up to the top. */
+export const BOOT_GLIDE_MS = 700;
+
+/** Where the boot is: centred splash, gliding up, or done with a prompt. */
+export type BootPhase = "splash" | "glide" | "ready";
+
+/**
+ * Boot phase on top of {@link useBootSequence}: the splash shows until the
+ * boot is complete, then glides up for {@link BOOT_GLIDE_MS}. Reduced motion
+ * and returning visitors (already booted on the first render) skip straight
+ * to `ready`.
+ */
+export function useBootPhase(booted: boolean): BootPhase {
+  const reducedMotion = usePrefersReducedMotion();
+  const [glided, setGlided] = useState(() => booted || reducedMotion);
+  useEffect(() => {
+    if (!booted || glided) {
+      return;
+    }
+    const timer = window.setTimeout(() => setGlided(true), BOOT_GLIDE_MS);
+    return () => window.clearTimeout(timer);
+  }, [booted, glided]);
+  if (!booted) {
+    return "splash";
+  }
+  return glided || reducedMotion ? "ready" : "glide";
+}

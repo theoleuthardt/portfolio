@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bootSteps } from "../terminal/boot";
-import { BOOT_STEP_MS, BOOTED_KEY } from "./useBootSequence";
+import { BOOT_GLIDE_MS, BOOT_STEP_MS, BOOTED_KEY } from "./useBootSequence";
 import { Terminal, type TerminalHandle } from "./Terminal";
 
 function mockReducedMotion(reduced: boolean) {
@@ -44,6 +44,10 @@ afterEach(() => {
 describe("Terminal", () => {
   it("shows the whole boot output at once with reduced motion", () => {
     render(<Terminal />);
+    expect(document.querySelector("[data-boot-phase]")).toHaveAttribute(
+      "data-boot-phase",
+      "ready",
+    );
     expect(
       within(log()).getByRole("img", { name: "TheoCloud OS" }),
     ).toBeInTheDocument();
@@ -394,14 +398,50 @@ describe("Terminal boot sequence", () => {
       vi.advanceTimersByTime(BOOT_STEP_MS * bootSteps.length);
     });
     expect(bar).toHaveAttribute("aria-valuenow", "100");
+    act(() => {
+      vi.advanceTimersByTime(BOOT_GLIDE_MS);
+    });
     expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
     expect(sessionStorage.getItem(BOOTED_KEY)).toBe("1");
+  });
+
+  it("shows only the centred boot splash while booting, without a prompt", () => {
+    render(<Terminal />);
+    expect(document.querySelector("[data-boot-phase]")).toHaveAttribute(
+      "data-boot-phase",
+      "splash",
+    );
+    expect(
+      screen.queryByRole("textbox", { name: "terminal input" }),
+    ).toBeNull();
+  });
+
+  it("glides the splash up and then shows the ready prompt", () => {
+    render(<Terminal />);
+    act(() => {
+      vi.advanceTimersByTime(BOOT_STEP_MS * bootSteps.length);
+    });
+    expect(document.querySelector("[data-boot-phase]")).toHaveAttribute(
+      "data-boot-phase",
+      "glide",
+    );
+    act(() => {
+      vi.advanceTimersByTime(BOOT_GLIDE_MS);
+    });
+    expect(document.querySelector("[data-boot-phase]")).toHaveAttribute(
+      "data-boot-phase",
+      "ready",
+    );
+    expect(input()).toHaveFocus();
   });
 
   it("skips the boot sequence on a key press", () => {
     render(<Terminal />);
     act(() => {
       fireEvent.keyDown(window, { key: "x" });
+    });
+    act(() => {
+      vi.advanceTimersByTime(BOOT_GLIDE_MS);
     });
     expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
   });
