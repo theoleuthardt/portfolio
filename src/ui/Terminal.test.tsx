@@ -106,6 +106,16 @@ describe("Terminal", () => {
     expect(input()).toHaveValue("");
   });
 
+  it("restores the unsubmitted input after browsing the history", () => {
+    render(<Terminal />);
+    type("ls");
+    fireEvent.change(input(), { target: { value: "dra" } });
+    fireEvent.keyDown(input(), { key: "ArrowUp" });
+    expect(input()).toHaveValue("ls");
+    fireEvent.keyDown(input(), { key: "ArrowDown" });
+    expect(input()).toHaveValue("dra");
+  });
+
   it("completes with Tab and lists ambiguous options", () => {
     render(<Terminal />);
     fireEvent.change(input(), { target: { value: "hel" } });

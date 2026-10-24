@@ -67,7 +67,7 @@ export function Terminal() {
       setOptions([]);
       const step =
         event.key === "ArrowUp"
-          ? stepBack(session.history)
+          ? stepBack(session.history, input)
           : stepForward(session.history);
       setSession((current) => ({ ...current, history: step.history }));
       setInput(step.value);

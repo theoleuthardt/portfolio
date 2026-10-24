@@ -32,4 +32,15 @@ describe("history", () => {
   it("returns empty input when stepping back with no entries", () => {
     expect(stepBack(emptyHistory).value).toBe("");
   });
+
+  it("keeps the unsubmitted draft and restores it past the newest entry", () => {
+    const back = stepBack(withTwo, "half typed");
+    expect(back.value).toBe("open flashi");
+    expect(stepForward(back.history).value).toBe("half typed");
+  });
+
+  it("forgets the draft once a command is recorded", () => {
+    const back = stepBack(withTwo, "half typed").history;
+    expect(record(back, "help").draft).toBe("");
+  });
 });
