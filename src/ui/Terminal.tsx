@@ -23,7 +23,9 @@ function Prompt({ command }: { command: string }) {
 
 /**
  * The CRT terminal: boot sequence, command log, project screens and the
- * input with history (arrow keys) and completion (Tab).
+ * input with history (arrow keys) and completion (Tab). Only the screen of
+ * the currently open project is expanded. Tab completes only when there is
+ * something to complete, so Tab and Shift+Tab otherwise move focus as usual.
  */
 export function Terminal() {
   const [session, setSession] = useState(createSession);
@@ -50,15 +52,19 @@ export function Terminal() {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
+    if (event.key === "Enter" && !event.nativeEvent.isComposing) {
       runCommand(input);
-    } else if (event.key === "Tab") {
-      event.preventDefault();
+    } else if (event.key === "Tab" && !event.shiftKey && input.trim() !== "") {
       const completion = complete(input, commandNames, projectIds);
+      if (completion.input === input && completion.options.length === 0) {
+        return;
+      }
+      event.preventDefault();
       setInput(completion.input);
       setOptions(completion.options.length > 1 ? completion.options : []);
     } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
+      setOptions([]);
       const step =
         event.key === "ArrowUp"
           ? stepBack(session.history)
@@ -67,6 +73,14 @@ export function Terminal() {
       setInput(step.value);
     }
   };
+
+  const expandedEntryId = [...session.log]
+    .reverse()
+    .find(
+      (entry) =>
+        entry.projectId !== undefined &&
+        entry.projectId === session.openProjectId,
+    )?.id;
 
   const linesOf = (entry: LogEntry) =>
     entry.command === undefined
@@ -83,9 +97,9 @@ export function Terminal() {
         <div role="log" aria-live="polite" aria-label="terminal output">
           {session.log.map((entry) => {
             const project =
-              entry.projectId === undefined
-                ? undefined
-                : findProject(entry.projectId);
+              entry.id === expandedEntryId && entry.projectId !== undefined
+                ? findProject(entry.projectId)
+                : undefined;
             return (
               <div key={entry.id} className="mb-2">
                 {entry.command === undefined ? null : (
@@ -106,7 +120,10 @@ export function Terminal() {
             aria-label="terminal input"
             className="crt-input flex-1"
             value={input}
-            onChange={(event) => setInput(event.target.value)}
+            onChange={(event) => {
+              setInput(event.target.value);
+              setOptions([]);
+            }}
             onKeyDown={onKeyDown}
             autoComplete="off"
             autoCapitalize="off"

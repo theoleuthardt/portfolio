@@ -42,7 +42,9 @@ function openProjectAfter(
   if (action?.type === "open") {
     return action.projectId;
   }
-  return action?.type === "close" ? undefined : current;
+  return action?.type === "close" || action?.type === "clear"
+    ? undefined
+    : current;
 }
 
 /** Runs `input`, records it and appends the result to the log. */

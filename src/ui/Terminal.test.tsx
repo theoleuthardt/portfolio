@@ -116,15 +116,52 @@ describe("Terminal", () => {
     expect(screen.getByText("clear close")).toBeInTheDocument();
   });
 
-  it("gives every opened project screen its own accessible name", () => {
+  it("expands only the screen of the currently open project", () => {
     render(<Terminal />);
     type("open flashi");
-    type("open flashi");
+    type("open trust-issues");
+    expect(within(log()).queryByRole("region", { name: /^Flashi/ })).toBeNull();
     expect(
-      within(log()).getAllByRole("region", { name: /^Flashi/ }),
-    ).toHaveLength(2);
+      within(log()).getByRole("region", { name: /^Trust Issues/ }),
+    ).toBeInTheDocument();
     const ids = [...document.querySelectorAll("[id]")].map((node) => node.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("collapses the project screen on close", () => {
+    render(<Terminal />);
+    type("open flashi");
+    type("close");
+    expect(within(log()).queryByRole("region")).toBeNull();
+  });
+
+  it("lets Tab and Shift+Tab move focus when there is nothing to complete", () => {
+    render(<Terminal />);
+    const empty = fireEvent.keyDown(input(), { key: "Tab" });
+    expect(empty).toBe(true);
+    fireEvent.change(input(), { target: { value: "xyz" } });
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(true);
+    fireEvent.change(input(), { target: { value: "hel" } });
+    expect(fireEvent.keyDown(input(), { key: "Tab", shiftKey: true })).toBe(
+      true,
+    );
+    expect(input()).toHaveValue("hel");
+  });
+
+  it("does not submit while an IME composition is confirmed with Enter", () => {
+    render(<Terminal />);
+    fireEvent.change(input(), { target: { value: "ls" } });
+    fireEvent.keyDown(input(), { key: "Enter", isComposing: true });
+    expect(input()).toHaveValue("ls");
+    expect(within(log()).queryByRole("button", { name: /^flashi/ })).toBeNull();
+  });
+
+  it("hides completion options once the input changes", () => {
+    render(<Terminal />);
+    fireEvent.change(input(), { target: { value: "cl" } });
+    fireEvent.keyDown(input(), { key: "Tab" });
+    fireEvent.change(input(), { target: { value: "cle" } });
+    expect(screen.queryByText("clear close")).toBeNull();
   });
 
   it("still works when session storage is blocked", () => {

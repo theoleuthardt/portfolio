@@ -62,4 +62,9 @@ describe("session", () => {
     const { session } = submit(cleared, "help");
     expect(session.log[0].id).toBe(3);
   });
+
+  it("closes the open project when the log is cleared", () => {
+    const opened = submit(fresh, "open flashi").session;
+    expect(submit(opened, "clear").session.openProjectId).toBeUndefined();
+  });
 });
