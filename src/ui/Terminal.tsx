@@ -133,6 +133,19 @@ export function Terminal({
   }, [phase]);
 
   useEffect(() => {
+    if (phase !== "splash") {
+      return;
+    }
+    const measure = () => {
+      if (splash.current) {
+        splashTop.current = splash.current.getBoundingClientRect().top;
+      }
+    };
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [phase]);
+
+  useEffect(() => {
     if (phase === "ready") {
       inputRef.current?.focus();
     }

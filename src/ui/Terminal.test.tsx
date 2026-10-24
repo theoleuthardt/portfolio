@@ -61,6 +61,14 @@ afterEach(() => {
 });
 
 describe("Terminal", () => {
+  it("with reduced motion skips the static splash on a click", () => {
+    render(<Terminal />);
+    act(() => {
+      fireEvent.pointerDown(window);
+    });
+    expect(phase()).toBe("ready");
+  });
+
   it("with reduced motion shows the splash briefly, then the prompt without gliding", () => {
     render(<Terminal />);
     expect(phase()).toBe("splash");
@@ -458,12 +466,7 @@ describe("Terminal boot sequence", () => {
     act(() => {
       fireEvent.keyDown(window, { key: "x" });
     });
-    act(() => {
-      vi.advanceTimersByTime(BOOT_HOLD_MS);
-    });
-    act(() => {
-      vi.advanceTimersByTime(BOOT_GLIDE_MS);
-    });
+    expect(phase()).toBe("ready");
     expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
   });
 

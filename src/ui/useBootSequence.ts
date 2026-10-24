@@ -63,13 +63,27 @@ type AfterBoot = "hold" | "glide" | "ready";
  * Boot phase on top of {@link useBootSequence}. The splash stays while
  * booting and for {@link BOOT_HOLD_MS} with the full bar, then glides up for
  * {@link BOOT_GLIDE_MS}. With reduced motion the static splash stays for
- * {@link BOOT_REDUCED_HOLD_MS} and the prompt follows without a glide.
+ * {@link BOOT_REDUCED_HOLD_MS} and the prompt follows without a glide. A key
+ * press or click skips straight to `ready` once the boot is complete.
  */
 export function useBootPhase(booted: boolean): BootPhase {
   const reducedMotion = usePrefersReducedMotion();
   const [stage, setStage] = useState<AfterBoot>("hold");
+  const [skipped, setSkipped] = useState(false);
   useEffect(() => {
-    if (!booted || stage === "ready") {
+    if (skipped || stage === "ready") {
+      return;
+    }
+    const skip = () => setSkipped(true);
+    window.addEventListener("keydown", skip);
+    window.addEventListener("pointerdown", skip);
+    return () => {
+      window.removeEventListener("keydown", skip);
+      window.removeEventListener("pointerdown", skip);
+    };
+  }, [skipped, stage]);
+  useEffect(() => {
+    if (!booted || stage === "ready" || skipped) {
       return;
     }
     const [delay, next]: [number, AfterBoot] = reducedMotion
@@ -80,8 +94,11 @@ export function useBootPhase(booted: boolean): BootPhase {
     const timer = window.setTimeout(() => setStage(next), delay);
     return () => window.clearTimeout(timer);
   }, [booted, stage, reducedMotion]);
-  if (!booted || stage === "hold") {
+  if (!booted) {
     return "splash";
   }
-  return stage;
+  if (skipped) {
+    return "ready";
+  }
+  return stage === "hold" ? "splash" : stage;
 }
