@@ -20,23 +20,23 @@ It has to work for three kinds of visitors:
 
 The scene is lit in teal-green; the CRT terminal keeps its classic phosphor green. Red and pink are the only other hues and appear as small accents.
 
-| Token                  | Value     | Use                                                     |
-| ---------------------- | --------- | ------------------------------------------------------- |
-| `--color-void`         | `#020403` | page background, darkest scene areas                    |
-| `--color-haze`         | `#06231c` | fog and haze colour                                     |
-| `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                       |
-| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at 82 % opacity)     |
-| `--color-line`         | `#1d5a2c` | panel borders, chips, grid                              |
-| `--color-phosphor`     | `#33ff66` | terminal text, prompt, "online" LEDs, links, focus ring |
-| `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                       |
-| `--color-text`         | `#b8f5c8` | long-form text in project screens                       |
-| `--color-neon`         | `#2ef2c0` | scene neon strips, glass floor glow, sign               |
-| `--color-ceiling`      | `#c8ffe9` | ceiling light panels (the brightest light in the room)  |
-| `--color-amber`        | `#ffb000` | activity LEDs, warnings, the fork badge                 |
-| `--color-alert`        | `#ff3b3b` | errors, "command not found", red accent lights          |
-| `--color-pink`         | `#ff3d8b` | rare accent lights and sign details in the scene        |
+| Token                  | Value     | Use                                                                          |
+| ---------------------- | --------- | ---------------------------------------------------------------------------- |
+| `--color-void`         | `#020403` | page background, darkest scene areas                                         |
+| `--color-haze`         | `#06231c` | fog and haze colour                                                          |
+| `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                                            |
+| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at least 92 % opacity plus backdrop blur) |
+| `--color-line`         | `#1d5a2c` | panel borders, chips, grid                                                   |
+| `--color-phosphor`     | `#33ff66` | terminal text, prompt, "online" LEDs, links, focus ring                      |
+| `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                                            |
+| `--color-text`         | `#b8f5c8` | long-form text in project screens                                            |
+| `--color-neon`         | `#2ef2c0` | scene neon strips, glass floor glow, sign                                    |
+| `--color-ceiling`      | `#c8ffe9` | ceiling light panels (the brightest light in the room)                       |
+| `--color-amber`        | `#ffb000` | activity LEDs, warnings, the fork badge                                      |
+| `--color-alert`        | `#ff3b3b` | errors, "command not found", red accent lights                               |
+| `--color-pink`         | `#ff3d8b` | rare accent lights and sign details in the scene                             |
 
-Contrast: phosphor, phosphor-dim and text on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
+Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. HUD panels over the scene are at least 92 % opaque with a backdrop blur, and their text has to keep AA against the blended background, so contrast is checked on screenshots over the brightest scene areas (ceiling panels, neon), not only against the solid token. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
 
 ### Typography
 
