@@ -1,40 +1,37 @@
 import { MeshReflectorMaterial } from "@react-three/drei";
 import { useEffect, useMemo } from "react";
 import { ROOM, evenlySpaced } from "../layout";
-import { glassFloorTexture, tileRoughnessTexture } from "./textures";
+import { glassFloorTexture } from "./textures";
+import { usePbr } from "./usePbr";
 import { InstancedBoxes, type Point3 } from "./InstancedBoxes";
 import { glow, palette } from "./palette";
 
-const TILE = 1.2;
+const TILE = 2.4;
 const WIDTH = ROOM.right - ROOM.left;
 const DEPTH = ROOM.front - ROOM.back;
 const CENTER_Z = (ROOM.front + ROOM.back) / 2;
 
-/** Glossy tiled floor with real reflections. */
+/** Polished dark stone tiles with real reflections. */
 function Tiles() {
-  const roughness = useMemo(() => {
-    const texture = tileRoughnessTexture();
-    texture.repeat.set(WIDTH / (TILE * 4), DEPTH / (TILE * 4));
-    return texture;
-  }, []);
-  useEffect(() => () => roughness.dispose(), [roughness]);
+  const maps = usePbr("floor", WIDTH / TILE, DEPTH / TILE);
   return (
     <mesh rotation-x={-Math.PI / 2} position={[0, ROOM.floor, CENTER_Z]}>
       <planeGeometry args={[WIDTH, DEPTH]} />
       <MeshReflectorMaterial
-        resolution={512}
-        blur={[220, 80]}
-        mixBlur={0.8}
-        mixStrength={7}
-        mixContrast={1.1}
-        roughness={0.35}
-        roughnessMap={roughness}
-        metalness={0.5}
+        {...maps}
+        resolution={1024}
+        blur={[260, 90]}
+        mixBlur={0.9}
+        mixStrength={11}
+        mixContrast={1.15}
+        roughness={0.9}
+        metalness={0.15}
+        normalScale={[0.6, 0.6]}
         depthScale={0.8}
         minDepthThreshold={0.3}
         maxDepthThreshold={1.2}
-        color={palette.tile}
-        mirror={0.75}
+        color="#26302d"
+        mirror={0.8}
       />
     </mesh>
   );
@@ -42,6 +39,8 @@ function Tiles() {
 
 /** Metal grating strips along both sides of the aisle. */
 function Gratings() {
+  const grating = usePbr("grating", 1, 0.2);
+  const length = ROOM.front - ROOM.back - 2;
   const slats = useMemo<Point3[]>(
     () =>
       [-2.6, 2.6].flatMap((x) =>
@@ -54,13 +53,37 @@ function Gratings() {
     [],
   );
   return (
-    <InstancedBoxes positions={slats} size={[0.5, 0.02, 0.08]}>
-      <meshStandardMaterial
-        color={palette.darkMetal}
-        metalness={0.8}
-        roughness={0.4}
-      />
-    </InstancedBoxes>
+    <group>
+      {[-2.6, 2.6].map((x) => (
+        <mesh key={x} position={[x, ROOM.floor + 0.004, CENTER_Z]}>
+          <boxGeometry args={[0.62, 0.008, length]} />
+          <meshStandardMaterial
+            color="#030605"
+            metalness={0.6}
+            roughness={0.8}
+          />
+        </mesh>
+      ))}
+      {[-2.92, -2.28, 2.28, 2.92].map((x) => (
+        <mesh key={x} position={[x, ROOM.floor + 0.014, CENTER_Z]}>
+          <boxGeometry args={[0.04, 0.028, length]} />
+          <meshStandardMaterial
+            {...grating}
+            color="#7d8a85"
+            metalness={1}
+            roughness={1}
+          />
+        </mesh>
+      ))}
+      <InstancedBoxes positions={slats} size={[0.5, 0.02, 0.08]}>
+        <meshStandardMaterial
+          {...grating}
+          color="#7d8a85"
+          metalness={1}
+          roughness={1}
+        />
+      </InstancedBoxes>
+    </group>
   );
 }
 

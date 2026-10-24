@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { ROOM, evenlySpaced } from "../layout";
 import { InstancedBoxes, type Point3 } from "./InstancedBoxes";
 import { glow, palette } from "./palette";
+import { usePbr } from "./usePbr";
 
 const HEIGHT = ROOM.ceiling - ROOM.floor;
 const MID_Y = (ROOM.ceiling + ROOM.floor) / 2;
@@ -11,6 +12,8 @@ const PILLAR_ZS = evenlySpaced(ROOM.back + 2, 6, 5);
 
 /** Side and back walls with panel seams. */
 function Shell() {
+  const side = usePbr("wall", DEPTH / 3, HEIGHT / 3);
+  const back = usePbr("wall", (ROOM.right - ROOM.left) / 3, HEIGHT / 3);
   const seams = useMemo<Point3[]>(
     () => [
       ...[ROOM.left + 0.02, ROOM.right - 0.02].flatMap((x) =>
@@ -33,18 +36,20 @@ function Shell() {
         >
           <planeGeometry args={[DEPTH, HEIGHT]} />
           <meshStandardMaterial
-            color={palette.metal}
-            metalness={0.4}
-            roughness={0.7}
+            {...side}
+            color="#55625e"
+            metalness={1}
+            roughness={1}
           />
         </mesh>
       ))}
       <mesh position={[0, MID_Y, ROOM.back]}>
         <planeGeometry args={[ROOM.right - ROOM.left, HEIGHT]} />
         <meshStandardMaterial
-          color={palette.metal}
-          metalness={0.4}
-          roughness={0.7}
+          {...back}
+          color="#55625e"
+          metalness={1}
+          roughness={1}
         />
       </mesh>
       <InstancedBoxes positions={seams} size={[0.03, HEIGHT, 0.03]}>
@@ -60,6 +65,7 @@ function Shell() {
 
 /** Pillars along both walls with vertical neon strips. */
 function Pillars() {
+  const plate = usePbr("wall", 0.5, 2.5);
   const pillars = useMemo<Point3[]>(
     () =>
       [ROOM.left + 0.35, ROOM.right - 0.35].flatMap((x) =>
@@ -76,9 +82,10 @@ function Pillars() {
     <group>
       <InstancedBoxes positions={pillars} size={[0.7, HEIGHT, 0.7]}>
         <meshStandardMaterial
-          color={palette.metal}
-          metalness={0.7}
-          roughness={0.35}
+          {...plate}
+          color="#6b7a75"
+          metalness={1}
+          roughness={1}
         />
       </InstancedBoxes>
       <InstancedBoxes positions={strips} size={[0.02, HEIGHT - 0.6, 0.06]}>

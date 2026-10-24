@@ -18,33 +18,6 @@ function canvasTexture(
   return texture;
 }
 
-/**
- * Roughness map of 4 × 4 floor tiles: polished tiles with slightly varying
- * roughness and rough grout lines, so reflections break up like on real tiles.
- */
-export function tileRoughnessTexture(): CanvasTexture {
-  return canvasTexture(512, (context, size) => {
-    const tile = size / 4;
-    for (let row = 0; row < 4; row++) {
-      for (let col = 0; col < 4; col++) {
-        const shade = 40 + ((row * 7 + col * 13) % 5) * 12;
-        context.fillStyle = `rgb(${shade},${shade},${shade})`;
-        context.fillRect(col * tile, row * tile, tile, tile);
-      }
-    }
-    context.strokeStyle = "rgb(230,230,230)";
-    context.lineWidth = 6;
-    for (let i = 0; i <= 4; i++) {
-      context.beginPath();
-      context.moveTo(i * tile, 0);
-      context.lineTo(i * tile, size);
-      context.moveTo(0, i * tile);
-      context.lineTo(size, i * tile);
-      context.stroke();
-    }
-  });
-}
-
 /** Glowing pattern under the glass floor panels: a grid with circuit traces. */
 export function glassFloorTexture(): CanvasTexture {
   const texture = canvasTexture(256, (context, size) => {
