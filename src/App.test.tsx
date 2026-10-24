@@ -373,6 +373,30 @@ describe("3D monitor", () => {
     expect(window.style.height).toBe("300px");
   });
 
+  it("drops the mapping when the scene goes away while the screen is mapped", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    act(() =>
+      sceneMock.place?.({
+        quad: [
+          [0, 0],
+          [400, 0],
+          [400, 300],
+          [0, 300],
+        ],
+        width: 400,
+        height: 300,
+      }),
+    );
+    viewport(390);
+    act(() => {
+      window.dispatchEvent(new Event("resize"));
+    });
+    expect(terminalWindow().style.transform).toBe("");
+    expect(terminalWindow().style.position).toBe("");
+  });
+
   it("returns the screen to the page layout when the 3D screen is gone", async () => {
     viewport(1440);
     render(<App />);

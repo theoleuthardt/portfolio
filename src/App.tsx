@@ -75,6 +75,12 @@ const App = () => {
   }, [sceneLoading]);
 
   useEffect(() => {
+    if (monitorPose === "off") {
+      windowElement.current?.removeAttribute("style");
+    }
+  }, [monitorPose]);
+
+  useEffect(() => {
     if (!waitingForSeat) {
       return;
     }
