@@ -28,7 +28,7 @@ export const Projects = ({
         p-4 rounded-xl hover:bg-opacity-30 transform transition-transform duration-200
         hover:scale-105 cursor-pointer"
             >
-              <img src={project.icon} alt="backlogIcon" className="w-10 h-10" />
+              <img src={project.icon} alt="" className="w-10 h-10" />
               <div className="text-white text-[18px] font-bold">
                 {project.title}
               </div>

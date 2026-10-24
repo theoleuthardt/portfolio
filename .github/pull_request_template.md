@@ -8,7 +8,7 @@ Closes #
 
 ## Tests
 
-- [ ] Tests written first, all passing (`npm test`, from #24 on)
+- [ ] Tests written first, all passing (`npm test`)
 - [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm run build`
 - [ ] UI checked in the running app (desktop, mobile width, reduced motion), if applicable
 

@@ -16,13 +16,12 @@ Follow these steps in order. Details and rules: `CLAUDE.md` (Workflow, Definitio
    git checkout -b <type>/<n>-<short-name>
    ```
 3. **Board → In Progress** (`47fc9ee4`), commands in `CLAUDE.md` → Project board.
-4. **Test first:** write the failing Vitest test, run `npm test` and see it fail for the right reason, then implement until it passes. Until Vitest exists (#24), skip this step and say so in the PR.
+4. **Test first:** write the failing Vitest test, run `npm test` and see it fail for the right reason, then implement until it passes.
 5. **New dependency?** `npm audit` first; high/critical CVEs or major updates → ask Theo.
 6. **Local checks**, all green:
    ```bash
    npm run lint && npm run typecheck && npm run format:check && npm test && npm run build
    ```
-   Before #24 is merged there is no `npm test`; run the other four.
    For UI changes, run `npm run dev` and check the feature in the browser.
 7. **Docs:** update `docs/` (and `CLAUDE.md`) where the change affects them.
 8. **Commit** (Conventional Commits, issue number in the subject) and push:
