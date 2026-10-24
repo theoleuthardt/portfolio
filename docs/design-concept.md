@@ -115,7 +115,7 @@ Full-screen scene: the rack stands on the right at a three-quarter angle, a serv
 
 ![Mockup of variant C: terminal HUD on the left, rack with the trust-issues module slid out, project screen on the right](design/mockup-variant-c.png)
 
-The mockup is a throwaway prototype (plain Three.js, procedural boxes, bloom, CSS CRT, system monospace font instead of VT323) and shows the **layout only**; the Night City look comes from the modeling work in section 2. It is not part of the code base.
+The mockup is a throwaway prototype (plain Three.js, procedural boxes, bloom, CSS CRT, system monospace font instead of VT323) and shows the **layout only**; the Night City look comes from the modeling work in section 2. Only this screenshot is kept in the repository as a reference; the prototype code is not part of the code base.
 
 ## 5. Interaction
 
@@ -156,14 +156,14 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 
 ## 6. Responsive and fallbacks
 
-| Situation                | Behaviour                                                                                                                |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
-| ≥ 1024 px                | variant layout as described                                                                                              |
-| 640–1023 px              | terminal bottom sheet (50 % height), rack above                                                                          |
-| < 640 px                 | **terminal only**, full-screen; the scene and its assets are not loaded at all. Project screens open inside the terminal |
-| `prefers-reduced-motion` | no boot animation, no orbit, cuts instead of flights, LEDs static                                                        |
-| no WebGL / low-end GPU   | terminal only, plus a static SVG rack illustration; same commands and content                                            |
-| JavaScript off           | `noscript` with the project list and links                                                                               |
+| Situation                                                                   | Behaviour                                                                                                                |
+| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| ≥ 1024 px                                                                   | variant layout as described                                                                                              |
+| 640–1023 px                                                                 | terminal bottom sheet (50 % height), rack above                                                                          |
+| phones: < 640 px wide, or a coarse pointer with < 500 px height (landscape) | **terminal only**, full-screen; the scene and its assets are not loaded at all. Project screens open inside the terminal |
+| `prefers-reduced-motion`                                                    | no boot animation, no orbit, cuts instead of flights, LEDs static                                                        |
+| no WebGL / low-end GPU                                                      | terminal only, plus a static SVG rack illustration; same commands and content                                            |
+| JavaScript off                                                              | `noscript` with the project list and links                                                                               |
 
 ## 7. Performance budget
 
@@ -188,7 +188,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 11. Post-processing and performance: selective bloom, vignette, idle animation, `frameloop`, DPR, visibility, asset budget
 12. Easter eggs: `neofetch`, `play dino`, `sudo`
 13. Quality: performance and bundle budget check in CI, a11y pass (keyboard, screen reader, contrast), `index.html` meta / Open Graph, `noscript`
-14. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono (#30)
+14. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono with their OFL licence texts shipped next to the font files (#30)
 
 This plan is the basis for the issues under #18 and #19; each issue may refine its scope, and new dependencies are audited before they are added.
 
