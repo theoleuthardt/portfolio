@@ -10,7 +10,7 @@ Theo Leuthardt's personal developer portfolio, served at <https://theocloud.dev>
 
 - **Vite + React + TypeScript** (single-page app, static build in `dist/`)
 - **Three.js** via `@react-three/fiber` and `@react-three/drei` (from epic #18)
-- **Tailwind CSS 4** for the 2D overlay, via `@tailwindcss/vite`; design tokens (colours, fonts, text sizes from `docs/design-concept.md`) live CSS-first in `@theme` in `src/index.css`; use them (`text-phosphor`, `bg-glass`, `text-terminal`, `text-hud`) instead of raw values. `src/design-tokens.test.ts` keeps the colours at WCAG AA. The only font is Share Tech Mono, self-hosted via Fontsource (latin subset, imported in `src/main.tsx`) and set on `html`; its OFL licence is served from `public/licenses/`. Hand-written global CSS goes into `@layer base` (or `components`): unlayered rules beat every Tailwind utility, because v4 uses native cascade layers
+- **Tailwind CSS 4** for the 2D overlay, via `@tailwindcss/vite`; design tokens (colours, fonts, text sizes from `docs/design-concept.md`) live CSS-first in `@theme` in `src/index.css`; use them (`text-phosphor`, `bg-glass`, `text-terminal`, `text-hud`) instead of raw values. `src/design-tokens.test.ts` keeps the colours at WCAG AA. The only font is Share Tech Mono, self-hosted via Fontsource (latin subset, imported in `src/main.tsx`) and set on `html`. One exception: the ASCII boot logo (`.boot-logo`) uses the system monospace font, because the subset has no block or box-drawing glyphs and mixed fonts misalign the art; its OFL licence is served from `public/licenses/`. Hand-written global CSS goes into `@layer base` (or `components`): unlayered rules beat every Tailwind utility, because v4 uses native cascade layers
 - **Vitest** + Testing Library (jsdom) for tests; Node version pinned in `.nvmrc` (22)
 - **ESLint 10** (flat config in `eslint.config.js`, typescript-eslint, React Hooks and React Refresh rules) + **Prettier**
 - **GitHub Actions** for CI ([`docs/CI.md`](docs/CI.md)) and the GitHub Pages deployment after green CI ([`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md))
@@ -35,7 +35,7 @@ npm audit              # known vulnerabilities in the locked dependencies
 
 ## Documentation lives in `docs/`
 
-Everything that matters beyond a single file is documented as Markdown in [`docs/`](docs/README.md): architecture, design concept, audits, deployment, decisions. When a change touches architecture, workflow, dependencies policy or deployment, update the matching document **in the same PR**. New topics get a new file in `docs/` and a line in `docs/README.md`. This file only summarises and links. **All documentation is written in English**, as are code, identifiers, TSDoc and commit messages.
+Everything that matters beyond a single file is documented as Markdown in [`docs/`](docs/README.md): architecture, design concept, audits, deployment, decisions. When a change touches architecture, workflow, dependencies policy or deployment, update the matching document **in the same PR**. New topics get a new file in `docs/` and a line in `docs/README.md`. This file only summarises and links. **All documentation is written in English**, as are code, identifiers, TSDoc, commit messages, PR titles, PR descriptions, PR and issue comments and issue texts — no German/English mix on GitHub.
 
 ## Clean Code
 

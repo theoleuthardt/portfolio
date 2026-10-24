@@ -1,31 +1,9 @@
-import { AnimatedBackground } from "animated-backgrounds";
-import { Hero, Navbar, Projects } from "./components";
-import { useRef } from "react";
+import { Terminal } from "./ui/Terminal";
 
-const App = () => {
-  const projectsRef = useRef<HTMLDivElement>(null);
-  const careerpathRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <div className="relative z-0 bg-transparent">
-      <AnimatedBackground animationName="auroraBorealis" />
-      <div className="bg-hero-pattern bg-cover bg-no-repeat bg-center">
-        <Navbar projectsRef={projectsRef} careerpathRef={careerpathRef} />
-        <div
-          className="flex justify-center items-center justify-items-center 
-                       mt-72"
-        >
-          <Hero projectsRef={projectsRef} />
-        </div>
-        <div
-          className="flex justify-center items-center mt-200
-            lg:mb-64 md:mb-56 sm:mb-52 mb-48"
-        >
-          <Projects projectsRef={projectsRef} />
-        </div>
-      </div>
-    </div>
-  );
-};
+const App = () => (
+  <main className="h-dvh bg-void p-2 sm:p-6">
+    <Terminal />
+  </main>
+);
 
 export default App;

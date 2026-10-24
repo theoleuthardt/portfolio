@@ -14,7 +14,6 @@
   --color-amber: #ffb000;
   --color-alert: #ff3b3b;
   --color-pink: #ff3d8b;
-  --color-secondary: #aaa6c3;
 
   --font-terminal: "Share Tech Mono", ui-monospace, monospace;
 
@@ -49,29 +48,218 @@
 }
 
 @layer components {
-  .rainbowText:hover {
-    background: repeating-linear-gradient(
-      -45deg,
-      red 0%,
-      yellow 7.14%,
-      rgb(0, 255, 0) 14.28%,
-      rgb(0, 255, 255) 21.4%,
-      cyan 28.56%,
-      blue 35.7%,
-      magenta 42.84%,
-      red 50%
-    );
-    background-size: 600vw 600vw;
-    -webkit-text-fill-color: transparent;
-    -webkit-background-clip: text;
-    animation: slide 10s linear infinite forwards;
+  .crt {
+    position: relative;
+    height: 100%;
+    padding: 0.75rem;
+    border-radius: 1.375rem;
+    background: linear-gradient(145deg, #1d211f, var(--color-bezel));
+    box-shadow:
+      0 0 0 2px #050605,
+      0 30px 80px rgb(0 0 0 / 0.8),
+      inset 0 0 0 1px #2a2f2b;
   }
-  @keyframes slide {
-    0% {
-      background-position-x: 0;
+
+  .crt-glass {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 1rem / 1.375rem;
+    background: radial-gradient(
+      ellipse at 50% 45%,
+      #062010 0%,
+      var(--color-glass) 70%,
+      #000 100%
+    );
+    box-shadow:
+      inset 0 0 70px rgb(0 0 0 / 0.95),
+      inset 0 0 18px color-mix(in srgb, var(--color-phosphor) 25%, transparent);
+  }
+
+  .crt-glass::before,
+  .crt-glass::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .crt-glass::before {
+    background: repeating-linear-gradient(
+      0deg,
+      rgb(0 0 0 / 0.35) 0 1px,
+      transparent 1px 3px
+    );
+  }
+
+  .crt-glass::after {
+    background:
+      radial-gradient(
+        ellipse at 30% 12%,
+        rgb(255 255 255 / 0.06),
+        transparent 45%
+      ),
+      radial-gradient(ellipse at center, transparent 60%, rgb(0 0 0 / 0.65));
+  }
+
+  .crt-roll {
+    position: absolute;
+    inset-inline: 0;
+    top: -20%;
+    z-index: 2;
+    height: 20%;
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      transparent,
+      color-mix(in srgb, var(--color-phosphor) 6%, transparent),
+      transparent
+    );
+  }
+
+  .crt-text {
+    position: relative;
+    z-index: 1;
+    padding: 1.25rem 1.25rem 2rem;
+    font-size: var(--text-terminal-sm);
+    line-height: var(--text-terminal-sm--line-height);
+    text-shadow:
+      0 0 2px color-mix(in srgb, currentColor 90%, transparent),
+      0 0 9px color-mix(in srgb, currentColor 45%, transparent);
+    overflow-wrap: anywhere;
+  }
+
+  .crt-text a {
+    color: var(--color-phosphor);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .crt-chip {
+    border: 1px solid var(--color-line);
+    padding: 0 0.5rem;
+    color: var(--color-phosphor);
+    cursor: pointer;
+  }
+
+  .crt-chip:hover,
+  .crt-chip:focus-visible {
+    background: var(--color-phosphor);
+    color: var(--color-glass);
+    text-shadow: none;
+  }
+
+  .crt-row {
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .crt-row:hover .text-phosphor,
+  .crt-row:focus-visible .text-phosphor {
+    background: var(--color-phosphor);
+    color: var(--color-glass);
+    text-shadow: none;
+  }
+
+  .crt-screen {
+    border: 1px solid var(--color-line);
+    padding: 0.75rem 1rem;
+    background: color-mix(in srgb, var(--color-phosphor) 4%, transparent);
+  }
+
+  .crt-tag {
+    border: 1px solid var(--color-line);
+    padding: 0 0.4rem;
+    font-size: var(--text-hud);
+    color: var(--color-text);
+  }
+
+  .crt-input {
+    min-width: 0;
+    background: transparent;
+    color: var(--color-phosphor);
+    caret-color: var(--color-phosphor);
+    outline: none;
+  }
+
+  .crt-input:focus-visible {
+    outline: none;
+    box-shadow: inset 0 -1px 0 var(--color-phosphor);
+  }
+
+  .boot-logo pre {
+    font-family: ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
+    font-size: 0.5rem;
+    line-height: 1.1;
+    color: var(--color-phosphor);
+    text-shadow:
+      0 0 3px var(--color-phosphor),
+      0 0 14px color-mix(in srgb, var(--color-phosphor) 50%, transparent);
+  }
+
+  .crt-label {
+    position: absolute;
+    bottom: -0.1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.5625rem;
+    letter-spacing: 0.3em;
+    color: #4b524d;
+  }
+
+  .crt-led {
+    position: absolute;
+    right: 1.6rem;
+    bottom: 0.25rem;
+    width: 0.375rem;
+    height: 0.375rem;
+    border-radius: 9999px;
+    background: var(--color-phosphor);
+    box-shadow: 0 0 8px var(--color-phosphor);
+  }
+
+  @media (min-width: 640px) {
+    .boot-logo pre {
+      font-size: 0.625rem;
     }
+
+    .crt-text {
+      padding: 1.75rem 2rem 2.5rem;
+      font-size: var(--text-terminal);
+      line-height: var(--text-terminal--line-height);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .crt-glass {
+      animation: crt-flicker 7s steps(1) infinite;
+    }
+
+    .crt-roll {
+      animation: crt-roll 9s linear infinite;
+    }
+  }
+
+  @keyframes crt-flicker {
+    0%,
     100% {
-      background-position-x: 600vw;
+      filter: brightness(1);
+    }
+    48% {
+      filter: brightness(0.96);
+    }
+    50% {
+      filter: brightness(1.02);
+    }
+  }
+
+  @keyframes crt-roll {
+    from {
+      top: -20%;
+    }
+    to {
+      top: 120%;
     }
   }
 }

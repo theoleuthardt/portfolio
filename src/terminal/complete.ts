@@ -20,9 +20,9 @@ function completeWord(
   candidates: readonly string[],
   suffix: string,
 ): Completion {
-  const options = candidates.filter((candidate) =>
-    candidate.startsWith(partial.toLowerCase()),
-  );
+  const options = candidates
+    .filter((candidate) => candidate.startsWith(partial.toLowerCase()))
+    .sort();
   if (options.length === 0) {
     return { input: before + partial, options };
   }
@@ -36,6 +36,7 @@ function completeWord(
  * Tab completion: completes the command name in the first word, and project
  * ids in the argument of `open`. A unique command gets a trailing space so
  * the argument can follow; anything else extends to the common prefix.
+ * Options are sorted alphabetically, like in a shell.
  */
 export function complete(
   input: string,

@@ -39,7 +39,9 @@ describe("complete", () => {
   });
 
   it("lists every project after open with an empty argument", () => {
-    expect(complete("open ", commands, projectIds).options).toEqual(projectIds);
+    expect(complete("open ", commands, projectIds).options).toEqual(
+      [...projectIds].sort(),
+    );
   });
 
   it("leaves input unchanged when nothing matches", () => {
@@ -54,5 +56,12 @@ describe("complete", () => {
       input: "help tru",
       options: [],
     });
+  });
+
+  it("lists ambiguous options alphabetically like a shell", () => {
+    expect(complete("c", ["close", "clear"], projectIds).options).toEqual([
+      "clear",
+      "close",
+    ]);
   });
 });
