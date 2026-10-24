@@ -12,8 +12,8 @@ Theo Leuthardt's personal developer portfolio, served at <https://theocloud.dev>
 - **Three.js** via `@react-three/fiber` and `@react-three/drei` (from epic #18)
 - **Tailwind CSS** for the 2D overlay (moving to Tailwind 4 with design tokens in #30)
 - **Vitest** + Testing Library (jsdom) for tests; Node version pinned in `.nvmrc` (22)
-- **ESLint** + **Prettier**
-- **GitHub Actions** for CI and the GitHub Pages deployment
+- **ESLint 10** (flat config in `eslint.config.js`, typescript-eslint, React Hooks and React Refresh rules) + **Prettier**
+- **GitHub Actions** for CI and the GitHub Pages deployment ([`docs/CI.md`](docs/CI.md))
 
 Default branch: `master`.
 
@@ -88,7 +88,7 @@ Every change goes through an issue and a PR, no matter how small.
 5. **Commit** with [Conventional Commits](https://www.conventionalcommits.org/) referencing the issue: `feat: terminal command parser (#29)`.
 6. **Push and open a PR** with `Closes #<n>` and a clear description (template in `.github/pull_request_template.md`).
 7. **Review** with the local review script (see the `pr-review` skill): `git fetch origin master && review origin/master`. It uses CodeRabbit and falls back to GLM via Ollama when CodeRabbit is unavailable. Verify every finding against the code, fix it or reject it with a reason in a PR comment, then review again.
-8. **Merge** (squash) only when `gh pr view <n> --json mergeable` is `MERGEABLE` and `gh pr checks <n>` is green. Until the PR CI from #25 exists, a PR may be merged once it is mergeable and the review is done.
+8. **Merge** (squash) only when `gh pr view <n> --json mergeable` is `MERGEABLE` and `gh pr checks <n>` is green.
 9. **Clean up**: delete the branch, move the card to _Done_, summarise the issue in 2-3 sentences.
 
 Rules: no force pushes, no direct commits to `master`, never disable or skip a failing check (fix the cause), ask when something is unclear or destructive. The content audit (#20) is closed only by Theo.

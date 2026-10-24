@@ -21,7 +21,7 @@ description: Review an open PR of this repo with the local review script (CodeRa
    gh pr view <n> --json mergeable,mergeStateStatus   # mergeable: MERGEABLE, mergeStateStatus: CLEAN
    gh pr checks <n>                                   # all green
    ```
-   Until the PR CI from #25 exists there are no checks; then a mergeable, reviewed PR may be merged. A red check is fixed at its cause, never skipped or disabled. PR #31 / issue #20 is closed only by Theo.
+   The CI workflow (`.github/workflows/ci.yml`) runs on every PR; wait for it with `gh pr checks <n> --watch`. A red check is fixed at its cause, never skipped or disabled. PR #31 / issue #20 is closed only by Theo.
 5. **Merge and clean up:**
    ```bash
    gh pr merge <n> --squash --delete-branch
