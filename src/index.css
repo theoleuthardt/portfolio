@@ -192,7 +192,7 @@
   @media (prefers-reduced-motion: no-preference) {
     [data-boot-phase="ready"]
       [role="log"]
-      > div:first-child
+      > div:has(> [data-boot-entry])
       > :not(:first-child),
     [data-boot-phase="ready"] .crt-prompt {
       animation: boot-reveal 0.35s ease-out both;

@@ -122,7 +122,9 @@ export function Terminal({
     }
     if (phase === "splash") {
       splashTop.current = block.getBoundingClientRect().top;
-    } else if (phase === "glide" && splashTop.current !== null) {
+      return;
+    }
+    if (phase === "glide" && splashTop.current !== null) {
       const delta = splashTop.current - block.getBoundingClientRect().top;
       splashTop.current = null;
       block.animate?.(
@@ -130,7 +132,7 @@ export function Terminal({
         { duration: BOOT_GLIDE_MS, easing: "cubic-bezier(0.2, 0.8, 0.2, 1)" },
       );
     }
-  }, [phase]);
+  });
 
   useEffect(() => {
     if (phase !== "splash") {
@@ -314,7 +316,7 @@ export function Terminal({
             return (
               <div key={entry.id} className="mb-2">
                 {entry.command === undefined ? (
-                  <div ref={splash}>
+                  <div ref={splash} data-boot-entry>
                     <BootScreen reached={bootReached} />
                   </div>
                 ) : (

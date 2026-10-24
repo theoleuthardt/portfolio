@@ -93,7 +93,7 @@ export function useBootPhase(booted: boolean): BootPhase {
         : [BOOT_GLIDE_MS, "ready"];
     const timer = window.setTimeout(() => setStage(next), delay);
     return () => window.clearTimeout(timer);
-  }, [booted, stage, reducedMotion]);
+  }, [booted, stage, reducedMotion, skipped]);
   if (!booted) {
     return "splash";
   }

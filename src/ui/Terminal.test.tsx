@@ -66,7 +66,8 @@ describe("Terminal", () => {
     act(() => {
       fireEvent.pointerDown(window);
     });
-    expect(phase()).toBe("ready");
+    expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
+    expect(input()).toHaveFocus();
   });
 
   it("with reduced motion shows the splash briefly, then the prompt without gliding", () => {
