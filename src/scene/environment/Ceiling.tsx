@@ -3,6 +3,7 @@ import { CatmullRomCurve3, Vector3 } from "three";
 import { ROOM, centeredGrid, evenlySpaced } from "../layout";
 import { InstancedBoxes, type Point3 } from "./InstancedBoxes";
 import { glow, palette } from "./palette";
+import { usePbr } from "./usePbr";
 
 const SOFFIT_Y = ROOM.ceiling - 0.45;
 const SOFFIT = { halfWidth: 4.2, front: 5, back: -14, radius: 1.6 };
@@ -75,7 +76,7 @@ function LightPanels() {
     <group>
       <InstancedBoxes positions={panels} size={[1.6, 0.02, 1.9]}>
         <meshBasicMaterial
-          color={glow(palette.ceiling.clone().lerp(palette.neon, 0.35), 0.95)}
+          color={glow(palette.ceiling.clone().lerp(palette.neon, 0.5), 1.8)}
           toneMapped={false}
         />
       </InstancedBoxes>
@@ -92,6 +93,7 @@ function LightPanels() {
 
 /** Ceiling slab, soffit and light panels. */
 export function Ceiling() {
+  const concrete = usePbr("concrete", 5, 10);
   return (
     <group>
       <mesh
@@ -102,9 +104,10 @@ export function Ceiling() {
           args={[ROOM.right - ROOM.left, ROOM.front - ROOM.back]}
         />
         <meshStandardMaterial
-          color={palette.darkMetal}
-          metalness={0.3}
-          roughness={0.8}
+          {...concrete}
+          color="#3a4441"
+          metalness={0}
+          roughness={1}
         />
       </mesh>
       <Soffit />

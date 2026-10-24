@@ -16,7 +16,10 @@ src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
                usePrefersReducedMotion, SceneLayer (phone / no WebGL / 3D),
                RackFallback (SVG), SceneErrorBoundary, ProjectPanel, useViewport
 src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
-               Scene (lazy chunk: Canvas, fog, floor, camera rig)
+               Scene (lazy chunk: Canvas, reflections, light beams, camera rig),
+               PostEffects (second lazy chunk: AO, bloom, grain, vignette),
+               environment/ (room kit, PBR surfaces via usePbr, palette)
+public/textures/ CC0 PBR maps, see ASSETS.md
 src/index.css  design tokens (@theme), base styles, CRT components
 ```
 
