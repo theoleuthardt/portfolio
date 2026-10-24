@@ -166,6 +166,15 @@ describe("Terminal", () => {
     expect(within(log()).queryByRole("button", { name: /^flashi/ })).toBeNull();
   });
 
+  it("leaves arrow keys and Tab to the IME while composing", () => {
+    render(<Terminal />);
+    type("ls");
+    fireEvent.change(input(), { target: { value: "he" } });
+    fireEvent.keyDown(input(), { key: "ArrowUp", isComposing: true });
+    fireEvent.keyDown(input(), { key: "Tab", isComposing: true });
+    expect(input()).toHaveValue("he");
+  });
+
   it("hides completion options once the input changes", () => {
     render(<Terminal />);
     fireEvent.change(input(), { target: { value: "cl" } });

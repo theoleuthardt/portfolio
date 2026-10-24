@@ -52,7 +52,10 @@ export function Terminal() {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+    if (event.key === "Enter") {
       runCommand(input);
     } else if (event.key === "Tab" && !event.shiftKey && input.trim() !== "") {
       const completion = complete(input, commandNames, projectIds);
