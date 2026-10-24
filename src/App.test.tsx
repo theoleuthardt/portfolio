@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App, { SCENE_TIMEOUT_MS } from "./App";
+import { BOOT_REDUCED_HOLD_MS } from "./ui/useBootSequence";
 
 const sceneMock = vi.hoisted(() => ({ hangs: false }));
 
@@ -70,7 +71,9 @@ describe("App", () => {
   it("shows an opened project as a side panel on wide screens", async () => {
     viewport(1440);
     render(<App />);
-    expect(await screen.findByText(/Welcome, guest/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
     type("open trust-issues");
     const panel = screen.getByRole("complementary", { name: "project" });
     expect(
@@ -84,7 +87,9 @@ describe("App", () => {
   it("keeps project screens inside the terminal below 1024 px", async () => {
     viewport(800);
     render(<App />);
-    expect(await screen.findByText(/Welcome, guest/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
     type("open trust-issues");
     expect(screen.queryByRole("complementary", { name: "project" })).toBeNull();
     expect(
@@ -94,16 +99,20 @@ describe("App", () => {
     ).toBeInTheDocument();
   });
 
-  it("does not hold the boot on phones, where no scene loads", () => {
+  it("does not hold the boot on phones, where no scene loads", async () => {
     viewport(390);
     render(<App />);
-    expect(screen.getByText(/Welcome, guest/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
   });
 
   it("closes the panel with Escape while focus is inside it", async () => {
     viewport(1440);
     render(<App />);
-    expect(await screen.findByText(/Welcome, guest/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
     type("open flashi");
     const link = within(
       screen.getByRole("complementary", { name: "project" }),
@@ -122,14 +131,19 @@ describe("App", () => {
     await act(async () => {
       vi.advanceTimersByTime(SCENE_TIMEOUT_MS);
     });
+    await act(async () => {
+      vi.advanceTimersByTime(BOOT_REDUCED_HOLD_MS);
+    });
     expect(screen.getByText(/Welcome, guest/)).toBeInTheDocument();
   });
 
-  it("shows no scene on touch tablets", () => {
+  it("shows no scene on touch tablets", async () => {
     viewport(820, true);
     render(<App />);
     expect(screen.queryByTestId("scene")).toBeNull();
-    expect(screen.getByText(/Welcome, guest/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
   });
 
   it("shows the scene on wide desktop screens", async () => {

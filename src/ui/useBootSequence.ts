@@ -2,48 +2,31 @@ import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 /** Delay between two boot steps. */
-export const BOOT_STEP_MS = 420;
+export const BOOT_STEP_MS = 600;
 
-/** Session storage key that marks the boot sequence as seen. */
-export const BOOTED_KEY = "theocloud.booted";
+/** How long the full progress bar stays on the splash before it glides up. */
+export const BOOT_HOLD_MS = 800;
 
-function alreadyBooted(): boolean {
-  try {
-    return sessionStorage.getItem(BOOTED_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+/** How long the boot splash takes to glide up to the top. */
+export const BOOT_GLIDE_MS = 900;
 
-function markBooted(): void {
-  try {
-    sessionStorage.setItem(BOOTED_KEY, "1");
-  } catch {
-    return;
-  }
-}
+/** How long the static splash stays visible with reduced motion. */
+export const BOOT_REDUCED_HOLD_MS = 1200;
 
 /**
- * Number of boot steps reached. Counts up one step at a time on the first
- * visit of a session; jumps as far as allowed at once with reduced motion,
- * for returning visitors and after any key press or pointer press. When the
- * browser blocks session storage, every visit counts as the first one.
- * While `hold` is set the count stops one step before the end for everyone,
- * including reduced motion and returning visitors, so the last step reflects
- * the real loading of the 3D scene. Once complete, the boot stays complete.
+ * Number of boot steps reached. Counts up one step at a time, on every visit;
+ * jumps as far as allowed at once with reduced motion and after any key press
+ * or pointer press. While `hold` is set the count stops one step before the
+ * end for everyone, so the last step reflects the real loading of the 3D
+ * scene. Once complete, the boot stays complete.
  */
 export function useBootSequence(total: number, hold = false): number {
   const reducedMotion = usePrefersReducedMotion();
-  const [visible, setVisible] = useState(() =>
-    reducedMotion || alreadyBooted() ? total : 1,
-  );
+  const [visible, setVisible] = useState(() => (reducedMotion ? total : 1));
   const done = visible >= total;
 
   useEffect(() => {
     if (done) {
-      if (!hold) {
-        markBooted();
-      }
       return;
     }
     const skip = () => setVisible(total);
@@ -58,7 +41,7 @@ export function useBootSequence(total: number, hold = false): number {
       window.removeEventListener("keydown", skip);
       window.removeEventListener("pointerdown", skip);
     };
-  }, [done, hold, total]);
+  }, [done, total]);
 
   const reached = reducedMotion ? total : visible;
   const [finished, setFinished] = useState(false);
@@ -71,30 +54,34 @@ export function useBootSequence(total: number, hold = false): number {
   return hold ? Math.min(reached, total - 1) : reached;
 }
 
-/** How long the boot splash takes to glide up to the top. */
-export const BOOT_GLIDE_MS = 700;
-
 /** Where the boot is: centred splash, gliding up, or done with a prompt. */
 export type BootPhase = "splash" | "glide" | "ready";
 
+type AfterBoot = "hold" | "glide" | "ready";
+
 /**
- * Boot phase on top of {@link useBootSequence}: the splash shows until the
- * boot is complete, then glides up for {@link BOOT_GLIDE_MS}. Reduced motion
- * and returning visitors (already booted on the first render) skip straight
- * to `ready`.
+ * Boot phase on top of {@link useBootSequence}. The splash stays while
+ * booting and for {@link BOOT_HOLD_MS} with the full bar, then glides up for
+ * {@link BOOT_GLIDE_MS}. With reduced motion the static splash stays for
+ * {@link BOOT_REDUCED_HOLD_MS} and the prompt follows without a glide.
  */
 export function useBootPhase(booted: boolean): BootPhase {
   const reducedMotion = usePrefersReducedMotion();
-  const [glided, setGlided] = useState(() => booted || reducedMotion);
+  const [stage, setStage] = useState<AfterBoot>("hold");
   useEffect(() => {
-    if (!booted || glided) {
+    if (!booted || stage === "ready") {
       return;
     }
-    const timer = window.setTimeout(() => setGlided(true), BOOT_GLIDE_MS);
+    const [delay, next]: [number, AfterBoot] = reducedMotion
+      ? [BOOT_REDUCED_HOLD_MS, "ready"]
+      : stage === "hold"
+        ? [BOOT_HOLD_MS, "glide"]
+        : [BOOT_GLIDE_MS, "ready"];
+    const timer = window.setTimeout(() => setStage(next), delay);
     return () => window.clearTimeout(timer);
-  }, [booted, glided]);
-  if (!booted) {
+  }, [booted, stage, reducedMotion]);
+  if (!booted || stage === "hold") {
     return "splash";
   }
-  return glided || reducedMotion ? "ready" : "glide";
+  return stage;
 }

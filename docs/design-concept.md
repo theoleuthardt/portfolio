@@ -118,18 +118,19 @@ The mockup is a throwaway prototype (plain Three.js, procedural boxes, bloom, CS
 
 ## 5. Interaction
 
-### Boot sequence (about 2.5 s, skippable with any key or click)
+### Boot sequence (about 6 s on every visit, skippable with any key or click)
+
+Like a server coming up: while booting, the CRT shows only the THEOCLOUD logo, `TheoCloud OS v2.6 // rack-01` and a progress bar with changing status labels, centred on the screen (one step every 600 ms; on wide screens the last step waits for the 3D scene). The full bar stays for a moment, then the block glides to the top and the welcome line and the prompt appear below it:
 
 ```
-theocloud BIOS v2.6 — rack-01
-POST ............................ ok
-mounting /projects .............. 7 modules
-starting services ............... ok
-Welcome, guest. Type 'help' or click a module.
-guest@theocloud:~$ _
+THEOCLOUD (ASCII logo)
+TheoCloud OS v2.6 // rack-01
+[████████████████████] 100% ready
+Welcome, guest. TheoCloud OS is ready: type a command or pick one below.
+guest@theocloud:~$ █
 ```
 
-Modules power on one after another while the lines appear (LEDs from amber to green, fans spin up). Returning visitors in the same session skip it.
+The boot plays on every visit so it is always seen briefly. With reduced motion the bar is full at once, the splash stays for 1.2 s without animation and the prompt follows without the glide.
 
 ### Commands
 
