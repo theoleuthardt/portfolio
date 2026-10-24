@@ -13,13 +13,13 @@ const App = () => {
         <Navbar projectsRef={projectsRef} careerpathRef={careerpathRef} />
         <div
           className="flex justify-center items-center justify-items-center 
-                       mt-[18rem]"
+                       mt-72"
         >
           <Hero projectsRef={projectsRef} />
         </div>
         <div
-          className="flex justify-center items-center mt-[50rem]
-            lg:mb-[16rem] md:mb-[14rem] sm:mb-[13rem] mb-[12rem]"
+          className="flex justify-center items-center mt-200
+            lg:mb-64 md:mb-56 sm:mb-52 mb-48"
         >
           <Projects projectsRef={projectsRef} />
         </div>
