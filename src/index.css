@@ -16,14 +16,13 @@
   --color-pink: #ff3d8b;
   --color-secondary: #aaa6c3;
 
-  --font-terminal: "VT323", ui-monospace, monospace;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-terminal: "Share Tech Mono", ui-monospace, monospace;
 
-  --text-terminal: 1.25rem;
-  --text-terminal--line-height: 1.3;
-  --text-terminal-sm: 1.125rem;
-  --text-terminal-sm--line-height: 1.3;
-  --text-hud: 0.6875rem;
+  --text-terminal: 1.0625rem;
+  --text-terminal--line-height: 1.5;
+  --text-terminal-sm: 0.9375rem;
+  --text-terminal-sm--line-height: 1.5;
+  --text-hud: 0.75rem;
   --text-hud--letter-spacing: 0.2em;
   --text-screen-title: 1.375rem;
 }
@@ -33,7 +32,10 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: var(--font-mono);
+  }
+
+  html {
+    font-family: var(--font-terminal);
     scroll-behavior: smooth;
     color-scheme: dark;
   }
