@@ -82,13 +82,15 @@ export interface TerminalProps {
   inlineProjectScreens?: boolean;
   /** Keep the boot sequence before its last step, e.g. while the scene loads. */
   holdBoot?: boolean;
+  /** Tell visitors that the server rack in the scene is clickable. */
+  rackHint?: boolean;
 }
 
 /**
  * The CRT terminal: boot sequence, command log, project screens and the
  * input with history (arrow keys) and completion (Tab). Only the screen of
- * the currently open project is expanded. Tab completes only when there is
- * something to complete, so Tab and Shift+Tab otherwise move focus as usual.
+ * the currently open project is expanded. Tab always completes, like in a
+ * terminal; Shift+Tab leaves the terminal.
  * Escape closes the open project wherever the focus is. The line edits like
  * bash/readline (Ctrl+A/E/U/K/W, Ctrl+C cancels, Ctrl+L clears the screen)
  * and shows a block cursor; the real input is invisible on top of it, so
@@ -99,6 +101,7 @@ export function Terminal({
   onOpenProjectChange,
   inlineProjectScreens = true,
   holdBoot = false,
+  rackHint = false,
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
@@ -258,12 +261,9 @@ export function Terminal({
     }
     if (event.key === "Enter") {
       runCommand(input);
-    } else if (event.key === "Tab" && !event.shiftKey && input.trim() !== "") {
-      const completion = complete(input, commandNames, projectIds);
-      if (completion.input === input && completion.options.length === 0) {
-        return;
-      }
+    } else if (event.key === "Tab" && !event.shiftKey) {
       event.preventDefault();
+      const completion = complete(input, commandNames, projectIds);
       setLine({ text: completion.input, cursor: completion.input.length });
       setOptions(completion.options.length > 1 ? completion.options : []);
     } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
@@ -325,6 +325,13 @@ export function Terminal({
                 {linesOf(entry).map((line, index) => (
                   <TerminalOutput key={index} line={line} onRun={runCommand} />
                 ))}
+                {rackHint &&
+                entry.command === undefined &&
+                phase === "ready" ? (
+                  <p className="text-phosphor-dim">
+                    tip: click a module in the server rack to open a project
+                  </p>
+                ) : null}
                 {project ? <ProjectScreen project={project} /> : null}
               </div>
             );

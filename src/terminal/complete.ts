@@ -27,25 +27,42 @@ function completeWord(
     return { input: before + partial, options };
   }
   if (options.length === 1) {
-    return { input: before + options[0] + suffix, options };
+    const [only] = options;
+    return {
+      input: before + only + (only.endsWith("/") ? "" : suffix),
+      options,
+    };
   }
   return { input: before + commonPrefix(options), options };
 }
 
 /**
- * Tab completion: completes the command name in the first word, and project
- * ids in the argument of `open`. A unique command gets a trailing space so
- * the argument can follow; anything else extends to the common prefix.
- * Options are sorted alphabetically, like in a shell.
+ * Tab completion like a shell: the first word completes to a command name
+ * (with a trailing space when unique); arguments complete per command:
+ * project ids after `open` and `cat`, the `projects/` directory after `cd`
+ * and `ls`, command names after `man`. Options are sorted alphabetically.
  */
 export function complete(
   input: string,
   commands: readonly string[],
   projectIds: readonly string[],
 ): Completion {
-  const openArgument = /^(\s*open\s+)(\S*)$/i.exec(input);
-  if (openArgument) {
-    return completeWord(openArgument[1], openArgument[2], projectIds, "");
+  const argument = /^(\s*(\S+)\s+)(\S*)$/.exec(input);
+  if (argument) {
+    const [, before, command, partial] = argument;
+    const candidates = new Map<string, readonly string[]>([
+      ["open", projectIds],
+      ["cat", projectIds],
+      ["cd", ["projects/"]],
+      ["ls", ["projects/"]],
+      ["man", commands],
+    ]);
+    return completeWord(
+      before,
+      partial,
+      candidates.get(command.toLowerCase()) ?? [],
+      "",
+    );
   }
   const firstWord = /^(\s*)(\S*)$/.exec(input);
   if (firstWord) {

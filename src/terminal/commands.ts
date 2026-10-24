@@ -7,7 +7,8 @@ export type TerminalLine =
   | { kind: "text" | "muted" | "error"; text: string }
   | { kind: "chips"; commands: readonly string[] }
   | { kind: "command"; name: string; usage: string; description: string }
-  | { kind: "project"; id: string; tagline: string; fork: boolean };
+  | { kind: "project"; id: string; tagline: string; fork: boolean }
+  | { kind: "dir"; name: string; command: string };
 
 /** The two directories of the guest's home. */
 export type Cwd = "~" | "~/projects";
@@ -122,7 +123,24 @@ function didYouMean(command: string): TerminalLine[] {
   ];
 }
 
-const listProjects: Run = (args, { cwd = "~" }) => {
+const projectRows = (): CommandResult => ({
+  lines: projects.map((project) => ({
+    kind: "project",
+    id: project.id,
+    tagline: project.tagline,
+    fork: project.fork !== undefined,
+  })),
+});
+
+const longLine = (project: Project) =>
+  `-rw-r--r-- 1 guest lab ${String(project.units).padStart(2)}U ${project.fork ? "fork" : "own "} ${project.id}`;
+
+/**
+ * `ls` like bash: at home it shows the `projects/` directory (clickable,
+ * runs `cd projects`), inside it the projects; `-l` prints the long format,
+ * a project argument lists just that project.
+ */
+const list: Run = (args, { cwd = "~" }) => {
   const options = args
     .filter((arg) => arg.startsWith("-"))
     .join("")
@@ -132,32 +150,20 @@ const listProjects: Run = (args, { cwd = "~" }) => {
     return error(`ls: invalid option -- '${invalid}'`);
   }
   const target = args.find((arg) => !arg.startsWith("-"));
-  const path = target === undefined ? undefined : resolvePath(target, cwd);
-  if (target !== undefined && path === undefined) {
+  const path = target === undefined ? { dir: cwd } : resolvePath(target, cwd);
+  if (path === undefined) {
     return error(`ls: cannot access '${target}': No such file or directory`);
   }
-  const single =
-    path !== undefined && "project" in path ? path.project : undefined;
-  const listed = single ? [single] : projects;
-  if (options.includes("l")) {
-    return text(
-      ...listed.map(
-        (project) =>
-          `-rw-r--r-- 1 guest lab ${String(project.units).padStart(2)}U ${project.fork ? "fork" : "own "} ${project.id}`,
-      ),
-    );
+  const long = options.includes("l");
+  if ("project" in path) {
+    return text(long ? longLine(path.project) : path.project.id);
   }
-  if (single) {
-    return text(single.id);
+  if (path.dir === "~") {
+    return long
+      ? text(`drwxr-xr-x 2 guest lab ${projects.length} projects/`)
+      : { lines: [{ kind: "dir", name: "projects/", command: "cd projects" }] };
   }
-  return {
-    lines: projects.map((project) => ({
-      kind: "project",
-      id: project.id,
-      tagline: project.tagline,
-      fork: project.fork !== undefined,
-    })),
-  };
+  return long ? text(...projects.map(longLine)) : projectRows();
 };
 
 const registry = new Map<string, Command>(
@@ -177,20 +183,21 @@ const registry = new Map<string, Command>(
           })),
           {
             kind: "muted",
-            text: "tab completes, arrow keys browse the history",
+            text: "tab completes, arrow keys browse the history, shift+tab leaves the terminal",
           },
         ],
       }),
     },
     ls: {
       usage: "ls [-l] [dir]",
-      description: "lists the projects in the rack, -l in the long format",
-      run: listProjects,
+      description:
+        "lists a directory: projects/ at home, the projects inside it",
+      run: list,
     },
     projects: {
       usage: "projects",
-      description: "lists the projects, same as ls",
-      run: listProjects,
+      description: "lists the projects from anywhere",
+      run: projectRows,
     },
     open: {
       usage: "open <project>",

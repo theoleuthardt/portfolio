@@ -47,6 +47,18 @@ export function TerminalOutput({ line, onRun }: TerminalOutputProps) {
           </span>
         </p>
       );
+    case "dir":
+      return (
+        <p>
+          <button
+            type="button"
+            className="crt-row"
+            onClick={() => onRun(line.command)}
+          >
+            <span className="crt-row-id crt-dir">{line.name}</span>
+          </button>
+        </p>
+      );
     case "project":
       return (
         <p>
@@ -55,7 +67,7 @@ export function TerminalOutput({ line, onRun }: TerminalOutputProps) {
             className="crt-row"
             onClick={() => onRun(`open ${line.id}`)}
           >
-            <span className="text-phosphor">{line.id}</span>{" "}
+            <span className="crt-row-id">{line.id}</span>{" "}
             <span className="text-phosphor-dim">{line.tagline}</span>
             {line.fork ? <span className="text-amber"> [fork]</span> : null}
           </button>

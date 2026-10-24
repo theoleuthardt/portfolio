@@ -60,8 +60,13 @@ describe("cd", () => {
 });
 
 describe("ls", () => {
-  it("lists projects in the long format with -l", () => {
-    const lines = texts("ls -l");
+  it("shows the projects directory in the long format at home", () => {
+    expect(texts("ls -l")).toHaveLength(1);
+    expect(texts("ls -l")[0]).toMatch(/^d[rwx-]{9} .* projects\/$/);
+  });
+
+  it("lists projects in the long format with -l inside projects/", () => {
+    const lines = texts("ls -l", inProjects);
     expect(lines).toHaveLength(projects.length);
     projects.forEach((project, index) => {
       expect(lines[index]).toMatch(new RegExp(`${project.id}$`));
@@ -70,7 +75,7 @@ describe("ls", () => {
   });
 
   it("lists the projects directory and rejects unknown paths and options", () => {
-    expect(run("ls projects", home).lines).toEqual(run("ls", home).lines);
+    expect(run("ls projects", home).lines).toEqual(run("ls", inProjects).lines);
     expect(texts("ls nowhere")).toEqual([
       "ls: cannot access 'nowhere': No such file or directory",
     ]);

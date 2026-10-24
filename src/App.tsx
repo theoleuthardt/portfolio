@@ -65,6 +65,7 @@ const App = () => {
           onOpenProjectChange={setOpenProjectId}
           inlineProjectScreens={!wide}
           holdBoot={sceneLoading}
+          rackHint={webgl && !isPhoneViewport(viewport)}
         />
       </div>
       {openProject ? <ProjectPanel project={openProject} /> : null}

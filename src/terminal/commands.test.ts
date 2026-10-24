@@ -30,11 +30,18 @@ describe("run", () => {
     expect(open).toMatchObject({ usage: "open <project>" });
   });
 
-  it("lists every project with its tagline for ls and projects", () => {
-    for (const input of ["ls", "projects"]) {
-      const listed = run(input, context).lines.filter(
-        (line) => line.kind === "project",
-      );
+  it("shows the projects directory for ls at home", () => {
+    expect(run("ls", context).lines).toEqual([
+      { kind: "dir", name: "projects/", command: "cd projects" },
+    ]);
+  });
+
+  it("lists every project with its tagline for projects, and for ls in projects/", () => {
+    for (const result of [
+      run("projects", context),
+      run("ls", { ...context, cwd: "~/projects" }),
+    ]) {
+      const listed = result.lines.filter((line) => line.kind === "project");
       expect(listed.map((line) => line.kind === "project" && line.id)).toEqual(
         projects.map((project) => project.id),
       );

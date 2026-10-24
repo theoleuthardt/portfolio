@@ -65,5 +65,8 @@ export const bootLines: readonly TerminalLine[] = [
     kind: "text",
     text: `Welcome, guest. ${OS_NAME} is ready: type a command or pick one below.`,
   },
-  { kind: "chips", commands: ["help", "ls", "open trust-issues"] },
+  {
+    kind: "chips",
+    commands: ["help", "ls", "cd projects", "open trust-issues"],
+  },
 ];
