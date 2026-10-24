@@ -100,6 +100,7 @@ export function Terminal({
   const [cursor, setCursor] = useState(0);
   const [focused, setFocused] = useState(false);
   const caretTarget = useRef<number | null>(null);
+  const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -122,12 +123,13 @@ export function Terminal({
       );
       caretTarget.current = null;
     }
-  }, [input, cursor]);
+  }, [caretMoves]);
 
   const setLine = ({ text, cursor: at }: Line) => {
     setInput(text);
     setCursor(at);
     caretTarget.current = at;
+    setCaretMoves((moves) => moves + 1);
   };
 
   const syncCursor = (field: HTMLInputElement) => {

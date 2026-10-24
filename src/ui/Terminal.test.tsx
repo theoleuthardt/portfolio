@@ -296,6 +296,18 @@ describe("Terminal", () => {
     expect(field).toHaveValue("");
   });
 
+  it("keeps following the caret after a readline key that changes nothing", () => {
+    render(<Terminal />);
+    const field = input() as HTMLInputElement;
+    fireEvent.change(field, { target: { value: "ls" } });
+    fireEvent.keyDown(field, { key: "a", ctrlKey: true });
+    fireEvent.keyDown(field, { key: "a", ctrlKey: true });
+    field.setSelectionRange(2, 2);
+    fireEvent.change(field, { target: { value: "lsx" } });
+    expect(field.selectionStart).toBe(3);
+    expect(document.querySelector(".crt-cursor")?.textContent).toBe(" ");
+  });
+
   it("cancels the line with Ctrl+C and clears the screen with Ctrl+L", () => {
     render(<Terminal />);
     fireEvent.change(input(), { target: { value: "open fla" } });
