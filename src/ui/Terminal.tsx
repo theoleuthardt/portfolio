@@ -11,7 +11,20 @@ import { findProject, projects } from "../content/projects";
 import { commandNames } from "../terminal/commands";
 import { complete } from "../terminal/complete";
 import { stepBack, stepForward } from "../terminal/history";
-import { createSession, submit, type LogEntry } from "../terminal/session";
+import {
+  deleteWordBefore,
+  killToEnd,
+  killToStart,
+  type Line,
+} from "../terminal/lineEditor";
+import {
+  cancel,
+  clearScreen,
+  createSession,
+  submit,
+  type LogEntry,
+} from "../terminal/session";
+import type { Cwd } from "../terminal/commands";
 import { bootSteps } from "../terminal/boot";
 import { BootScreen } from "./BootScreen";
 import { CrtFrame } from "./CrtFrame";
@@ -19,15 +32,31 @@ import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
 import { useBootSequence } from "./useBootSequence";
 
-const PROMPT = "guest@theocloud:~$";
 const projectIds = projects.map((project) => project.id);
+const promptFor = (cwd: Cwd = "~") => `guest@theocloud:${cwd}$`;
 
-function Prompt({ command }: { command: string }) {
+function Prompt({ command, cwd }: { command: string; cwd?: Cwd }) {
   return (
     <p>
-      <span className="text-phosphor-dim">{PROMPT}</span>{" "}
+      <span className="text-phosphor-dim">{promptFor(cwd)}</span>{" "}
       <span className="text-phosphor">{command}</span>
     </p>
+  );
+}
+
+/** The typed line with a block cursor on the character under the caret. */
+function EditLine({ line, focused }: { line: Line; focused: boolean }) {
+  const before = line.text.slice(0, line.cursor);
+  const under = line.text.charAt(line.cursor) || " ";
+  const after = line.text.slice(line.cursor + 1);
+  return (
+    <span className="crt-line" aria-hidden="true">
+      {before}
+      <span className={focused ? "crt-cursor" : "crt-cursor crt-cursor-idle"}>
+        {under}
+      </span>
+      {after}
+    </span>
   );
 }
 
@@ -55,7 +84,10 @@ export interface TerminalProps {
  * input with history (arrow keys) and completion (Tab). Only the screen of
  * the currently open project is expanded. Tab completes only when there is
  * something to complete, so Tab and Shift+Tab otherwise move focus as usual.
- * Escape closes the open project wherever the focus is.
+ * Escape closes the open project wherever the focus is. The line edits like
+ * bash/readline (Ctrl+A/E/U/K/W, Ctrl+C cancels, Ctrl+L clears the screen)
+ * and shows a block cursor; the real input is invisible on top of it, so
+ * typing, IME and touch keyboards keep working.
  */
 export function Terminal({
   ref,
@@ -65,6 +97,10 @@ export function Terminal({
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
+  const [cursor, setCursor] = useState(0);
+  const [focused, setFocused] = useState(false);
+  const caretTarget = useRef<number | null>(null);
+  const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
@@ -79,15 +115,72 @@ export function Terminal({
     logRef.current?.scrollTo?.({ top: logRef.current.scrollHeight });
   }, [session.log, bootReached]);
 
+  useEffect(() => {
+    if (caretTarget.current !== null) {
+      inputRef.current?.setSelectionRange(
+        caretTarget.current,
+        caretTarget.current,
+      );
+      caretTarget.current = null;
+    }
+  }, [caretMoves]);
+
+  const setLine = ({ text, cursor: at }: Line) => {
+    setInput(text);
+    setCursor(at);
+    caretTarget.current = at;
+    setCaretMoves((moves) => moves + 1);
+  };
+
+  const syncCursor = (field: HTMLInputElement) => {
+    if (caretTarget.current === null) {
+      setCursor(field.selectionStart ?? field.value.length);
+    }
+  };
+
   const runCommand = (command: string) => {
     const next = submit(session, command).session;
     setSession(next);
     if (next.openProjectId !== session.openProjectId) {
       onOpenProjectChange?.(next.openProjectId);
     }
-    setInput("");
+    setLine({ text: "", cursor: 0 });
     setOptions([]);
     inputRef.current?.focus();
+  };
+
+  /** Readline shortcuts; returns whether the key was handled. */
+  const readline = (key: string): boolean => {
+    const line = {
+      text: input,
+      cursor: inputRef.current?.selectionStart ?? cursor,
+    };
+    switch (key) {
+      case "c":
+        setSession(cancel(session, input));
+        setLine({ text: "", cursor: 0 });
+        return true;
+      case "l":
+        setSession(clearScreen(session));
+        return true;
+      case "u":
+        setLine(killToStart(line));
+        return true;
+      case "k":
+        setLine(killToEnd(line));
+        return true;
+      case "w":
+        setLine(deleteWordBefore(line));
+        return true;
+      case "a":
+        setLine({ text: input, cursor: 0 });
+        return true;
+      case "e":
+        setLine({ text: input, cursor: input.length });
+        return true;
+      default:
+        return false;
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -114,6 +207,13 @@ export function Terminal({
     if (event.nativeEvent.isComposing) {
       return;
     }
+    if (event.ctrlKey && !event.altKey && !event.metaKey) {
+      if (readline(event.key.toLowerCase())) {
+        event.preventDefault();
+        setOptions([]);
+      }
+      return;
+    }
     if (event.key === "Enter") {
       runCommand(input);
     } else if (event.key === "Tab" && !event.shiftKey && input.trim() !== "") {
@@ -122,7 +222,7 @@ export function Terminal({
         return;
       }
       event.preventDefault();
-      setInput(completion.input);
+      setLine({ text: completion.input, cursor: completion.input.length });
       setOptions(completion.options.length > 1 ? completion.options : []);
     } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
       event.preventDefault();
@@ -132,7 +232,7 @@ export function Terminal({
           ? stepBack(session.history, input)
           : stepForward(session.history, input);
       setSession((current) => ({ ...current, history: step.history }));
-      setInput(step.value);
+      setLine({ text: step.value, cursor: step.value.length });
     }
   };
 
@@ -171,7 +271,7 @@ export function Terminal({
                 {entry.command === undefined ? (
                   <BootScreen reached={bootReached} />
                 ) : (
-                  <Prompt command={entry.command} />
+                  <Prompt command={entry.command} cwd={entry.cwd} />
                 )}
                 {linesOf(entry).map((line, index) => (
                   <TerminalOutput key={index} line={line} onRun={runCommand} />
@@ -181,22 +281,30 @@ export function Terminal({
             );
           })}
         </div>
-        <label className="flex items-center gap-2">
-          <span className="text-phosphor-dim">{PROMPT}</span>
-          <input
-            ref={inputRef}
-            aria-label="terminal input"
-            className="crt-input flex-1"
-            value={input}
-            onChange={(event) => {
-              setInput(event.target.value);
-              setOptions([]);
-            }}
-            onKeyDown={onKeyDown}
-            autoComplete="off"
-            autoCapitalize="off"
-            spellCheck={false}
-          />
+        <label className="crt-prompt">
+          <span className="text-phosphor-dim">{promptFor(session.cwd)}</span>
+          <span className="crt-edit">
+            <EditLine line={{ text: input, cursor }} focused={focused} />
+            <input
+              ref={inputRef}
+              aria-label="terminal input"
+              className="crt-input"
+              value={input}
+              onChange={(event) => {
+                setInput(event.target.value);
+                syncCursor(event.target);
+                setOptions([]);
+              }}
+              onSelect={(event) => syncCursor(event.currentTarget)}
+              onKeyUp={(event) => syncCursor(event.currentTarget)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              onKeyDown={onKeyDown}
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
+          </span>
         </label>
         {options.length > 0 ? (
           <p className="text-phosphor-dim">{options.join(" ")}</p>

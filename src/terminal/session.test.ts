@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bootLines } from "./boot";
-import { createSession, submit } from "./session";
+import { cancel, clearScreen, createSession, submit } from "./session";
 
 describe("session", () => {
   const fresh = createSession();
@@ -32,6 +32,7 @@ describe("session", () => {
     expect(session.log[session.log.length - 1]).toEqual({
       id: 1,
       command: "",
+      cwd: "~",
       lines: [],
     });
     expect(session.history.entries).toEqual([]);
@@ -66,5 +67,44 @@ describe("session", () => {
   it("closes the open project when the log is cleared", () => {
     const opened = submit(fresh, "open flashi").session;
     expect(submit(opened, "clear").session.openProjectId).toBeUndefined();
+  });
+});
+
+describe("session bash behaviour", () => {
+  const fresh = createSession();
+
+  it("expands !! and echoes the expanded command", () => {
+    const afterLs = submit(fresh, "ls").session;
+    const { session } = submit(afterLs, "!!");
+    const entry = session.log[session.log.length - 1];
+    expect(entry.command).toBe("!!");
+    expect(entry.lines[0]).toEqual({ kind: "muted", text: "ls" });
+    expect(session.history.entries).toEqual(["ls"]);
+  });
+
+  it("reports an unknown history event", () => {
+    const { session } = submit(fresh, "!7");
+    expect(session.log[session.log.length - 1].lines).toEqual([
+      { kind: "error", text: "!7: event not found" },
+    ]);
+  });
+
+  it("changes the working directory and remembers it per entry", () => {
+    const { session } = submit(fresh, "cd projects");
+    expect(session.cwd).toBe("~/projects");
+    const next = submit(session, "pwd").session;
+    expect(next.log[next.log.length - 1].cwd).toBe("~/projects");
+  });
+
+  it("cancels a line with Ctrl+C without recording it", () => {
+    const session = cancel(fresh, "open fla");
+    expect(session.log[session.log.length - 1].command).toBe("open fla^C");
+    expect(session.history.entries).toEqual([]);
+  });
+
+  it("clears the screen with Ctrl+L and keeps the history", () => {
+    const withLs = submit(fresh, "ls").session;
+    expect(clearScreen(withLs).log).toEqual([]);
+    expect(clearScreen(withLs).history.entries).toEqual(["ls"]);
   });
 });

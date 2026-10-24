@@ -270,6 +270,62 @@ describe("Terminal", () => {
     );
   });
 
+  it("draws a block cursor on the character under the caret", () => {
+    render(<Terminal />);
+    fireEvent.change(input(), { target: { value: "ls" } });
+    expect(document.querySelector(".crt-cursor")?.textContent).toBe(" ");
+    (input() as HTMLInputElement).setSelectionRange(0, 0);
+    fireEvent.select(input());
+    expect(document.querySelector(".crt-cursor")?.textContent).toBe("l");
+  });
+
+  it("edits the line with readline keys", () => {
+    render(<Terminal />);
+    const field = input() as HTMLInputElement;
+    fireEvent.change(field, { target: { value: "open flashi" } });
+    field.setSelectionRange(5, 5);
+    fireEvent.select(field);
+    fireEvent.keyDown(field, { key: "u", ctrlKey: true });
+    expect(field).toHaveValue("flashi");
+    fireEvent.keyDown(field, { key: "e", ctrlKey: true });
+    fireEvent.keyDown(field, { key: "w", ctrlKey: true });
+    expect(field).toHaveValue("");
+    fireEvent.change(field, { target: { value: "open flashi" } });
+    fireEvent.keyDown(field, { key: "a", ctrlKey: true });
+    fireEvent.keyDown(field, { key: "k", ctrlKey: true });
+    expect(field).toHaveValue("");
+  });
+
+  it("keeps following the caret after a readline key that changes nothing", () => {
+    render(<Terminal />);
+    const field = input() as HTMLInputElement;
+    fireEvent.change(field, { target: { value: "ls" } });
+    fireEvent.keyDown(field, { key: "a", ctrlKey: true });
+    fireEvent.keyDown(field, { key: "a", ctrlKey: true });
+    field.setSelectionRange(2, 2);
+    fireEvent.change(field, { target: { value: "lsx" } });
+    expect(field.selectionStart).toBe(3);
+    expect(document.querySelector(".crt-cursor")?.textContent).toBe(" ");
+  });
+
+  it("cancels the line with Ctrl+C and clears the screen with Ctrl+L", () => {
+    render(<Terminal />);
+    fireEvent.change(input(), { target: { value: "open fla" } });
+    fireEvent.keyDown(input(), { key: "c", ctrlKey: true });
+    expect(within(log()).getByText("open fla^C")).toBeInTheDocument();
+    expect(input()).toHaveValue("");
+    fireEvent.keyDown(input(), { key: "l", ctrlKey: true });
+    expect(within(log()).queryByText("open fla^C")).toBeNull();
+  });
+
+  it("shows the working directory in the prompt", () => {
+    render(<Terminal />);
+    type("cd projects");
+    expect(
+      screen.getAllByText("guest@theocloud:~/projects$").length,
+    ).toBeGreaterThan(0);
+  });
+
   it("clears the log", () => {
     render(<Terminal />);
     type("clear");
