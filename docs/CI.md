@@ -17,7 +17,7 @@ Secret scanning and push protection are enabled: GitHub scans the repository for
 
 ## Dependabot
 
-`.github/dependabot.yml` checks npm packages and GitHub Actions every Monday at 06:00 (Europe/Berlin). Minor and patch updates arrive as one grouped PR per ecosystem; every major update gets its own PR. All Dependabot PRs carry the `dependencies` label and go through the same CI, review and merge gate. Major updates are merged only after Theo has agreed (see `CLAUDE.md` → Dependencies).
+`.github/dependabot.yml` checks npm packages and GitHub Actions every Monday at 06:00 (Europe/Berlin). Minor and patch updates arrive as one grouped PR per ecosystem; every major update gets its own PR. Major version updates of TypeScript are ignored until `typescript-eslint` supports TypeScript 7 (security updates still arrive) (see the decision log in [ARCHITECTURE.md](ARCHITECTURE.md)). All Dependabot PRs carry the `dependencies` label and go through the same CI, review and merge gate. Major updates are merged only after Theo has agreed (see `CLAUDE.md` → Dependencies).
 
 ## Merge gate
 
