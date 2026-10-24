@@ -47,7 +47,13 @@ export function stepBack(history: History, current = ""): HistoryStep {
   return at({ ...history, draft }, Math.max(0, history.cursor - 1));
 }
 
-/** Moves to the next (newer) entry, ending on the kept draft. */
-export function stepForward(history: History): HistoryStep {
-  return at(history, Math.min(history.entries.length, history.cursor + 1));
+/**
+ * Moves to the next (newer) entry, ending on the kept draft. On the draft
+ * line itself it changes nothing and keeps `current`, like a shell does.
+ */
+export function stepForward(history: History, current = ""): HistoryStep {
+  if (history.cursor === history.entries.length) {
+    return { history, value: current };
+  }
+  return at(history, history.cursor + 1);
 }

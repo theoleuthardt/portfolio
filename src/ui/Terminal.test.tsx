@@ -122,6 +122,16 @@ describe("Terminal", () => {
     expect(input()).toHaveValue("dra");
   });
 
+  it("keeps a text selection in the log instead of focusing the input", () => {
+    render(<Terminal />);
+    input().blur();
+    vi.spyOn(window, "getSelection").mockReturnValue({
+      isCollapsed: false,
+    } as Selection);
+    fireEvent.click(log());
+    expect(input()).not.toHaveFocus();
+  });
+
   it("completes with Tab and lists ambiguous options", () => {
     render(<Terminal />);
     fireEvent.change(input(), { target: { value: "hel" } });

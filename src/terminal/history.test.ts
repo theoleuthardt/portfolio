@@ -43,4 +43,10 @@ describe("history", () => {
     const back = stepBack(withTwo, "half typed").history;
     expect(record(back, "help").draft).toBe("");
   });
+
+  it("keeps the current input when stepping forward on the draft line", () => {
+    const back = stepBack(withTwo, "abc").history;
+    const onDraft = stepForward(back).history;
+    expect(stepForward(onDraft, "abcxyz").value).toBe("abcxyz");
+  });
 });

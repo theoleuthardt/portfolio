@@ -73,7 +73,7 @@ export function Terminal() {
       const step =
         event.key === "ArrowUp"
           ? stepBack(session.history, input)
-          : stepForward(session.history);
+          : stepForward(session.history, input);
       setSession((current) => ({ ...current, history: step.history }));
       setInput(step.value);
     }
@@ -95,7 +95,11 @@ export function Terminal() {
       <div
         ref={logRef}
         className="crt-text h-full overflow-y-auto"
-        onClick={() => inputRef.current?.focus()}
+        onClick={() => {
+          if (window.getSelection()?.isCollapsed !== false) {
+            inputRef.current?.focus();
+          }
+        }}
       >
         <div role="log" aria-live="polite" aria-label="terminal output">
           {session.log.map((entry) => {

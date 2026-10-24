@@ -9,13 +9,13 @@ import {
 
 /** Props of {@link BootScreen}. */
 export interface BootScreenProps {
-  /** How many boot steps have been reached, starting at 1. */
+  /** How many boot steps have been reached; clamped to the existing steps. */
   reached: number;
 }
 
 /** The TheoCloud OS logo with the boot progress bar. */
 export function BootScreen({ reached }: BootScreenProps) {
-  const step = bootSteps[Math.min(reached, bootSteps.length) - 1];
+  const step = bootSteps[Math.min(Math.max(reached, 1), bootSteps.length) - 1];
   return (
     <div className="mb-3">
       <div role="img" aria-label={OS_NAME} className="boot-logo">
