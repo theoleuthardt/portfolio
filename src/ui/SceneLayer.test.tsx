@@ -2,12 +2,21 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SceneLayer } from "./SceneLayer";
 
+const sceneMock = vi.hoisted(() => ({ fails: false }));
+
 vi.mock("../scene/Scene", () => ({
-  default: () => <div data-testid="scene" />,
+  default: () => {
+    if (sceneMock.fails) {
+      throw new Error("WebGL context lost");
+    }
+    return <div data-testid="scene" />;
+  },
 }));
 
 afterEach(() => {
+  sceneMock.fails = false;
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 function viewport(width: number, height: number, coarsePointer: boolean) {
@@ -44,5 +53,15 @@ describe("SceneLayer", () => {
     viewport(1280, 800, false);
     render(<SceneLayer webgl={true} />);
     expect(await screen.findByTestId("scene")).toBeInTheDocument();
+  });
+
+  it("falls back to the rack illustration when the scene fails", async () => {
+    viewport(1280, 800, false);
+    sceneMock.fails = true;
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    render(<SceneLayer webgl={true} />);
+    expect(
+      await screen.findByRole("img", { name: /server rack/i }),
+    ).toBeInTheDocument();
   });
 });
