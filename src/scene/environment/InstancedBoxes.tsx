@@ -1,8 +1,8 @@
 import { useLayoutEffect, useRef, type ReactNode } from "react";
-import { Object3D, type InstancedMesh } from "three";
+import type { InstancedMesh } from "three";
+import { instanceMatrices, type Point3 } from "./instances";
 
-/** A position in scene space. */
-export type Point3 = [number, number, number];
+export type { Point3 };
 
 /** Props of {@link InstancedBoxes}. */
 export interface InstancedBoxesProps {
@@ -20,15 +20,14 @@ export function InstancedBoxes({
 }: InstancedBoxesProps) {
   const mesh = useRef<InstancedMesh>(null);
   useLayoutEffect(() => {
-    const dummy = new Object3D();
-    positions.forEach((position, index) => {
-      dummy.position.set(...position);
-      dummy.updateMatrix();
-      mesh.current?.setMatrixAt(index, dummy.matrix);
-    });
-    if (mesh.current) {
-      mesh.current.instanceMatrix.needsUpdate = true;
+    const instanced = mesh.current;
+    if (instanced === null) {
+      return;
     }
+    instanceMatrices(positions).forEach((matrix, index) =>
+      instanced.setMatrixAt(index, matrix),
+    );
+    instanced.instanceMatrix.needsUpdate = true;
   }, [positions]);
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, positions.length]}>

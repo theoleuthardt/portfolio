@@ -41,7 +41,7 @@ function Soffit() {
           roughness={0.35}
         />
       </mesh>
-      <mesh position-y={-0.3}>
+      <mesh position-y={-0.345}>
         <tubeGeometry args={[path, 200, 0.025, 6, true]} />
         <meshBasicMaterial color={glow(palette.neon, 3)} toneMapped={false} />
       </mesh>

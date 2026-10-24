@@ -1,5 +1,5 @@
 import { MeshReflectorMaterial } from "@react-three/drei";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { ROOM, evenlySpaced } from "../layout";
 import { glassFloorTexture, tileRoughnessTexture } from "./textures";
 import { InstancedBoxes, type Point3 } from "./InstancedBoxes";
@@ -17,6 +17,7 @@ function Tiles() {
     texture.repeat.set(WIDTH / (TILE * 4), DEPTH / (TILE * 4));
     return texture;
   }, []);
+  useEffect(() => () => roughness.dispose(), [roughness]);
   return (
     <mesh rotation-x={-Math.PI / 2} position={[0, ROOM.floor, CENTER_Z]}>
       <planeGeometry args={[WIDTH, DEPTH]} />
@@ -66,6 +67,7 @@ function Gratings() {
 /** A row of glass floor panels lit from below, along the left side. */
 function GlassPanels() {
   const texture = useMemo(() => glassFloorTexture(), []);
+  useEffect(() => () => texture.dispose(), [texture]);
   const zs = evenlySpaced(-12, 4, 6);
   return (
     <group>
