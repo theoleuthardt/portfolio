@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
-/** Delay between two boot lines. */
-export const BOOT_STEP_MS = 350;
+/** Delay between two boot steps. */
+export const BOOT_STEP_MS = 420;
 
 /** Session storage key that marks the boot sequence as seen. */
 export const BOOTED_KEY = "theocloud.booted";
@@ -24,7 +24,7 @@ function markBooted(): void {
 }
 
 /**
- * Number of boot lines to show. Counts up one line per step on the first
+ * Number of boot steps reached. Counts up one step at a time on the first
  * visit of a session; shows everything at once with reduced motion, for
  * returning visitors and after any key press or pointer press. When the
  * browser blocks session storage, every visit counts as the first one.

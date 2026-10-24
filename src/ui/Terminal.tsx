@@ -4,6 +4,8 @@ import { commandNames } from "../terminal/commands";
 import { complete } from "../terminal/complete";
 import { stepBack, stepForward } from "../terminal/history";
 import { createSession, submit, type LogEntry } from "../terminal/session";
+import { bootSteps } from "../terminal/boot";
+import { BootScreen } from "./BootScreen";
 import { CrtFrame } from "./CrtFrame";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
@@ -33,8 +35,8 @@ export function Terminal() {
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
-  const bootEntry = session.log.find((entry) => entry.command === undefined);
-  const visibleBootLines = useBootSequence(bootEntry?.lines.length ?? 0);
+  const bootReached = useBootSequence(bootSteps.length);
+  const booted = bootReached >= bootSteps.length;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -42,7 +44,7 @@ export function Terminal() {
 
   useEffect(() => {
     logRef.current?.scrollTo?.({ top: logRef.current.scrollHeight });
-  }, [session.log, visibleBootLines]);
+  }, [session.log, bootReached]);
 
   const runCommand = (command: string) => {
     setSession((current) => submit(current, command).session);
@@ -86,9 +88,7 @@ export function Terminal() {
     )?.id;
 
   const linesOf = (entry: LogEntry) =>
-    entry.command === undefined
-      ? entry.lines.slice(0, visibleBootLines)
-      : entry.lines;
+    entry.command === undefined && !booted ? [] : entry.lines;
 
   return (
     <CrtFrame>
@@ -105,7 +105,9 @@ export function Terminal() {
                 : undefined;
             return (
               <div key={entry.id} className="mb-2">
-                {entry.command === undefined ? null : (
+                {entry.command === undefined ? (
+                  <BootScreen reached={bootReached} />
+                ) : (
                   <Prompt command={entry.command} />
                 )}
                 {linesOf(entry).map((line, index) => (

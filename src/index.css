@@ -188,6 +188,16 @@
     box-shadow: inset 0 -1px 0 var(--color-phosphor);
   }
 
+  .boot-logo pre {
+    font-family: ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
+    font-size: 0.5rem;
+    line-height: 1.1;
+    color: var(--color-phosphor);
+    text-shadow:
+      0 0 3px var(--color-phosphor),
+      0 0 14px color-mix(in srgb, var(--color-phosphor) 50%, transparent);
+  }
+
   .crt-label {
     position: absolute;
     bottom: -0.1rem;
@@ -210,6 +220,10 @@
   }
 
   @media (min-width: 640px) {
+    .boot-logo pre {
+      font-size: 0.625rem;
+    }
+
     .crt-text {
       padding: 1.75rem 2rem 2.5rem;
       font-size: var(--text-terminal);

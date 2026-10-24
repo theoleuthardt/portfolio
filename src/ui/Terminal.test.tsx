@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { bootLines } from "../terminal/boot";
+import { bootSteps } from "../terminal/boot";
 import { BOOT_STEP_MS, BOOTED_KEY } from "./useBootSequence";
 import { Terminal } from "./Terminal";
 
@@ -43,7 +43,13 @@ afterEach(() => {
 describe("Terminal", () => {
   it("shows the whole boot output at once with reduced motion", () => {
     render(<Terminal />);
-    expect(within(log()).getByText(/THEOCLOUD BIOS/)).toBeInTheDocument();
+    expect(
+      within(log()).getByRole("img", { name: "TheoCloud OS" }),
+    ).toBeInTheDocument();
+    expect(within(log()).getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "100",
+    );
     expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
   });
 
@@ -200,7 +206,9 @@ describe("Terminal", () => {
   it("clears the log", () => {
     render(<Terminal />);
     type("clear");
-    expect(within(log()).queryByText(/THEOCLOUD BIOS/)).toBeNull();
+    expect(
+      within(log()).queryByRole("img", { name: "TheoCloud OS" }),
+    ).toBeNull();
   });
 });
 
@@ -210,12 +218,22 @@ describe("Terminal boot sequence", () => {
     vi.useFakeTimers();
   });
 
-  it("reveals the boot output line by line", () => {
+  it("shows the logo at once and fills the progress bar step by step", () => {
     render(<Terminal />);
+    expect(
+      within(log()).getByRole("img", { name: "TheoCloud OS" }),
+    ).toBeInTheDocument();
+    const bar = within(log()).getByRole("progressbar");
+    expect(bar).toHaveAttribute("aria-valuenow", String(bootSteps[0].percent));
     expect(within(log()).queryByText(/Welcome, guest/)).toBeNull();
     act(() => {
-      vi.advanceTimersByTime(BOOT_STEP_MS * bootLines.length);
+      vi.advanceTimersByTime(BOOT_STEP_MS);
     });
+    expect(bar).toHaveAttribute("aria-valuenow", String(bootSteps[1].percent));
+    act(() => {
+      vi.advanceTimersByTime(BOOT_STEP_MS * bootSteps.length);
+    });
+    expect(bar).toHaveAttribute("aria-valuenow", "100");
     expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
     expect(sessionStorage.getItem(BOOTED_KEY)).toBe("1");
   });
