@@ -106,3 +106,31 @@ describe("man", () => {
     expect(texts("man")).toEqual(["What manual page do you want?"]);
   });
 });
+
+describe("path handling", () => {
+  it("normalises . and .. inside paths", () => {
+    expect(run("cd projects/..", home).action).toEqual({
+      type: "cd",
+      cwd: "~",
+    });
+    expect(run("cd ./projects/.", home).action).toEqual({
+      type: "cd",
+      cwd: "~/projects",
+    });
+    expect(texts("cat projects/../projects/flashi")).toEqual(
+      texts("cat flashi"),
+    );
+    expect(run("cd ../..", inProjects).action).toEqual({
+      type: "cd",
+      cwd: "~",
+    });
+  });
+
+  it("lists a single project when ls is given one", () => {
+    expect(texts("ls projects/flashi")).toEqual(["flashi"]);
+    expect(texts("ls flashi", inProjects)).toEqual(["flashi"]);
+    const long = texts("ls -l projects/flashi");
+    expect(long).toHaveLength(1);
+    expect(long[0]).toMatch(/ flashi$/);
+  });
+});

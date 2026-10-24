@@ -55,32 +55,37 @@ type Path = { dir: Cwd } | { project: Project } | undefined;
 
 /**
  * Resolves a path argument against the working directory: home, the
- * projects directory, or a project inside it. A bare project id also
- * resolves from home, as a shortcut.
+ * projects directory, or a project inside it. `.` and `..` are normalised
+ * (never above home); a bare project id also resolves from home, as a
+ * shortcut.
  */
 function resolvePath(arg: string | undefined, cwd: Cwd): Path {
-  const raw = (arg ?? "~").replace(/\/+$/, "") || "/";
-  const absolute = raw.replace(/^\/home\/guest/, "~");
-  const path =
-    absolute === "."
-      ? cwd
-      : absolute === ".."
-        ? "~"
-        : absolute.startsWith("~")
-          ? absolute
-          : `${cwd}/${absolute.replace(/^\.\//, "")}`;
-  if (path === "~") {
+  const raw = (arg ?? "~").replace(/^\/home\/guest(?=\/|$)/, "~");
+  const fromHome = raw.startsWith("~");
+  const segments: string[] = fromHome || cwd === "~" ? [] : ["projects"];
+  for (const segment of (fromHome ? raw.slice(1) : raw).split("/")) {
+    if (segment === "..") {
+      segments.pop();
+    } else if (segment !== "" && segment !== ".") {
+      segments.push(segment);
+    }
+  }
+  if (raw.startsWith("/") && !fromHome) {
+    return undefined;
+  }
+  if (segments.length === 0) {
     return { dir: "~" };
   }
-  if (path === "~/projects") {
+  if (segments.length === 1 && segments[0] === "projects") {
     return { dir: "~/projects" };
   }
-  const inside = /^~\/projects\/([^/]+)$/.exec(path);
-  const project = inside
-    ? findProject(inside[1])
-    : arg !== undefined && !arg.includes("/")
-      ? findProject(arg)
-      : undefined;
+  const id =
+    segments.length === 2 && segments[0] === "projects"
+      ? segments[1]
+      : segments.length === 1 && !raw.includes("/")
+        ? segments[0]
+        : undefined;
+  const project = id === undefined ? undefined : findProject(id);
   return project ? { project } : undefined;
 }
 
@@ -127,16 +132,23 @@ const listProjects: Run = (args, { cwd = "~" }) => {
     return error(`ls: invalid option -- '${invalid}'`);
   }
   const target = args.find((arg) => !arg.startsWith("-"));
-  if (target !== undefined && resolvePath(target, cwd) === undefined) {
+  const path = target === undefined ? undefined : resolvePath(target, cwd);
+  if (target !== undefined && path === undefined) {
     return error(`ls: cannot access '${target}': No such file or directory`);
   }
+  const single =
+    path !== undefined && "project" in path ? path.project : undefined;
+  const listed = single ? [single] : projects;
   if (options.includes("l")) {
     return text(
-      ...projects.map(
+      ...listed.map(
         (project) =>
           `drwxr-xr-x 1 guest lab ${String(project.units).padStart(2)}U ${project.fork ? "fork" : "own "} ${project.id}`,
       ),
     );
+  }
+  if (single) {
+    return text(single.id);
   }
   return {
     lines: projects.map((project) => ({
