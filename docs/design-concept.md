@@ -25,7 +25,7 @@ The scene is lit in teal-green; the CRT terminal keeps its classic phosphor gree
 | `--color-void`         | `#020403` | page background, darkest scene areas                                         |
 | `--color-haze`         | `#06231c` | fog and haze colour                                                          |
 | `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                                            |
-| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at least 92 % opacity plus backdrop blur) |
+| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at least 96 % opacity plus backdrop blur) |
 | `--color-line`         | `#1d5a2c` | panel borders, chips, grid                                                   |
 | `--color-phosphor`     | `#33ff66` | terminal text, prompt, "online" LEDs, links, focus ring                      |
 | `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                                            |
@@ -36,7 +36,7 @@ The scene is lit in teal-green; the CRT terminal keeps its classic phosphor gree
 | `--color-alert`        | `#ff3b3b` | errors, "command not found", red accent lights                               |
 | `--color-pink`         | `#ff3d8b` | rare accent lights and sign details in the scene                             |
 
-Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. HUD panels over the scene are at least 92 % opaque with a backdrop blur, and their text has to keep AA against the blended background, so contrast is checked on screenshots over the brightest scene areas (ceiling panels, neon), not only against the solid token. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
+Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. HUD panels over the scene are at least 96 % opaque with a backdrop blur: even over the brightest ceiling colour the blended background keeps phosphor at 13.4:1, text at 14.5:1 and phosphor-dim at 4.9:1 (at 92 % phosphor-dim would drop to 4.5:1). Contrast is also checked on screenshots over the brightest scene areas. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
 
 ### Typography
 
@@ -171,7 +171,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 - The scene is a lazily loaded chunk (`three`, `@react-three/fiber`, `@react-three/drei`, post-processing; ≤ 260 KB gzip), loaded after the boot text starts.
 - 3D assets (glTF models, lightmaps, KTX2 textures) are streamed after the terminal is usable: ≤ 3 MB compressed in total, the environment shell first, props afterwards. Simple parts stay procedural and instanced.
 - Device pixel ratio clamped to 1–1.75; `frameloop="demand"` while nothing animates; rendering pauses when the tab is hidden.
-- Target: 60 fps on a mid-range laptop, ≥ 30 fps on a recent phone.
+- Target: 60 fps on a mid-range laptop, ≥ 30 fps on a recent tablet. Phones load no scene (section 6).
 
 ## 8. Implementation plan (issues under #18 and #19)
 
