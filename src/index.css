@@ -567,6 +567,25 @@
       inset 0 1px 0 rgb(255 255 255 / 0.15);
   }
 
+  .crt-bare,
+  .crt-bare .crt-bezel {
+    background: none;
+    box-shadow: none;
+  }
+
+  .crt-bare::before,
+  .crt-bare::after,
+  .crt-bare .crt-bezel::before {
+    display: none;
+  }
+
+  .crt-bare .crt-glass {
+    box-shadow:
+      inset 0 0 110px rgb(0 0 0 / 0.97),
+      inset 0 6px 14px rgb(0 0 0 / 0.9),
+      inset 0 0 24px color-mix(in srgb, var(--color-phosphor) 22%, transparent);
+  }
+
   .crt-dock,
   .crt-launcher {
     position: fixed;
@@ -678,8 +697,36 @@
       animation: crt-flicker 7s steps(1) infinite;
     }
 
+    .crt-bare .crt-titlebar,
+    .crt-bare .crt-viewport {
+      animation: crt-power-on 1.1s ease-out both;
+    }
+
     .crt-roll {
       animation: crt-roll 9s linear infinite;
+    }
+  }
+
+  @keyframes crt-power-on {
+    0%,
+    40% {
+      opacity: 0;
+      transform: scale(1, 0.004);
+      filter: brightness(6);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1, 0.004);
+      filter: brightness(6);
+    }
+    72% {
+      transform: scale(1, 1);
+      filter: brightness(1.8);
+    }
+    100% {
+      opacity: 1;
+      transform: none;
+      filter: none;
     }
   }
 

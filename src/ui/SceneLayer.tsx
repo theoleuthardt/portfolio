@@ -1,4 +1,5 @@
 import { lazy, Suspense, type RefObject } from "react";
+import type { MonitorPose } from "../scene/monitor/CrtMonitor";
 import { isPhoneViewport } from "../scene/device";
 import type { FocusLayout } from "../scene/rack/focus";
 import { RackFallback } from "./RackFallback";
@@ -13,6 +14,8 @@ export interface SceneLayerProps {
   webgl: boolean;
   /** Called when the scene is ready or has failed and the fallback shows. */
   onReady?: () => void;
+  /** Called when the scene has failed, in addition to `onReady`. */
+  onFail?: () => void;
   /** The project whose module is ejected, if any. */
   openProjectId?: string;
   /** Called when a rack module is clicked. */
@@ -23,6 +26,10 @@ export interface SceneLayerProps {
   promptAnchor?: () => DOMRect | undefined;
   /** Where the terminal sits, so the focused module is framed beside it. */
   focusLayout?: FocusLayout;
+  /** The terminal's screen, which the 3D monitor surrounds; none if absent. */
+  screenRect?: () => DOMRect | undefined;
+  /** Whether the visitor sits at the 3D terminal, stands, or there is none. */
+  monitorPose?: MonitorPose;
 }
 
 /**
@@ -33,11 +40,14 @@ export interface SceneLayerProps {
 export function SceneLayer({
   webgl,
   onReady,
+  onFail,
   openProjectId,
   onSelectProject,
   connector,
   promptAnchor,
   focusLayout,
+  screenRect,
+  monitorPose,
 }: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
@@ -46,7 +56,13 @@ export function SceneLayer({
   return (
     <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-end pr-[8vw]">
       {webgl ? (
-        <SceneErrorBoundary fallback={<RackFallback />} onError={onReady}>
+        <SceneErrorBoundary
+          fallback={<RackFallback />}
+          onError={() => {
+            onFail?.();
+            onReady?.();
+          }}
+        >
           <Suspense fallback={null}>
             <Scene
               onReady={onReady}
@@ -55,6 +71,8 @@ export function SceneLayer({
               connector={connector}
               promptAnchor={promptAnchor}
               focusLayout={focusLayout}
+              screenRect={screenRect}
+              monitorPose={monitorPose}
             />
           </Suspense>
         </SceneErrorBoundary>

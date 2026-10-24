@@ -167,3 +167,32 @@ export function signTexture(
   );
   return texture;
 }
+
+/** The dark glossy brand panel beside a terminal's screen. */
+export function brandPanelTexture(): CanvasTexture {
+  return canvasTexture(
+    256,
+    512,
+    (context) => {
+      const gradient = context.createLinearGradient(0, 0, 256, 512);
+      gradient.addColorStop(0, "#2a2a28");
+      gradient.addColorStop(1, "#0d0d0c");
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, 256, 512);
+      context.textAlign = "center";
+      context.font = `34px ${FONT}`;
+      context.shadowColor = "#33ff66";
+      context.shadowBlur = 14;
+      context.fillStyle = "#b9ffcc";
+      context.fillText("TheoCloud", 128, 400);
+      context.font = `18px ${FONT}`;
+      context.shadowColor = "#ff3d8b";
+      context.fillStyle = "#ff3d8b";
+      context.fillText("data systems", 128, 430);
+      context.shadowBlur = 0;
+      context.fillStyle = "#8f8a7c";
+      context.fillText("PWR", 92, 486);
+    },
+    true,
+  );
+}

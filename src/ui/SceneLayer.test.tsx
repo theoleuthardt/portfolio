@@ -74,4 +74,14 @@ describe("SceneLayer", () => {
     await screen.findByRole("img", { name: /server rack/i });
     expect(onReady).toHaveBeenCalled();
   });
+
+  it("also reports the failure itself, so the page can drop what needs the scene", async () => {
+    viewport(1280, 800, false);
+    sceneMock.fails = true;
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const onFail = vi.fn();
+    render(<SceneLayer webgl={true} onFail={onFail} />);
+    await screen.findByRole("img", { name: /server rack/i });
+    expect(onFail).toHaveBeenCalled();
+  });
 });
