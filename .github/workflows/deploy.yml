@@ -5,7 +5,6 @@ on:
     workflows: [CI]
     types: [completed]
     branches: [master]
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,15 +14,37 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  gate:
+    name: Verified commit is master's head
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      latest: ${{ steps.head.outputs.latest }}
+    steps:
+      - id: head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFIED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          head_sha=$(gh api "repos/${GITHUB_REPOSITORY}/commits/master" --jq .sha)
+          if [ "$head_sha" = "$VERIFIED_SHA" ]; then
+            echo "latest=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "latest=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping deploy of $VERIFIED_SHA, master is already at $head_sha"
+          fi
+
   build:
     name: Build
-    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    needs: gate
+    if: needs.gate.outputs.latest == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
       - uses: actions/setup-node@v7
         with:
