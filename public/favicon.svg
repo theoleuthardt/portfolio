@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1.1" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="scan" width="4" height="3" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#000" opacity="0.35"/>
+    </pattern>
+    <clipPath id="cube">
+      <path d="M32 2 L59 17 V47 L32 62 L5 47 V17 Z"/>
+    </clipPath>
+  </defs>
+  <path d="M32 2 L59 17 V47 L32 62 L5 47 V17 Z" fill="#041009"/>
+  <path d="M32 34 L59 19 V47 L32 62 Z" fill="#0f3019"/>
+  <path d="M10 21 V43 M13 48 L28 56.5" fill="none" stroke="#1d9a3f" stroke-width="2" stroke-linecap="round" stroke-dasharray="5 3"/>
+  <g transform="matrix(1 -0.56 0 1 0 17.92)">
+    <path d="M44 40 C43 36.5 35 36.5 35 41 C35 45.5 44 44 44 49.5 C44 54 35 54 34.5 50 M39.5 34.5 V56" fill="none" stroke="#33ff66" stroke-width="3.2" stroke-linecap="round"/>
+    <rect x="47" y="54.5" width="9" height="3.4" fill="#33ff66"/>
+  </g>
+  <g clip-path="url(#cube)">
+    <rect width="64" height="64" fill="url(#scan)"/>
+  </g>
+  <path d="M32 34 L59 19 M32 34 V62" fill="none" stroke="#2ef2c0" stroke-width="2" stroke-linecap="round"/>
+  <path d="M32 2 L59 17 V47 L32 62 L5 47 V17 Z" fill="none" stroke="#33ff66" stroke-width="3" stroke-linejoin="round" filter="url(#glow)"/>
+  <path d="M50 9 L57 13" stroke="#ff3d8b" stroke-width="2" stroke-linecap="round"/>
+</svg>

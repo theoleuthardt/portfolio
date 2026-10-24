@@ -10,10 +10,11 @@ src/content/   projects as typed data (Project, findProject, RACK_UNITS),
                rack layout (rackSlots)
 src/terminal/  pure logic: parse, suggest (did you mean), complete (Tab),
                history, commands (registry, output lines, actions),
-               boot (boot output), session (log, history, open project)
+               boot (boot output), session (log, history, open project),
+               tabTitle (browser tab title per boot phase and prompt)
 src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
                ProjectScreen, CrtFrame, BootScreen, useBootSequence,
-               usePrefersReducedMotion, SceneLayer (phone / no WebGL / 3D),
+               usePrefersReducedMotion, useTabTitle, SceneLayer (phone / no WebGL / 3D),
                RackFallback (SVG), SceneErrorBoundary, ProjectPanel, useViewport
 src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                Scene (lazy chunk: Canvas, reflections, light beams, camera rig),
@@ -25,6 +26,9 @@ src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                neon sign, wall screens, signs, cables)
 public/textures/ CC0 PBR maps, see ASSETS.md
 public/models/   CC0 glTF props (meshopt), see ASSETS.md
+public/favicon*  own neon `$_` cube icon (after the bash logo): SVG,
+               32 px PNG fallback, 180 px apple-touch-icon
+public/favicon*  own `>_` icon: SVG, 32 px PNG fallback, 180 px apple-touch-icon
 src/index.css  design tokens (@theme), base styles, CRT components
 ```
 
