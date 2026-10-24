@@ -5,6 +5,7 @@ import { Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
 import { cameraPosition, LAB_RIG } from "./cameraRig";
 import { LabEnvironment } from "./environment/Environment";
+import { Rack } from "./rack/Rack";
 import { ROOM } from "./layout";
 
 const PostEffects = lazy(() => import("./PostEffects"));
@@ -96,6 +97,10 @@ function ReadySignal({ onReady }: { onReady?: () => void }) {
 export interface SceneProps {
   /** Called once the textures are loaded and the lab can be shown. */
   onReady?: () => void;
+  /** The project whose module is ejected, if any. */
+  openProjectId?: string;
+  /** Called when a rack module is clicked. */
+  onSelectProject?: (projectId: string) => void;
 }
 
 /**
@@ -103,7 +108,11 @@ export interface SceneProps {
  * WebGL: PBR environment, reflections, volumetric light, post-processing and
  * the camera rig.
  */
-export default function Scene({ onReady }: SceneProps) {
+export default function Scene({
+  onReady,
+  openProjectId,
+  onSelectProject,
+}: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   return (
     <Canvas
@@ -153,6 +162,7 @@ export default function Scene({ onReady }: SceneProps) {
       <Suspense fallback={null}>
         <Reflections />
         <LabEnvironment />
+        <Rack openProjectId={openProjectId} onSelectProject={onSelectProject} />
         <LightBeams />
         <ReadySignal onReady={onReady} />
       </Suspense>

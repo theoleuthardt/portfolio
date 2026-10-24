@@ -1,8 +1,9 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import { createRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bootSteps } from "../terminal/boot";
 import { BOOT_STEP_MS, BOOTED_KEY } from "./useBootSequence";
-import { Terminal } from "./Terminal";
+import { Terminal, type TerminalHandle } from "./Terminal";
 
 function mockReducedMotion(reduced: boolean) {
   vi.stubGlobal(
@@ -249,6 +250,16 @@ describe("Terminal", () => {
     expect(
       within(log()).getByText(/ejecting module flashi/),
     ).toBeInTheDocument();
+  });
+
+  it("runs commands given from outside, e.g. a click on a rack module", () => {
+    const ref = createRef<TerminalHandle>();
+    render(<Terminal ref={ref} />);
+    act(() => ref.current?.run("open flashi"));
+    expect(
+      within(log()).getByRole("region", { name: /^Flashi/ }),
+    ).toBeInTheDocument();
+    expect(within(log()).getByText("open flashi")).toBeInTheDocument();
   });
 
   it("clears the log", () => {
