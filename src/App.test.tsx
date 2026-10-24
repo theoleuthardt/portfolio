@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App, { SCENE_TIMEOUT_MS } from "./App";
 import { BOOT_REDUCED_HOLD_MS } from "./ui/useBootSequence";
 
-const sceneMock = vi.hoisted(() => ({ hangs: false }));
+const sceneMock = vi.hoisted(() => ({
+  hangs: false,
+  promptAnchor: undefined as (() => DOMRect | undefined) | undefined,
+}));
 
 vi.mock("./scene/Scene", async () => {
   const { useEffect } = await import("react");
@@ -11,10 +14,13 @@ vi.mock("./scene/Scene", async () => {
     default: function SceneMock({
       onReady,
       onSelectProject,
+      promptAnchor,
     }: {
       onReady: () => void;
       onSelectProject: (id: string) => void;
+      promptAnchor: () => DOMRect | undefined;
     }) {
+      sceneMock.promptAnchor = promptAnchor;
       useEffect(() => {
         if (!sceneMock.hangs) {
           onReady();
@@ -184,5 +190,111 @@ describe("App", () => {
       await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
     ).toBeInTheDocument();
     expect(screen.queryByText(/server rack/)).toBeNull();
+  });
+});
+
+describe("terminal window", () => {
+  const booted = () =>
+    screen.findByRole("textbox", { name: "terminal input" }, { timeout: 3000 });
+
+  it("offers minimize and close only where the scene is shown", async () => {
+    viewport(1440);
+    const { unmount } = render(<App />);
+    await booted();
+    expect(
+      screen.getByRole("button", { name: "minimize terminal" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "close terminal" }),
+    ).toBeInTheDocument();
+    unmount();
+    viewport(390);
+    render(<App />);
+    await booted();
+    expect(screen.queryByRole("button", { name: /terminal$/ })).toBeNull();
+  });
+
+  it("minimizes the terminal into a bar that restores it", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    expect(
+      screen.queryByRole("textbox", { name: "terminal input" }),
+    ).toBeNull();
+    const restore = screen.getByRole("button", { name: "restore terminal" });
+    expect(restore).toHaveFocus();
+    fireEvent.click(restore);
+    expect(
+      screen.getByRole("textbox", { name: "terminal input" }),
+    ).toHaveFocus();
+    expect(
+      screen.queryByRole("button", { name: "restore terminal" }),
+    ).toBeNull();
+  });
+
+  it("closes the terminal behind a button that opens it with its session", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    type("pwd");
+    fireEvent.click(screen.getByRole("button", { name: "close terminal" }));
+    expect(
+      screen.queryByRole("textbox", { name: "terminal input" }),
+    ).toBeNull();
+    const reopen = screen.getByRole("button", { name: "open terminal" });
+    expect(reopen).toHaveFocus();
+    fireEvent.click(reopen);
+    expect(
+      screen.getByRole("textbox", { name: "terminal input" }),
+    ).toHaveFocus();
+    expect(
+      within(screen.getByRole("log")).getByText("/home/guest"),
+    ).toBeInTheDocument();
+  });
+
+  it("names the window after the working directory", async () => {
+    viewport(390);
+    render(<App />);
+    await booted();
+    expect(screen.getByText("guest@theocloud: ~")).toBeInTheDocument();
+    type("cd projects");
+    expect(screen.getByText("guest@theocloud: ~/projects")).toBeInTheDocument();
+  });
+
+  it("maximizes the window and brings it back to its size", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    const maximize = screen.getByRole("button", { name: "maximize terminal" });
+    expect(maximize).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(maximize);
+    expect(maximize).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(maximize);
+    expect(maximize).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("draws no HUD line to a prompt that is folded away", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    type("open flashi");
+    expect(sceneMock.promptAnchor?.()).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    expect(sceneMock.promptAnchor?.()).toBeUndefined();
+  });
+
+  it("brings the terminal back when a rack module opens a project", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    fireEvent.click(screen.getByTestId("scene"));
+    expect(
+      screen.getByRole("textbox", { name: "terminal input" }),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("log")).getByText("open flashi"),
+    ).toBeInTheDocument();
   });
 });

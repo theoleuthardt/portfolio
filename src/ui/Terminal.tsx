@@ -28,7 +28,7 @@ import {
 import type { Cwd } from "../terminal/commands";
 import { bootSteps } from "../terminal/boot";
 import { BootScreen } from "./BootScreen";
-import { CrtFrame } from "./CrtFrame";
+import { CrtFrame, type CrtControls } from "./CrtFrame";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
 import { useTabTitle } from "./useTabTitle";
@@ -72,6 +72,8 @@ export interface TerminalHandle {
   run: (command: string) => void;
   /** Screen rectangle of the prompt input, where the HUD line starts. */
   promptAnchor: () => DOMRect | undefined;
+  /** Moves the focus into the prompt, e.g. after the window is restored. */
+  focus: () => void;
 }
 
 /** Props of {@link Terminal}. */
@@ -85,6 +87,8 @@ export interface TerminalProps {
   holdBoot?: boolean;
   /** Tell visitors that the server rack in the scene is clickable. */
   rackHint?: boolean;
+  /** Minimize and close keys in the monitor housing; none if absent. */
+  controls?: CrtControls;
 }
 
 /**
@@ -104,6 +108,7 @@ export function Terminal({
   inlineProjectScreens = true,
   holdBoot = false,
   rackHint = false,
+  controls,
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
@@ -241,6 +246,7 @@ export function Terminal({
   useImperativeHandle(ref, () => ({
     run: runCommand,
     promptAnchor: () => inputRef.current?.getBoundingClientRect(),
+    focus: () => inputRef.current?.focus(),
   }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
@@ -306,7 +312,7 @@ export function Terminal({
     entry.command === undefined && phase !== "ready" ? [] : entry.lines;
 
   return (
-    <CrtFrame>
+    <CrtFrame title={`guest@theocloud: ${session.cwd}`} controls={controls}>
       <div
         ref={logRef}
         data-boot-phase={phase}
