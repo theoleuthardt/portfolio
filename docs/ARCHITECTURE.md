@@ -6,16 +6,21 @@ A static single-page app built with Vite, React and TypeScript. `npm run build` 
 
 ```
 index.html → src/main.tsx (fonts, styles) → src/App.tsx → ui/Terminal
-src/content/   projects as typed data (Project, findProject, RACK_UNITS)
+src/content/   projects as typed data (Project, findProject, RACK_UNITS),
+               rack layout (rackSlots)
 src/terminal/  pure logic: parse, suggest (did you mean), complete (Tab),
                history, commands (registry, output lines, actions),
                boot (boot output), session (log, history, open project)
 src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
-               ProjectScreen, CrtFrame, useBootSequence, usePrefersReducedMotion
+               ProjectScreen, CrtFrame, BootScreen, useBootSequence,
+               usePrefersReducedMotion, SceneLayer (phone / no WebGL / 3D),
+               RackFallback (SVG), useViewport
+src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
+               Scene (lazy chunk: Canvas, fog, floor, camera rig)
 src/index.css  design tokens (@theme), base styles, CRT components
 ```
 
-Today the CRT terminal is the whole page (the phone layout of variant C); the scene and the wide-screen layout follow in #66 and #67. The old page is described in [content-audit.md](content-audit.md).
+On phones the CRT terminal is the whole page and the scene chunk is never requested. On wide screens the lazily loaded scene (#67) renders behind the terminal; the full variant C layout follows in #66. The old page is described in [content-audit.md](content-audit.md).
 
 ## Target picture
 
