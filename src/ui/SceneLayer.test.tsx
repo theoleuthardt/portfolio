@@ -64,4 +64,14 @@ describe("SceneLayer", () => {
       await screen.findByRole("img", { name: /server rack/i }),
     ).toBeInTheDocument();
   });
+
+  it("reports a failed scene as ready so the boot can finish", async () => {
+    viewport(1280, 800, false);
+    sceneMock.fails = true;
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const onReady = vi.fn();
+    render(<SceneLayer webgl={true} onReady={onReady} />);
+    await screen.findByRole("img", { name: /server rack/i });
+    expect(onReady).toHaveBeenCalled();
+  });
 });

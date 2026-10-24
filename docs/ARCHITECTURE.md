@@ -20,7 +20,7 @@ src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
 src/index.css  design tokens (@theme), base styles, CRT components
 ```
 
-On phones the CRT terminal is the whole page and the scene chunk is never requested. From 640 px the lazily loaded scene renders behind the terminal. `App` owns the shared state: the open project (reported by the terminal, shown as `ProjectPanel` on ≥ 1024 px and inside the terminal below) and whether the scene is ready (the boot bar holds at "syncing lab" until it is, or until the scene fails and the SVG fallback shows). The old page is described in [content-audit.md](content-audit.md).
+On phones and touch tablets (touch below 1024 px) the CRT terminal is the whole page and the scene chunk is never requested. From 640 px the lazily loaded scene renders behind the terminal. `App` owns the shared state: the open project (reported by the terminal, shown as `ProjectPanel` on ≥ 1024 px and inside the terminal below) and whether the scene has settled (the boot bar holds at "syncing lab" until the scene is ready, fails and shows the SVG fallback, or 8 s have passed; a finished boot never falls back). The old page is described in [content-audit.md](content-audit.md).
 
 ## Target picture
 

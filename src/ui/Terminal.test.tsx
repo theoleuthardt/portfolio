@@ -266,6 +266,26 @@ describe("Terminal boot hold", () => {
   });
 });
 
+describe("Terminal boot latch", () => {
+  it("does not fall back once the boot has completed", () => {
+    const { rerender } = render(<Terminal holdBoot={false} />);
+    rerender(<Terminal holdBoot={true} />);
+    expect(within(log()).getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "100",
+    );
+    expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
+  });
+
+  it("ignores Escape while an IME composition is active", () => {
+    const onOpenProjectChange = vi.fn();
+    render(<Terminal onOpenProjectChange={onOpenProjectChange} />);
+    type("open flashi");
+    fireEvent.keyDown(window, { key: "Escape", isComposing: true });
+    expect(onOpenProjectChange).toHaveBeenLastCalledWith("flashi");
+  });
+});
+
 describe("Terminal boot sequence", () => {
   beforeEach(() => {
     mockReducedMotion(false);

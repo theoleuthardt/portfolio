@@ -29,7 +29,7 @@ function markBooted(): void {
  * returning visitors and after any key press or pointer press. When the
  * browser blocks session storage, every visit counts as the first one.
  * While `hold` is set the count stops one step before the end, so the last
- * step waits for the 3D scene.
+ * step waits for the 3D scene. Once complete, the boot stays complete.
  */
 export function useBootSequence(total: number, hold = false): number {
   const reducedMotion = usePrefersReducedMotion();
@@ -60,5 +60,12 @@ export function useBootSequence(total: number, hold = false): number {
   }, [done, hold, total]);
 
   const reached = reducedMotion ? total : visible;
+  const [finished, setFinished] = useState(false);
+  if (!finished && !hold && reached >= total) {
+    setFinished(true);
+  }
+  if (finished) {
+    return total;
+  }
   return hold ? Math.min(reached, total - 1) : reached;
 }

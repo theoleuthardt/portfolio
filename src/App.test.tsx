@@ -1,26 +1,37 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import App from "./App";
+import App, { SCENE_TIMEOUT_MS } from "./App";
 
-vi.mock("./scene/Scene", () => ({
-  default: ({ onReady }: { onReady: () => void }) => {
-    onReady();
-    return null;
-  },
-}));
+const sceneMock = vi.hoisted(() => ({ hangs: false }));
+
+vi.mock("./scene/Scene", async () => {
+  const { useEffect } = await import("react");
+  return {
+    default: function SceneMock({ onReady }: { onReady: () => void }) {
+      useEffect(() => {
+        if (!sceneMock.hangs) {
+          onReady();
+        }
+      }, [onReady]);
+      return <div data-testid="scene" />;
+    },
+  };
+});
 
 vi.mock("./scene/device", async (importOriginal) => ({
   ...(await importOriginal<typeof import("./scene/device")>()),
   supportsWebGL: () => true,
 }));
 
-function viewport(width: number) {
+function viewport(width: number, coarsePointer = false) {
   vi.stubGlobal("innerWidth", width);
   vi.stubGlobal("innerHeight", 900);
   vi.stubGlobal(
     "matchMedia",
     vi.fn((query: string) => ({
-      matches: query.includes("prefers-reduced-motion"),
+      matches:
+        query.includes("prefers-reduced-motion") ||
+        (coarsePointer && query.includes("pointer: coarse")),
       media: query,
       addEventListener: vi.fn(),
       removeEventListener: vi.fn(),
@@ -35,7 +46,11 @@ function type(command: string) {
 }
 
 beforeEach(() => sessionStorage.clear());
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  sceneMock.hangs = false;
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 describe("App", () => {
   it("shows an opened project as a side panel on wide screens", async () => {
@@ -82,5 +97,30 @@ describe("App", () => {
     link.focus();
     fireEvent.keyDown(link, { key: "Escape" });
     expect(screen.queryByRole("complementary", { name: "project" })).toBeNull();
+  });
+
+  it("does not wait forever for a scene that never loads", async () => {
+    vi.useFakeTimers();
+    viewport(1440);
+    sceneMock.hangs = true;
+    render(<App />);
+    expect(screen.queryByText(/Welcome, guest/)).toBeNull();
+    await act(async () => {
+      vi.advanceTimersByTime(SCENE_TIMEOUT_MS);
+    });
+    expect(screen.getByText(/Welcome, guest/)).toBeInTheDocument();
+  });
+
+  it("shows no scene on touch tablets", () => {
+    viewport(820, true);
+    render(<App />);
+    expect(screen.queryByTestId("scene")).toBeNull();
+    expect(screen.getByText(/Welcome, guest/)).toBeInTheDocument();
+  });
+
+  it("shows the scene on wide desktop screens", async () => {
+    viewport(1440);
+    render(<App />);
+    expect(await screen.findByTestId("scene")).toBeInTheDocument();
   });
 });

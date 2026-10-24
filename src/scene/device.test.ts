@@ -17,9 +17,18 @@ describe("isPhoneViewport", () => {
     ).toBe(true);
   });
 
-  it("treats tablets and desktops as wide screens", () => {
+  it("treats touch devices narrower than 1024 px as phones", () => {
+    expect(
+      isPhoneViewport({ width: 820, height: 1180, coarsePointer: true }),
+    ).toBe(true);
+  });
+
+  it("treats large tablets and desktops as wide screens", () => {
     expect(
       isPhoneViewport({ width: 1024, height: 768, coarsePointer: true }),
+    ).toBe(false);
+    expect(
+      isPhoneViewport({ width: 820, height: 1000, coarsePointer: false }),
     ).toBe(false);
     expect(
       isPhoneViewport({ width: 1280, height: 480, coarsePointer: false }),

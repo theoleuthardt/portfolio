@@ -79,7 +79,11 @@ export function Terminal({
   };
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
-    if (event.key === "Escape" && session.openProjectId !== undefined) {
+    if (
+      event.key === "Escape" &&
+      !event.isComposing &&
+      session.openProjectId !== undefined
+    ) {
       runCommand("close");
     }
   });
