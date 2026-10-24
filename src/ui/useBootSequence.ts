@@ -28,8 +28,10 @@ function markBooted(): void {
  * visit of a session; shows everything at once with reduced motion, for
  * returning visitors and after any key press or pointer press. When the
  * browser blocks session storage, every visit counts as the first one.
+ * While `hold` is set the count stops one step before the end, so the last
+ * step waits for the 3D scene.
  */
-export function useBootSequence(total: number): number {
+export function useBootSequence(total: number, hold = false): number {
   const reducedMotion = usePrefersReducedMotion();
   const [visible, setVisible] = useState(() =>
     reducedMotion || alreadyBooted() ? total : 1,
@@ -38,7 +40,9 @@ export function useBootSequence(total: number): number {
 
   useEffect(() => {
     if (done) {
-      markBooted();
+      if (!hold) {
+        markBooted();
+      }
       return;
     }
     const skip = () => setVisible(total);
@@ -53,7 +57,8 @@ export function useBootSequence(total: number): number {
       window.removeEventListener("keydown", skip);
       window.removeEventListener("pointerdown", skip);
     };
-  }, [done, total]);
+  }, [done, hold, total]);
 
-  return reducedMotion ? total : visible;
+  const reached = reducedMotion ? total : visible;
+  return hold ? Math.min(reached, total - 1) : reached;
 }

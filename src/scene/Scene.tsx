@@ -54,12 +54,18 @@ function NeonFloor() {
   );
 }
 
+/** Props of {@link Scene}. */
+export interface SceneProps {
+  /** Called once the WebGL renderer has been created. */
+  onReady?: () => void;
+}
+
 /**
  * The 3D lab behind the terminal, loaded lazily on wide screens with WebGL.
  * This first stage has the floor, fog and camera rig; the environment, rack
  * and props follow in their own issues.
  */
-export default function Scene() {
+export default function Scene({ onReady }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   return (
     <Canvas
@@ -70,6 +76,7 @@ export default function Scene() {
       eventSource={document.getElementById("root") ?? undefined}
       eventPrefix="client"
       aria-hidden="true"
+      onCreated={() => onReady?.()}
     >
       <color attach="background" args={[HAZE]} />
       <fogExp2 attach="fog" args={[HAZE, 0.06]} />

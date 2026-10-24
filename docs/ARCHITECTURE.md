@@ -14,13 +14,13 @@ src/terminal/  pure logic: parse, suggest (did you mean), complete (Tab),
 src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
                ProjectScreen, CrtFrame, BootScreen, useBootSequence,
                usePrefersReducedMotion, SceneLayer (phone / no WebGL / 3D),
-               RackFallback (SVG), useViewport
+               RackFallback (SVG), SceneErrorBoundary, ProjectPanel, useViewport
 src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                Scene (lazy chunk: Canvas, fog, floor, camera rig)
 src/index.css  design tokens (@theme), base styles, CRT components
 ```
 
-On phones the CRT terminal is the whole page and the scene chunk is never requested. On wide screens the lazily loaded scene (#67) renders behind the terminal; the full variant C layout follows in #66. The old page is described in [content-audit.md](content-audit.md).
+On phones the CRT terminal is the whole page and the scene chunk is never requested. From 640 px the lazily loaded scene renders behind the terminal. `App` owns the shared state: the open project (reported by the terminal, shown as `ProjectPanel` on ≥ 1024 px and inside the terminal below) and whether the scene is ready (the boot bar holds at "syncing lab" until it is, or until the scene fails and the SVG fallback shows). The old page is described in [content-audit.md](content-audit.md).
 
 ## Target picture
 

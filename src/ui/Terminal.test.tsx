@@ -213,12 +213,56 @@ describe("Terminal", () => {
     ).toBeInTheDocument();
   });
 
+  it("reports the open project and its closing", () => {
+    const onOpenProjectChange = vi.fn();
+    render(<Terminal onOpenProjectChange={onOpenProjectChange} />);
+    type("open flashi");
+    expect(onOpenProjectChange).toHaveBeenLastCalledWith("flashi");
+    type("close");
+    expect(onOpenProjectChange).toHaveBeenLastCalledWith(undefined);
+  });
+
+  it("closes the open project with Escape", () => {
+    const onOpenProjectChange = vi.fn();
+    render(<Terminal onOpenProjectChange={onOpenProjectChange} />);
+    type("open flashi");
+    fireEvent.keyDown(input(), { key: "Escape" });
+    expect(onOpenProjectChange).toHaveBeenLastCalledWith(undefined);
+    expect(within(log()).queryByRole("region")).toBeNull();
+  });
+
+  it("leaves project screens out of the log when they are shown elsewhere", () => {
+    render(<Terminal inlineProjectScreens={false} />);
+    type("open flashi");
+    expect(within(log()).queryByRole("region")).toBeNull();
+    expect(
+      within(log()).getByText(/ejecting module flashi/),
+    ).toBeInTheDocument();
+  });
+
   it("clears the log", () => {
     render(<Terminal />);
     type("clear");
     expect(
       within(log()).queryByRole("img", { name: "TheoCloud OS" }),
     ).toBeNull();
+  });
+});
+
+describe("Terminal boot hold", () => {
+  it("holds the boot at the lab sync step until the scene is ready", () => {
+    const { rerender } = render(<Terminal holdBoot={true} />);
+    expect(within(log()).getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      String(bootSteps[bootSteps.length - 2].percent),
+    );
+    expect(within(log()).queryByText(/Welcome, guest/)).toBeNull();
+    rerender(<Terminal holdBoot={false} />);
+    expect(within(log()).getByRole("progressbar")).toHaveAttribute(
+      "aria-valuenow",
+      "100",
+    );
+    expect(within(log()).getByText(/Welcome, guest/)).toBeInTheDocument();
   });
 });
 

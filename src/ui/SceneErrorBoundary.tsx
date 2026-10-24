@@ -4,6 +4,8 @@ import { Component, type ReactNode } from "react";
 export interface SceneErrorBoundaryProps {
   children: ReactNode;
   fallback: ReactNode;
+  /** Called once the scene has failed and the fallback is shown. */
+  onError?: () => void;
 }
 
 interface State {
@@ -23,6 +25,10 @@ export class SceneErrorBoundary extends Component<
 
   static getDerivedStateFromError(): State {
     return { failed: true };
+  }
+
+  componentDidCatch() {
+    this.props.onError?.();
   }
 
   render() {

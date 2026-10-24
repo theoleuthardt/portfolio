@@ -45,7 +45,8 @@ export const bootSteps: readonly BootStep[] = [
   { label: "mem check 640K", percent: 27 },
   { label: `mounting /projects (${projects.length} modules)`, percent: 46 },
   { label: "linking rack-01", percent: 64 },
-  { label: "starting services", percent: 83 },
+  { label: "starting services", percent: 78 },
+  { label: "syncing lab", percent: 92 },
   { label: "ready", percent: 100 },
 ];
 
