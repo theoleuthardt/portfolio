@@ -143,7 +143,7 @@ const listProjects: Run = (args, { cwd = "~" }) => {
     return text(
       ...listed.map(
         (project) =>
-          `drwxr-xr-x 1 guest lab ${String(project.units).padStart(2)}U ${project.fork ? "fork" : "own "} ${project.id}`,
+          `-rw-r--r-- 1 guest lab ${String(project.units).padStart(2)}U ${project.fork ? "fork" : "own "} ${project.id}`,
       ),
     );
   }

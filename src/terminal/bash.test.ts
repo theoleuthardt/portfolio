@@ -65,7 +65,7 @@ describe("ls", () => {
     expect(lines).toHaveLength(projects.length);
     projects.forEach((project, index) => {
       expect(lines[index]).toMatch(new RegExp(`${project.id}$`));
-      expect(lines[index]).toMatch(/^[-d][rwx-]{9} /);
+      expect(lines[index]).toMatch(/^-[rwx-]{9} /);
     });
   });
 
