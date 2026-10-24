@@ -40,8 +40,7 @@ Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-
 
 ### Typography
 
-- **VT323** (OFL, self-hosted) for the CRT terminal: the boot log, prompt and command output, 20 px desktop / 18 px mobile, line height 1.3, so it reads like a real 80-column terminal.
-- **JetBrains Mono** (OFL, self-hosted) for longer text: project screens, HUD labels (11 px uppercase, 0.2 em tracking), headings. Weights 400 / 700.
+- **Share Tech Mono** (OFL, self-hosted) for everything: the CRT terminal, project screens, HUD labels and headings, so the whole site reads like one cyberpunk terminal. Terminal text 17 px desktop / 15 px mobile, line height 1.5; HUD labels 12 px uppercase with 0.2 em tracking; project screen titles 22 px.
 - No Google Fonts; both are bundled.
 
 ### CRT terminal
@@ -115,7 +114,7 @@ Full-screen scene: the rack stands on the right at a three-quarter angle, a serv
 
 ![Mockup of variant C: terminal HUD on the left, rack with the trust-issues module slid out, project screen on the right](design/mockup-variant-c.png)
 
-The mockup is a throwaway prototype (plain Three.js, procedural boxes, bloom, CSS CRT, system monospace font instead of VT323) and shows the **layout only**; the Night City look comes from the modeling work in section 2. Only this screenshot is kept in the repository as a reference; the prototype code is not part of the code base.
+The mockup is a throwaway prototype (plain Three.js, procedural boxes, bloom, CSS CRT, system monospace font instead of Share Tech Mono) and shows the **layout only**; the Night City look comes from the modeling work in section 2. Only this screenshot is kept in the repository as a reference; the prototype code is not part of the code base.
 
 ## 5. Interaction
 
@@ -188,7 +187,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 11. Post-processing and performance: selective bloom, vignette, idle animation, `frameloop`, DPR, visibility, asset budget
 12. Easter eggs: `neofetch`, `play dino`, `sudo`
 13. Quality: performance and bundle budget check in CI, a11y pass (keyboard, screen reader, contrast), `index.html` meta / Open Graph, `noscript`
-14. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono with their OFL licence texts shipped next to the font files (#30)
+14. Design tokens in Tailwind `@theme`, self-hosted Share Tech Mono with its OFL licence text served next to the font (#30)
 
 This plan is the basis for the issues under #18 and #19; each issue may refine its scope, and new dependencies are audited before they are added.
 

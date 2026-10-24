@@ -10,7 +10,7 @@ Theo Leuthardt's personal developer portfolio, served at <https://theocloud.dev>
 
 - **Vite + React + TypeScript** (single-page app, static build in `dist/`)
 - **Three.js** via `@react-three/fiber` and `@react-three/drei` (from epic #18)
-- **Tailwind CSS 4** for the 2D overlay, via `@tailwindcss/vite`; theme values live CSS-first in `@theme` in `src/index.css` (design tokens follow in #30). Hand-written global CSS goes into `@layer base` (or `components`): unlayered rules beat every Tailwind utility, because v4 uses native cascade layers
+- **Tailwind CSS 4** for the 2D overlay, via `@tailwindcss/vite`; design tokens (colours, fonts, text sizes from `docs/design-concept.md`) live CSS-first in `@theme` in `src/index.css`; use them (`text-phosphor`, `bg-glass`, `text-terminal`, `text-hud`) instead of raw values. `src/design-tokens.test.ts` keeps the colours at WCAG AA. The only font is Share Tech Mono, self-hosted via Fontsource (latin subset, imported in `src/main.tsx`) and set on `html`; its OFL licence is served from `public/licenses/`. Hand-written global CSS goes into `@layer base` (or `components`): unlayered rules beat every Tailwind utility, because v4 uses native cascade layers
 - **Vitest** + Testing Library (jsdom) for tests; Node version pinned in `.nvmrc` (22)
 - **ESLint 10** (flat config in `eslint.config.js`, typescript-eslint, React Hooks and React Refresh rules) + **Prettier**
 - **GitHub Actions** for CI ([`docs/CI.md`](docs/CI.md)) and the GitHub Pages deployment after green CI ([`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md))
