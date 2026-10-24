@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 /** The window keys of the terminal app; absent where they make no sense. */
 export interface CrtControls {
@@ -14,6 +14,13 @@ export interface CrtFrameProps {
   title: string;
   children: ReactNode;
   controls?: CrtControls;
+  /**
+   * Draw the housing; off while the 3D monitor in the scene surrounds the
+   * screen, which then keeps its place and size so the two line up.
+   */
+  housing?: boolean;
+  /** The tube glass, whose rectangle the 3D monitor is built around. */
+  glassRef?: Ref<HTMLDivElement>;
 }
 
 /**
@@ -22,11 +29,17 @@ export interface CrtFrameProps {
  * model plate, buttons and the power LED. On the screen runs the terminal
  * app as a window with a title bar and the minimize, maximize and close keys.
  */
-export function CrtFrame({ title, children, controls }: CrtFrameProps) {
+export function CrtFrame({
+  title,
+  children,
+  controls,
+  housing = true,
+  glassRef,
+}: CrtFrameProps) {
   return (
-    <div className="crt">
+    <div className={housing ? "crt" : "crt crt-bare"}>
       <div className="crt-bezel">
-        <div className="crt-glass">
+        <div ref={glassRef} className="crt-glass">
           <div className="crt-titlebar">
             <span className="crt-title">{title}</span>
             {controls ? (
@@ -64,20 +77,24 @@ export function CrtFrame({ title, children, controls }: CrtFrameProps) {
         </div>
       </div>
       <div className="crt-strip" aria-hidden="true">
-        <span className="crt-vents" />
-        <span className="crt-knobs">
-          <span className="crt-knob" />
-          BRT
-          <span className="crt-knob" />
-          CONT
-        </span>
-        <span className="crt-plate">THEO-TERM 3270</span>
-        <span className="crt-power">
-          <span className="crt-button" />
-          <span className="crt-button" />
-          <span className="crt-led" />
-          PWR
-        </span>
+        {housing ? (
+          <>
+            <span className="crt-vents" />
+            <span className="crt-knobs">
+              <span className="crt-knob" />
+              BRT
+              <span className="crt-knob" />
+              CONT
+            </span>
+            <span className="crt-plate">THEO-TERM 3270</span>
+            <span className="crt-power">
+              <span className="crt-button" />
+              <span className="crt-button" />
+              <span className="crt-led" />
+              PWR
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );

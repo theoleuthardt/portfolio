@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cameraPosition, type RigSettings } from "./cameraRig";
+import { cameraPosition, standUp, type RigSettings } from "./cameraRig";
 
 const settings: RigSettings = {
   base: [0, 1, 10],
@@ -33,5 +33,14 @@ describe("cameraPosition", () => {
     expect(cameraPosition(settings, 13, { x: 1, y: -1 }, true)).toEqual([
       0, 1, 10,
     ]);
+  });
+});
+
+describe("standUp", () => {
+  it("raises the eyes and steps back from the desk", () => {
+    const [x, y, z] = standUp([0.6, 1.4, 9]);
+    expect(x).toBe(0.6);
+    expect(y).toBeGreaterThan(1.4);
+    expect(z).toBeGreaterThan(9);
   });
 });

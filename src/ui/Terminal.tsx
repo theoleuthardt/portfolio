@@ -74,6 +74,8 @@ export interface TerminalHandle {
   promptAnchor: () => DOMRect | undefined;
   /** Moves the focus into the prompt, e.g. after the window is restored. */
   focus: () => void;
+  /** Screen rectangle of the tube glass, which the 3D monitor surrounds. */
+  screenRect: () => DOMRect | undefined;
 }
 
 /** Props of {@link Terminal}. */
@@ -89,6 +91,8 @@ export interface TerminalProps {
   rackHint?: boolean;
   /** Minimize and close keys in the monitor housing; none if absent. */
   controls?: CrtControls;
+  /** Draw the 2D monitor housing; off while the 3D monitor surrounds it. */
+  housing?: boolean;
 }
 
 /**
@@ -109,6 +113,7 @@ export function Terminal({
   holdBoot = false,
   rackHint = false,
   controls,
+  housing = true,
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
@@ -120,6 +125,7 @@ export function Terminal({
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
+  const glassRef = useRef<HTMLDivElement>(null);
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
   const phase = useBootPhase(booted);
@@ -247,6 +253,7 @@ export function Terminal({
     run: runCommand,
     promptAnchor: () => inputRef.current?.getBoundingClientRect(),
     focus: () => inputRef.current?.focus(),
+    screenRect: () => glassRef.current?.getBoundingClientRect(),
   }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
@@ -312,7 +319,12 @@ export function Terminal({
     entry.command === undefined && phase !== "ready" ? [] : entry.lines;
 
   return (
-    <CrtFrame title={`guest@theocloud: ${session.cwd}`} controls={controls}>
+    <CrtFrame
+      title={`guest@theocloud: ${session.cwd}`}
+      controls={controls}
+      housing={housing}
+      glassRef={glassRef}
+    >
       <div
         ref={logRef}
         data-boot-phase={phase}

@@ -13,7 +13,7 @@ import { SceneErrorBoundary } from "../ui/SceneErrorBoundary";
 import { rackSlots, type RackSlot } from "../content/rack";
 import { Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
-import { cameraPosition, LAB_RIG } from "./cameraRig";
+import { cameraPosition, LAB_RIG, standUp } from "./cameraRig";
 import { LabEnvironment } from "./environment/Environment";
 import { connectorPoints, toScreen } from "./rack/connector";
 import {
@@ -25,6 +25,8 @@ import {
   type FocusPose,
 } from "./rack/focus";
 import { Rack } from "./rack/Rack";
+import { CrtMonitor, type MonitorPose } from "./monitor/CrtMonitor";
+import type { ScreenRect } from "./monitor/placement";
 import { ROOM } from "./layout";
 
 const PostEffects = lazy(() => import("./PostEffects"));
@@ -40,9 +42,11 @@ const SLOTS = rackSlots();
 interface CameraRigProps {
   reducedMotion: boolean;
   focus?: FocusPose;
+  /** The visitor has stood up from the desk; a focused module still wins. */
+  standing: boolean;
 }
 
-function CameraRig({ reducedMotion, focus }: CameraRigProps) {
+function CameraRig({ reducedMotion, focus, standing }: CameraRigProps) {
   const next = useMemo(() => new Vector3(), []);
   const lookAt = useMemo(() => TARGET.clone(), []);
   const goal = useMemo(() => new Vector3(), []);
@@ -51,12 +55,16 @@ function CameraRig({ reducedMotion, focus }: CameraRigProps) {
       next.set(...focus.position);
       goal.set(...focus.target);
     } else {
-      next.set(
-        ...cameraPosition(LAB_RIG, clock.elapsedTime, pointer, reducedMotion),
+      const seated = cameraPosition(
+        LAB_RIG,
+        clock.elapsedTime,
+        pointer,
+        reducedMotion,
       );
+      next.set(...(standing ? standUp(seated) : seated));
       goal.copy(TARGET);
     }
-    const speed = reducedMotion ? Infinity : focus ? 3.2 : 2;
+    const speed = reducedMotion ? Infinity : focus ? 3.2 : standing ? 1.3 : 2;
     camera.position.set(
       approach(camera.position.x, next.x, delta, speed),
       approach(camera.position.y, next.y, delta, speed),
@@ -198,12 +206,16 @@ export interface SceneProps {
   promptAnchor?: () => DOMRect | undefined;
   /** Where the terminal sits, so the focused module is framed beside it. */
   focusLayout?: FocusLayout;
+  /** The terminal's screen, which the 3D monitor surrounds; none if absent. */
+  screenRect?: () => ScreenRect | undefined;
+  /** Whether the visitor sits at the 3D terminal, stands, or there is none. */
+  monitorPose?: MonitorPose;
 }
 
 /**
  * The Night City lab behind the terminal, loaded lazily on wide screens with
- * WebGL: PBR environment, reflections, volumetric light, post-processing and
- * the camera rig.
+ * WebGL: PBR environment, reflections, volumetric light, post-processing,
+ * the camera rig and the 3D monitor around the terminal's screen.
  */
 export default function Scene({
   onReady,
@@ -212,6 +224,8 @@ export default function Scene({
   connector,
   promptAnchor,
   focusLayout = "docked",
+  screenRect,
+  monitorPose = "off",
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [labReady, setLabReady] = useState(false);
@@ -287,7 +301,16 @@ export default function Scene({
       <Suspense fallback={null}>
         <PostEffects />
       </Suspense>
-      <CameraRig reducedMotion={reducedMotion} focus={focus} />
+      <CameraRig
+        reducedMotion={reducedMotion}
+        focus={focus}
+        standing={monitorPose === "standing"}
+      />
+      <CrtMonitor
+        screenRect={screenRect}
+        pose={monitorPose}
+        reducedMotion={reducedMotion}
+      />
       <Connector
         line={connector}
         slot={focusedSlot}

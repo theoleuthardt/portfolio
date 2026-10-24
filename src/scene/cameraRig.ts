@@ -51,3 +51,11 @@ export const LAB_RIG: RigSettings = {
   orbitPeriodSeconds: 48,
   parallax: 0.35,
 };
+
+/**
+ * The eye position after standing up from the desk at `seated`: higher and
+ * a step back, so the desk with the terminal stays in view below.
+ */
+export function standUp([x, y, z]: Vector3): Vector3 {
+  return [x, y + 0.55, z + 0.75];
+}

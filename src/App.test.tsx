@@ -5,7 +5,10 @@ import { BOOT_REDUCED_HOLD_MS } from "./ui/useBootSequence";
 
 const sceneMock = vi.hoisted(() => ({
   hangs: false,
+  fails: false,
   promptAnchor: undefined as (() => DOMRect | undefined) | undefined,
+  screenRect: undefined as (() => DOMRect | undefined) | undefined,
+  monitorPose: undefined as string | undefined,
 }));
 
 vi.mock("./scene/Scene", async () => {
@@ -15,12 +18,21 @@ vi.mock("./scene/Scene", async () => {
       onReady,
       onSelectProject,
       promptAnchor,
+      screenRect,
+      monitorPose,
     }: {
       onReady: () => void;
       onSelectProject: (id: string) => void;
       promptAnchor: () => DOMRect | undefined;
+      screenRect?: () => DOMRect | undefined;
+      monitorPose?: string;
     }) {
+      if (sceneMock.fails) {
+        throw new Error("WebGL context lost");
+      }
       sceneMock.promptAnchor = promptAnchor;
+      sceneMock.screenRect = screenRect;
+      sceneMock.monitorPose = monitorPose;
       useEffect(() => {
         if (!sceneMock.hangs) {
           onReady();
@@ -69,6 +81,10 @@ function type(command: string) {
 beforeEach(() => sessionStorage.clear());
 afterEach(() => {
   sceneMock.hangs = false;
+  sceneMock.fails = false;
+  sceneMock.screenRect = undefined;
+  sceneMock.monitorPose = undefined;
+  vi.restoreAllMocks();
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
@@ -296,5 +312,72 @@ describe("terminal window", () => {
     expect(
       within(screen.getByRole("log")).getByText("open flashi"),
     ).toBeInTheDocument();
+  });
+});
+
+describe("3D monitor", () => {
+  const booted = () =>
+    screen.findByRole("textbox", { name: "terminal input" }, { timeout: 3000 });
+
+  it("hands the screen to the 3D monitor once the scene is ready", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    expect(sceneMock.screenRect?.()).toBeDefined();
+    expect(screen.queryByText("THEO-TERM 3270")).toBeNull();
+  });
+
+  it("keeps the 2D housing on phones and while the scene never loads", async () => {
+    viewport(390);
+    const { unmount } = render(<App />);
+    await booted();
+    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
+    unmount();
+    vi.useFakeTimers();
+    sceneMock.hangs = true;
+    viewport(1440);
+    render(<App />);
+    await act(() => vi.advanceTimersByTimeAsync(SCENE_TIMEOUT_MS + 5000));
+    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
+    expect(sceneMock.screenRect).toBeUndefined();
+  });
+
+  it("keeps the 2D housing when the scene fails", async () => {
+    viewport(1440);
+    sceneMock.fails = true;
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    render(<App />);
+    await booted();
+    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
+  });
+
+  it("goes back to the 2D housing while the window is maximized", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    fireEvent.click(screen.getByRole("button", { name: "maximize terminal" }));
+    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
+    expect(sceneMock.screenRect).toBeUndefined();
+  });
+
+  it("stands up from the desk while the terminal is folded away", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    expect(sceneMock.monitorPose).toBe("seated");
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    expect(sceneMock.monitorPose).toBe("standing");
+    fireEvent.click(screen.getByRole("button", { name: "restore terminal" }));
+    expect(sceneMock.monitorPose).toBe("seated");
+    fireEvent.click(screen.getByRole("button", { name: "close terminal" }));
+    expect(sceneMock.monitorPose).toBe("standing");
+  });
+
+  it("puts no 3D monitor in the scene while the window is maximized", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    fireEvent.click(screen.getByRole("button", { name: "maximize terminal" }));
+    expect(sceneMock.monitorPose).toBe("off");
   });
 });

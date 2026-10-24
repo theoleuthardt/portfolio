@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { findProject } from "./content/projects";
+import type { MonitorPose } from "./scene/monitor/CrtMonitor";
 import { isPhoneViewport, supportsWebGL } from "./scene/device";
 import { ProjectPanel } from "./ui/ProjectPanel";
 import { SceneLayer } from "./ui/SceneLayer";
@@ -22,12 +23,17 @@ export const SCENE_TIMEOUT_MS = 8000;
  * scene, at most {@link SCENE_TIMEOUT_MS}. Where the scene is shown, the
  * terminal can be maximized, minimized into a bar or closed behind a button to free the
  * view of the lab; it stays mounted, so its session survives, and opening a
- * project from the rack brings it back.
+ * project from the rack brings it back. Once the scene is ready, the 3D
+ * monitor in the scene replaces the 2D housing around the screen, except
+ * while the window is maximized; folding the terminal away stands the
+ * visitor up from the desk, restoring it sits them down again.
  */
 const App = () => {
   const [webgl] = useState(() => supportsWebGL());
   const [openProjectId, setOpenProjectId] = useState<string>();
   const [sceneSettled, setSceneSettled] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
+  const [sceneFailed, setSceneFailed] = useState(false);
   const [terminalWindow, setTerminalWindow] = useState<TerminalWindow>("open");
   const [maximized, setMaximized] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
@@ -38,6 +44,13 @@ const App = () => {
   const sceneShown = webgl && !isPhoneViewport(viewport);
   const sceneLoading = sceneShown && !sceneSettled;
   const windowState = sceneShown ? terminalWindow : "open";
+  const monitorAvailable =
+    sceneShown && sceneReady && !sceneFailed && !maximized;
+  const monitorPose: MonitorPose = !monitorAvailable
+    ? "off"
+    : windowState === "open"
+      ? "seated"
+      : "standing";
   useEffect(() => {
     if (!sceneLoading) {
       return;
@@ -66,7 +79,11 @@ const App = () => {
     <main className="relative flex h-dvh flex-col justify-end overflow-hidden bg-void p-2 sm:p-6 lg:justify-start">
       <SceneLayer
         webgl={webgl}
-        onReady={() => setSceneSettled(true)}
+        onReady={() => {
+          setSceneSettled(true);
+          setSceneReady(true);
+        }}
+        onFail={() => setSceneFailed(true)}
         openProjectId={openProjectId}
         onSelectProject={(id) => {
           setTerminalWindow("open");
@@ -77,6 +94,10 @@ const App = () => {
           windowState === "open" ? terminal.current?.promptAnchor() : undefined
         }
         focusLayout={wide ? "docked" : "sheet"}
+        screenRect={
+          monitorAvailable ? () => terminal.current?.screenRect() : undefined
+        }
+        monitorPose={monitorPose}
       />
       {wide ? (
         <svg className="hud-connector" aria-hidden="true">
@@ -88,7 +109,7 @@ const App = () => {
         className={
           maximized && sceneShown
             ? "relative z-10 h-full"
-            : "relative z-10 h-full sm:mx-auto sm:mb-4 sm:aspect-[4/3] sm:h-auto sm:w-[min(calc(100%_-_3.5rem),calc(55dvh*4/3))] lg:mx-0 lg:my-auto lg:w-[min(40rem,44vw,calc((100dvh_-_6rem)*4/3))]"
+            : "relative z-10 h-full sm:mb-[22dvh] sm:ml-[4vw] sm:aspect-[4/3] sm:h-auto sm:w-[min(calc(100%_-_15rem),calc(42dvh*4/3))] lg:mb-0 lg:ml-0 lg:mt-[3vh] lg:w-[min(36rem,40vw,calc((100dvh_-_16rem)*4/3))]"
         }
       >
         <Terminal
@@ -97,6 +118,7 @@ const App = () => {
           inlineProjectScreens={!wide}
           holdBoot={sceneLoading}
           rackHint={sceneShown}
+          housing={monitorPose !== "seated"}
           controls={
             sceneShown
               ? {
