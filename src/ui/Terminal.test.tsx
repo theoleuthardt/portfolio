@@ -97,9 +97,9 @@ describe("Terminal", () => {
 
   it("runs a typed command on Enter and echoes the prompt", () => {
     renderBooted(<Terminal />);
-    type("ls");
+    type("projects");
     expect(
-      within(log()).getAllByText("ls", { selector: "p > span" }),
+      within(log()).getAllByText("projects", { selector: "p > span" }),
     ).toHaveLength(1);
     expect(
       within(log()).getByRole("button", { name: /^trust-issues/ }),
@@ -117,8 +117,10 @@ describe("Terminal", () => {
     renderBooted(<Terminal />);
     type("help");
     expect(within(log()).getByText(/opens a project/i)).toBeInTheDocument();
-    const lsButtons = within(log()).getAllByRole("button", { name: "ls" });
-    fireEvent.click(lsButtons[lsButtons.length - 1]);
+    const projectButtons = within(log()).getAllByRole("button", {
+      name: "projects",
+    });
+    fireEvent.click(projectButtons[projectButtons.length - 1]);
     expect(
       within(log()).getByRole("button", { name: /^trust-issues/ }),
     ).toBeInTheDocument();
@@ -126,7 +128,7 @@ describe("Terminal", () => {
 
   it("opens a project screen from a project row", () => {
     renderBooted(<Terminal />);
-    type("ls");
+    type("projects");
     fireEvent.click(within(log()).getByRole("button", { name: /^flashi/ }));
     const screenHeading = within(log()).getByRole("heading", {
       name: "Flashi",
@@ -209,17 +211,53 @@ describe("Terminal", () => {
     expect(within(log()).queryByRole("region")).toBeNull();
   });
 
-  it("lets Tab and Shift+Tab move focus when there is nothing to complete", () => {
+  it("completes with Tab like a terminal and leaves with Shift+Tab", () => {
     renderBooted(<Terminal />);
-    const empty = fireEvent.keyDown(input(), { key: "Tab" });
-    expect(empty).toBe(true);
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(screen.getByText(/^cat cd clear close/)).toBeInTheDocument();
     fireEvent.change(input(), { target: { value: "xyz" } });
-    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(true);
-    fireEvent.change(input(), { target: { value: "hel" } });
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(input()).toHaveValue("xyz");
     expect(fireEvent.keyDown(input(), { key: "Tab", shiftKey: true })).toBe(
       true,
     );
-    expect(input()).toHaveValue("hel");
+  });
+
+  it("lets a second Tab without anything new move focus on", () => {
+    renderBooted(<Terminal />);
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(true);
+    fireEvent.change(input(), { target: { value: "hel" } });
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(input()).toHaveValue("help ");
+  });
+
+  it("starts over with Tab after a command was run", () => {
+    renderBooted(<Terminal />);
+    fireEvent.keyDown(input(), { key: "Tab" });
+    fireEvent.keyDown(input(), { key: "Enter" });
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+  });
+
+  it("shows projects/ at home and changes into it on click", () => {
+    renderBooted(<Terminal />);
+    type("ls");
+    fireEvent.click(within(log()).getByRole("button", { name: "projects/" }));
+    expect(
+      screen.getAllByText("guest@theocloud:~/projects$").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("hints that the server rack is interactive where the scene is shown", () => {
+    renderBooted(<Terminal rackHint />);
+    expect(
+      within(log()).getByText(/click a module in the server rack/),
+    ).toBeInTheDocument();
+  });
+
+  it("gives no rack hint without the scene", () => {
+    renderBooted(<Terminal />);
+    expect(within(log()).queryByText(/server rack/)).toBeNull();
   });
 
   it("does not submit while an IME composition is confirmed with Enter", () => {

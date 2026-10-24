@@ -166,4 +166,23 @@ describe("App", () => {
       within(screen.getByRole("log")).getByText("open flashi"),
     ).toBeInTheDocument();
   });
+
+  it("hints at the clickable rack only where the scene is shown", async () => {
+    viewport(1440);
+    const { unmount } = render(<App />);
+    expect(
+      await screen.findByText(
+        /click a module in the server rack/,
+        {},
+        { timeout: 3000 },
+      ),
+    ).toBeInTheDocument();
+    unmount();
+    viewport(390);
+    render(<App />);
+    expect(
+      await screen.findByText(/Welcome, guest/, {}, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/server rack/)).toBeNull();
+  });
 });

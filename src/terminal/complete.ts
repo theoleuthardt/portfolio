@@ -1,3 +1,5 @@
+import type { Cwd } from "./commands";
+
 /** Result of a tab completion: the new input and the matching options. */
 export interface Completion {
   input: string;
@@ -27,25 +29,45 @@ function completeWord(
     return { input: before + partial, options };
   }
   if (options.length === 1) {
-    return { input: before + options[0] + suffix, options };
+    const [only] = options;
+    return {
+      input: before + only + (only.endsWith("/") ? "" : suffix),
+      options,
+    };
   }
   return { input: before + commonPrefix(options), options };
 }
 
 /**
- * Tab completion: completes the command name in the first word, and project
- * ids in the argument of `open`. A unique command gets a trailing space so
- * the argument can follow; anything else extends to the common prefix.
- * Options are sorted alphabetically, like in a shell.
+ * Tab completion like a shell: the first word completes to a command name
+ * (with a trailing space when unique); arguments complete per command:
+ * project ids after `open` and `cat`; after `cd` the directory reachable from
+ * `cwd` (`projects/` at home, `../` inside it); after `ls` that directory and
+ * the projects; command names after `man`. Options are sorted alphabetically.
  */
 export function complete(
   input: string,
   commands: readonly string[],
   projectIds: readonly string[],
+  cwd: Cwd = "~",
 ): Completion {
-  const openArgument = /^(\s*open\s+)(\S*)$/i.exec(input);
-  if (openArgument) {
-    return completeWord(openArgument[1], openArgument[2], projectIds, "");
+  const atHome = cwd === "~";
+  const argument = /^(\s*(\S+)\s+)(\S*)$/.exec(input);
+  if (argument) {
+    const [, before, command, partial] = argument;
+    const candidates = new Map<string, readonly string[]>([
+      ["open", projectIds],
+      ["cat", projectIds],
+      ["cd", atHome ? ["projects/"] : ["../"]],
+      ["ls", atHome ? ["projects/", ...projectIds] : projectIds],
+      ["man", commands],
+    ]);
+    return completeWord(
+      before,
+      partial,
+      candidates.get(command.toLowerCase()) ?? [],
+      "",
+    );
   }
   const firstWord = /^(\s*)(\S*)$/.exec(input);
   if (firstWord) {

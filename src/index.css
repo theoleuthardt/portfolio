@@ -158,8 +158,17 @@
     cursor: pointer;
   }
 
-  .crt-row:hover .text-phosphor,
-  .crt-row:focus-visible .text-phosphor {
+  .crt-row-id {
+    color: var(--color-phosphor);
+  }
+
+  .crt-dir {
+    color: var(--color-neon);
+    font-weight: 700;
+  }
+
+  .crt-row:hover .crt-row-id,
+  .crt-row:focus-visible .crt-row-id {
     background: var(--color-phosphor);
     color: var(--color-glass);
     text-shadow: none;
