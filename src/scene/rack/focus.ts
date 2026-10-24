@@ -8,11 +8,18 @@ export interface FocusPose {
   target: Vector3;
 }
 
+/**
+ * Where the terminal sits: docked on the left (wide screens) or as a sheet
+ * over the lower part of the screen (narrow desktop windows).
+ */
+export type FocusLayout = "docked" | "sheet";
+
 /** How far in front of a focused module the camera stops. */
 export const FOCUS_DISTANCE = 3.1;
 const FOCUS_RISE = 0.3;
 const SIDE_SHIFT = 1.05;
 const TARGET_RISE = 0.45;
+const SHEET_TARGET_DROP = -0.55;
 
 function facing(): [number, number] {
   return [Math.sin(RACK.rotationY), Math.cos(RACK.rotationY)];
@@ -34,9 +41,16 @@ export function moduleFront(slot: RackSlot, slidOut = 0): Vector3 {
 /**
  * Camera pose for a focused module: in front of it at a fixed distance,
  * slightly above, looking a bit to the left of and above it, so the module
- * lands right of the docked terminal and below the project panel.
+ * lands right of the docked terminal and below the project panel. With the
+ * terminal as a bottom sheet the camera looks below the module instead, so
+ * the module sits in the visible upper part of the screen.
  */
-export function focusPose(slot: RackSlot): FocusPose {
+export function focusPose(
+  slot: RackSlot,
+  layout: FocusLayout = "docked",
+): FocusPose {
+  const side = layout === "docked" ? SIDE_SHIFT : 0;
+  const rise = layout === "docked" ? TARGET_RISE : SHEET_TARGET_DROP;
   const [fx, fz] = facing();
   const [mx, my, mz] = moduleFront(slot);
   const position: Vector3 = [
@@ -47,11 +61,7 @@ export function focusPose(slot: RackSlot): FocusPose {
   const right: [number, number] = [fz, -fx];
   return {
     position,
-    target: [
-      mx - right[0] * SIDE_SHIFT,
-      my + TARGET_RISE,
-      mz - right[1] * SIDE_SHIFT,
-    ],
+    target: [mx - right[0] * side, my + rise, mz - right[1] * side],
   };
 }
 

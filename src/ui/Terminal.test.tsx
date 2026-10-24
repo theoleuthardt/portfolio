@@ -262,6 +262,14 @@ describe("Terminal", () => {
     expect(within(log()).getByText("open flashi")).toBeInTheDocument();
   });
 
+  it("tells where the prompt is, as the anchor of the HUD line", () => {
+    const ref = createRef<TerminalHandle>();
+    render(<Terminal ref={ref} />);
+    expect(ref.current?.promptAnchor()).toEqual(
+      input().getBoundingClientRect(),
+    );
+  });
+
   it("clears the log", () => {
     render(<Terminal />);
     type("clear");

@@ -12,6 +12,7 @@ import {
   focusPose,
   moduleFront,
   SLIDE_OUT,
+  type FocusLayout,
   type FocusPose,
 } from "./rack/focus";
 import { Rack } from "./rack/Rack";
@@ -61,15 +62,24 @@ function CameraRig({ reducedMotion, focus }: CameraRigProps) {
   return null;
 }
 
-/** Keeps the HUD line from the terminal prompt to the focused module up to date. */
+/**
+ * Keeps the HUD line from the terminal prompt to the focused module up to
+ * date, and clears it when nothing is focused or the scene goes away.
+ */
 function Connector({
   line,
   slot,
+  promptAnchor,
 }: {
   line?: RefObject<SVGPolylineElement | null>;
   slot?: RackSlot;
+  promptAnchor?: () => DOMRect | undefined;
 }) {
   const point = useMemo(() => new Vector3(), []);
+  useEffect(() => {
+    const element = line?.current;
+    return () => element?.setAttribute("points", "");
+  }, [line]);
   useFrame(({ camera, size }) => {
     const element = line?.current;
     if (!element) {
@@ -79,9 +89,7 @@ function Connector({
       element.setAttribute("points", "");
       return;
     }
-    const anchor = document
-      .querySelector('[aria-label="terminal input"]')
-      ?.getBoundingClientRect();
+    const anchor = promptAnchor?.();
     camera.updateMatrixWorld();
     point.set(...moduleFront(slot, SLIDE_OUT)).project(camera);
     const module = toScreen(point, size);
@@ -173,6 +181,10 @@ export interface SceneProps {
   onSelectProject?: (projectId: string) => void;
   /** SVG polyline the scene draws the HUD line into, from prompt to module. */
   connector?: RefObject<SVGPolylineElement | null>;
+  /** Where the HUD line starts: the terminal prompt. */
+  promptAnchor?: () => DOMRect | undefined;
+  /** Where the terminal sits, so the focused module is framed beside it. */
+  focusLayout?: FocusLayout;
 }
 
 /**
@@ -185,12 +197,14 @@ export default function Scene({
   openProjectId,
   onSelectProject,
   connector,
+  promptAnchor,
+  focusLayout = "docked",
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   const focusedSlot = SLOTS.find((slot) => slot.id === openProjectId);
   const focus = useMemo(
-    () => (focusedSlot ? focusPose(focusedSlot) : undefined),
-    [focusedSlot],
+    () => (focusedSlot ? focusPose(focusedSlot, focusLayout) : undefined),
+    [focusedSlot, focusLayout],
   );
   return (
     <Canvas
@@ -248,7 +262,11 @@ export default function Scene({
         <PostEffects />
       </Suspense>
       <CameraRig reducedMotion={reducedMotion} focus={focus} />
-      <Connector line={connector} slot={focusedSlot} />
+      <Connector
+        line={connector}
+        slot={focusedSlot}
+        promptAnchor={promptAnchor}
+      />
     </Canvas>
   );
 }

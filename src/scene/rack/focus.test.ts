@@ -68,3 +68,20 @@ describe("approach", () => {
     expect(approach(0, 10, 0.01, Infinity)).toBe(10);
   });
 });
+
+describe("focusPose for the bottom-sheet layout", () => {
+  it("keeps the module in the upper part of the screen, above the terminal", () => {
+    const pose = focusPose(flashi, "sheet");
+    const front = moduleFront(flashi);
+    expect(front[1]).toBeGreaterThan(pose.target[1]);
+  });
+
+  it("does not shift the module sideways", () => {
+    const pose = focusPose(flashi, "sheet");
+    const front = moduleFront(flashi);
+    const dx = pose.target[0] - pose.position[0];
+    const dz = pose.target[2] - pose.position[2];
+    const toModule = [front[0] - pose.target[0], front[2] - pose.target[2]];
+    expect(toModule[0] * -dz + toModule[1] * dx).toBeCloseTo(0, 5);
+  });
+});

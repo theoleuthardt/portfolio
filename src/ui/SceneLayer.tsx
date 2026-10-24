@@ -1,5 +1,6 @@
 import { lazy, Suspense, type RefObject } from "react";
 import { isPhoneViewport } from "../scene/device";
+import type { FocusLayout } from "../scene/rack/focus";
 import { RackFallback } from "./RackFallback";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { useViewport } from "./useViewport";
@@ -18,6 +19,10 @@ export interface SceneLayerProps {
   onSelectProject?: (projectId: string) => void;
   /** SVG polyline for the HUD line from the prompt to the focused module. */
   connector?: RefObject<SVGPolylineElement | null>;
+  /** Where the HUD line starts: the terminal prompt. */
+  promptAnchor?: () => DOMRect | undefined;
+  /** Where the terminal sits, so the focused module is framed beside it. */
+  focusLayout?: FocusLayout;
 }
 
 /**
@@ -31,6 +36,8 @@ export function SceneLayer({
   openProjectId,
   onSelectProject,
   connector,
+  promptAnchor,
+  focusLayout,
 }: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
@@ -46,6 +53,8 @@ export function SceneLayer({
               openProjectId={openProjectId}
               onSelectProject={onSelectProject}
               connector={connector}
+              promptAnchor={promptAnchor}
+              focusLayout={focusLayout}
             />
           </Suspense>
         </SceneErrorBoundary>

@@ -51,6 +51,8 @@ const App = () => {
         openProjectId={openProjectId}
         onSelectProject={(id) => terminal.current?.run(`open ${id}`)}
         connector={connector}
+        promptAnchor={() => terminal.current?.promptAnchor()}
+        focusLayout={wide ? "docked" : "sheet"}
       />
       {wide ? (
         <svg className="hud-connector" aria-hidden="true">
