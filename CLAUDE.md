@@ -34,7 +34,7 @@ npm audit              # known vulnerabilities in the locked dependencies
 
 ## Documentation lives in `docs/`
 
-Everything that matters beyond a single file is documented as Markdown in [`docs/`](docs/README.md): architecture, design concept, audits, deployment, decisions. When a change touches architecture, workflow, dependencies policy or deployment, update the matching document **in the same PR**. New topics get a new file in `docs/` and a line in `docs/README.md`. This file only summarises and links.
+Everything that matters beyond a single file is documented as Markdown in [`docs/`](docs/README.md): architecture, design concept, audits, deployment, decisions. When a change touches architecture, workflow, dependencies policy or deployment, update the matching document **in the same PR**. New topics get a new file in `docs/` and a line in `docs/README.md`. This file only summarises and links. **All documentation is written in English**, as are code, identifiers, TSDoc and commit messages.
 
 ## Clean Code
 

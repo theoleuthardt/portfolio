@@ -1,12 +1,12 @@
-# Dokumentation
+# Documentation
 
-Alles Wichtige zum Portfolio steht hier als Markdown. Neue Themen bekommen eine eigene Datei und eine Zeile in dieser Liste.
+Everything important about the portfolio is documented here as Markdown. New topics get their own file and a line in this list.
 
-| Dokument                             | Inhalt                                                                             |
-| ------------------------------------ | ---------------------------------------------------------------------------------- |
-| [ARCHITECTURE.md](ARCHITECTURE.md)   | Softwarearchitektur: Ist-Stand, Zielbild, Module, Datenfluss, Build und Deployment |
-| [content-audit.md](content-audit.md) | Bestandsaufnahme des alten Portfolios mit Bewertung (#20)                          |
+| Document                             | Contents                                                                                       |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| [ARCHITECTURE.md](ARCHITECTURE.md)   | Software architecture: current state, target picture, modules, data flow, build and deployment |
+| [content-audit.md](content-audit.md) | Inventory of the old portfolio with a keep / rework / drop rating (#20)                        |
 
-Geplant: `design-concept.md` (#29), `DEPLOYMENT.md` (#28).
+Planned: `design-concept.md` (#29), `DEPLOYMENT.md` (#28).
 
-Arbeitsweise, Befehle und Definition of Done stehen in der [`CLAUDE.md`](../CLAUDE.md) im Repo-Root.
+Workflow, commands and the Definition of Done live in [`CLAUDE.md`](../CLAUDE.md) at the repository root.
