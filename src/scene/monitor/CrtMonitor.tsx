@@ -21,7 +21,12 @@ import {
   type CanvasTexture,
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { brandPanelTexture, crtScreenTexture } from "../props/propTextures";
+import {
+  brandPanelTexture,
+  crtScreenTexture,
+  postcardTexture,
+} from "../props/propTextures";
+import { friends } from "../../content/friends";
 import {
   KEYBOARD_UNITS,
   keyboardKeys,
@@ -365,12 +370,80 @@ function Deck({ aspect, plastic }: Omit<PartProps, "dark">) {
   );
 }
 
+/** Pixels a click may move before it counts as a drag to look around. */
+const DRAG_TOLERANCE = 5;
+
+/**
+ * A postcard propped up on the desk for each friend's site; clicking it
+ * opens the site, like `open <site>` in the terminal.
+ */
+function Postcards({
+  top,
+  onOpen,
+}: {
+  top: number;
+  onOpen?: (id: string) => void;
+}) {
+  const cards = useMemo(
+    () =>
+      friends.map((friend) => ({
+        friend,
+        texture: postcardTexture(friend.site, new URL(friend.url).host),
+      })),
+    [],
+  );
+  useEffect(
+    () => () => cards.forEach(({ texture }) => texture.dispose()),
+    [cards],
+  );
+  return cards.map(({ friend, texture }, index) => (
+    <mesh
+      key={friend.id}
+      position={[1.2 + index * 0.6, top + 0.17, 0.25]}
+      rotation={[-0.35, -0.25, 0]}
+      onPointerOver={(event) => {
+        event.stopPropagation();
+        document.body.style.cursor = "pointer";
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = "";
+      }}
+      onClick={(event) => {
+        const target = event.nativeEvent.target;
+        const onOverlay =
+          target instanceof Element &&
+          target.closest(".crt, .hud-panel") !== null;
+        if (onOverlay || event.delta > DRAG_TOLERANCE) {
+          return;
+        }
+        event.stopPropagation();
+        onOpen?.(friend.id);
+      }}
+    >
+      <planeGeometry args={[0.55, 0.37]} />
+      <meshStandardMaterial
+        map={texture}
+        roughness={0.6}
+        emissiveMap={texture}
+        emissive="#ffffff"
+        emissiveIntensity={0.35}
+      />
+    </mesh>
+  ));
+}
+
 /**
  * The desk the terminal stands on, its legs on the floor `floor` units
  * below the screen centre: dark gunmetal with a neon strip along its front
  * edge, a green underglow beneath the keyboard deck, and a chair.
  */
-function Desk({ floor }: { floor: number }) {
+function Desk({
+  floor,
+  onOpen,
+}: {
+  floor: number;
+  onOpen?: (id: string) => void;
+}) {
   const box = outline(ASPECT);
   const top = box.bottom - DECK_HEIGHT - 0.01;
   const width = 5.6;
@@ -479,6 +552,7 @@ function Desk({ floor }: { floor: number }) {
           <meshStandardMaterial color="#d9dcd6" roughness={0.9} />
         </mesh>
       ))}
+      <Postcards top={top} onOpen={onOpen} />
       <group position={[0.55, 0, 2.25]}>
         <mesh position-y={seat}>
           <boxGeometry args={[1.3, 0.2, 1.2]} />
@@ -544,6 +618,8 @@ export interface CrtMonitorProps {
    * and when they no longer do, so the page shows the screen only then.
    */
   onSeatedChange?: (seated: boolean) => void;
+  /** Called with a friend's id when their postcard on the desk is clicked. */
+  onOpen?: (id: string) => void;
 }
 
 const SEATED_DISTANCE = 0.12;
@@ -561,6 +637,7 @@ export function CrtMonitor({
   pose,
   onScreenPlacement,
   onSeatedChange,
+  onOpen,
 }: CrtMonitorProps) {
   const reported = useRef(false);
   const point = useMemo(() => new Vector3(), []);
@@ -646,7 +723,7 @@ export function CrtMonitor({
         screen={screen}
       />
       <Deck aspect={ASPECT} plastic={plastic} />
-      <Desk floor={TERMINAL_FLOOR} />
+      <Desk floor={TERMINAL_FLOOR} onOpen={onOpen} />
     </group>
   );
 }

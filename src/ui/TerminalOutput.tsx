@@ -59,6 +59,14 @@ export function TerminalOutput({ line, onRun }: TerminalOutputProps) {
           </button>
         </p>
       );
+    case "link":
+      return (
+        <p>
+          <a href={line.url} target="_blank" rel="noopener noreferrer">
+            &gt; {line.label} ↗
+          </a>
+        </p>
+      );
     case "project":
       return (
         <p>

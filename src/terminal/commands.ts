@@ -1,3 +1,4 @@
+import { findFriend, friends } from "../content/friends";
 import { findProject, projects, type Project } from "../content/projects";
 import { parseCommand } from "./parse";
 import { closestMatch } from "./suggest";
@@ -8,7 +9,8 @@ export type TerminalLine =
   | { kind: "chips"; commands: readonly string[] }
   | { kind: "command"; name: string; usage: string; description: string }
   | { kind: "project"; id: string; tagline: string; fork: boolean }
-  | { kind: "dir"; name: string; command: string };
+  | { kind: "dir"; name: string; command: string }
+  | { kind: "link"; label: string; url: string };
 
 /** The two directories of the guest's home. */
 export type Cwd = "~" | "~/projects";
@@ -18,7 +20,8 @@ export type TerminalAction =
   | { type: "open"; projectId: string }
   | { type: "close" }
   | { type: "clear" }
-  | { type: "cd"; cwd: Cwd };
+  | { type: "cd"; cwd: Cwd }
+  | { type: "visit"; url: string };
 
 /** Output and optional action of one command. */
 export interface CommandResult {
@@ -211,12 +214,24 @@ const registry = new Map<string, Command>(
             ],
           };
         }
+        const friend = findFriend(name);
+        if (friend !== undefined) {
+          return {
+            lines: [
+              {
+                kind: "muted",
+                text: `> opening ${friend.site} in a new tab ...`,
+              },
+            ],
+            action: { type: "visit", url: friend.url },
+          };
+        }
         const project = findProject(name);
         if (project === undefined) {
-          const suggestion = closestMatch(
-            name,
-            projects.map((p) => p.id),
-          );
+          const suggestion = closestMatch(name, [
+            ...projects.map((p) => p.id),
+            ...friends.map((friend) => friend.id),
+          ]);
           return {
             lines: [
               { kind: "error", text: `open: no such project: ${name}` },
@@ -234,6 +249,37 @@ const registry = new Map<string, Command>(
             },
           ],
           action: { type: "open", projectId: project.id },
+        };
+      },
+    },
+    friends: {
+      usage: "friends",
+      description: "lists the sites of friends of the lab (open <site>)",
+      run: (): CommandResult => ({
+        lines: [
+          { kind: "text", text: "friends of the lab:" },
+          ...friends.flatMap((friend): TerminalLine[] => [
+            { kind: "link", label: friend.site, url: friend.url },
+            { kind: "muted", text: `  ${friend.about}` },
+          ]),
+          {
+            kind: "chips",
+            commands: friends.map((friend) => `open ${friend.id}`),
+          },
+        ],
+      }),
+    },
+    domi: {
+      usage: "domi",
+      description: "says who Domi is and links DomiFolio",
+      run: (): CommandResult => {
+        const domi = friends[0];
+        return {
+          lines: [
+            { kind: "text", text: `${domi.site}: ${domi.about}.` },
+            { kind: "link", label: domi.site, url: domi.url },
+            { kind: "chips", commands: [`open ${domi.id}`] },
+          ],
         };
       },
     },
