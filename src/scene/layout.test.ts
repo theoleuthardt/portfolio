@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LAB_RIG } from "./cameraRig";
+import { cameraPosition, LAB_RIG } from "./cameraRig";
 import { ROOM, centeredGrid, evenlySpaced } from "./layout";
 
 describe("centeredGrid", () => {
@@ -28,14 +28,19 @@ describe("evenlySpaced", () => {
 });
 
 describe("ROOM", () => {
-  it("keeps the camera, including its orbit and parallax, inside the room", () => {
-    const [x, y, z] = LAB_RIG.base;
-    const reach =
-      Math.hypot(x, z) * Math.sin(LAB_RIG.orbitRadians) + LAB_RIG.parallax;
-    expect(x - reach).toBeGreaterThan(ROOM.left);
-    expect(x + reach).toBeLessThan(ROOM.right);
-    expect(z + reach).toBeLessThan(ROOM.front);
-    expect(y - LAB_RIG.parallax).toBeGreaterThan(ROOM.floor);
-    expect(y + LAB_RIG.parallax).toBeLessThan(ROOM.ceiling);
+  it("keeps the camera inside the room over a full orbit and any pointer", () => {
+    const corners = [-1, 1].flatMap((x) => [-1, 1].map((y) => ({ x, y })));
+    for (let step = 0; step <= 48; step++) {
+      const seconds = (LAB_RIG.orbitPeriodSeconds * step) / 48;
+      for (const pointer of corners) {
+        const [x, y, z] = cameraPosition(LAB_RIG, seconds, pointer, false);
+        expect(x).toBeGreaterThan(ROOM.left);
+        expect(x).toBeLessThan(ROOM.right);
+        expect(z).toBeLessThan(ROOM.front);
+        expect(z).toBeGreaterThan(ROOM.back);
+        expect(y).toBeGreaterThan(ROOM.floor);
+        expect(y).toBeLessThan(ROOM.ceiling);
+      }
+    }
   });
 });
