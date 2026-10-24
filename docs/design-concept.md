@@ -1,6 +1,6 @@
 # Design concept: terminal + server rack
 
-Status: proposal for #29, waiting for Theo's choice of variant (section 4).
+Status: accepted (#29). Theo chose **variant C**; on phones only the terminal is shown.
 
 ## 1. Idea
 
@@ -111,7 +111,7 @@ Full-screen scene: the rack stands on the right at a three-quarter angle, a serv
 - - works on mobile: terminal full-screen, rack as a small strip on top that still reacts
 - − connecting line and two panels need careful layout at medium widths
 
-**Recommendation: C.** It shows off the Three.js work without making the content depend on it.
+**Decision: C** (chosen by Theo). It shows off the Three.js work without making the content depend on it. On phones only the terminal is shown (section 6).
 
 ![Mockup of variant C: terminal HUD on the left, rack with the trust-issues module slid out, project screen on the right](design/mockup-variant-c.png)
 
@@ -156,14 +156,14 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 
 ## 6. Responsive and fallbacks
 
-| Situation                | Behaviour                                                                          |
-| ------------------------ | ---------------------------------------------------------------------------------- |
-| ≥ 1024 px                | variant layout as described                                                        |
-| 640–1023 px              | terminal bottom sheet (50 % height), rack above                                    |
-| < 640 px                 | terminal full-screen; rack as a 120 px strip at the top, tapping a module opens it |
-| `prefers-reduced-motion` | no boot animation, no orbit, cuts instead of flights, LEDs static                  |
-| no WebGL / low-end GPU   | terminal only, plus a static SVG rack illustration; same commands and content      |
-| JavaScript off           | `noscript` with the project list and links                                         |
+| Situation                | Behaviour                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| ≥ 1024 px                | variant layout as described                                                                                              |
+| 640–1023 px              | terminal bottom sheet (50 % height), rack above                                                                          |
+| < 640 px                 | **terminal only**, full-screen; the scene and its assets are not loaded at all. Project screens open inside the terminal |
+| `prefers-reduced-motion` | no boot animation, no orbit, cuts instead of flights, LEDs static                                                        |
+| no WebGL / low-end GPU   | terminal only, plus a static SVG rack illustration; same commands and content                                            |
+| JavaScript off           | `noscript` with the project list and links                                                                               |
 
 ## 7. Performance budget
 
