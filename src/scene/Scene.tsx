@@ -76,10 +76,12 @@ function Connector({
   promptAnchor?: () => DOMRect | undefined;
 }) {
   const point = useMemo(() => new Vector3(), []);
-  useEffect(() => {
-    const element = line?.current;
-    return () => element?.setAttribute("points", "");
-  }, [line]);
+  useEffect(
+    () => () => {
+      line?.current?.setAttribute("points", "");
+    },
+    [line],
+  );
   useFrame(({ camera, size }) => {
     const element = line?.current;
     if (!element) {

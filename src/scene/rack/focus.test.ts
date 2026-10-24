@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { rackSlots } from "../../content/rack";
-import { approach, FOCUS_DISTANCE, focusPose, moduleFront } from "./focus";
+import {
+  approach,
+  FOCUS_DISTANCE,
+  focusPose,
+  moduleFront,
+  SLIDE_OUT,
+} from "./focus";
 import { RACK, slotCenterY } from "./geometry";
 
 const flashi = rackSlots().find((slot) => slot.id === "flashi");
@@ -34,8 +40,8 @@ describe("moduleFront of an ejected module", () => {
 describe("focusPose", () => {
   const pose = focusPose(flashi);
 
-  it("puts the camera at the focus distance in front of the module", () => {
-    const front = moduleFront(flashi);
+  it("puts the camera at the focus distance in front of the ejected module", () => {
+    const front = moduleFront(flashi, SLIDE_OUT);
     const distance = Math.hypot(
       pose.position[0] - front[0],
       pose.position[2] - front[2],

@@ -39,7 +39,8 @@ export function moduleFront(slot: RackSlot, slidOut = 0): Vector3 {
 }
 
 /**
- * Camera pose for a focused module: in front of it at a fixed distance,
+ * Camera pose for a focused module: in front of its ejected front plate at
+ * {@link FOCUS_DISTANCE},
  * slightly above, looking a bit to the left of and above it, so the module
  * lands right of the docked terminal and below the project panel. With the
  * terminal as a bottom sheet the camera looks below the module instead, so
@@ -52,7 +53,7 @@ export function focusPose(
   const side = layout === "docked" ? SIDE_SHIFT : 0;
   const rise = layout === "docked" ? TARGET_RISE : SHEET_TARGET_DROP;
   const [fx, fz] = facing();
-  const [mx, my, mz] = moduleFront(slot);
+  const [mx, my, mz] = moduleFront(slot, SLIDE_OUT);
   const position: Vector3 = [
     mx + fx * FOCUS_DISTANCE,
     my + FOCUS_RISE,
