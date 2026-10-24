@@ -11,7 +11,7 @@ Theo Leuthardt's personal developer portfolio, served at <https://theocloud.dev>
 - **Vite + React + TypeScript** (single-page app, static build in `dist/`)
 - **Three.js** via `@react-three/fiber` and `@react-three/drei` (from epic #18)
 - **Tailwind CSS** for the 2D overlay (moving to Tailwind 4 with design tokens in #30)
-- **Vitest** + Testing Library for tests (from #24)
+- **Vitest** + Testing Library (jsdom) for tests; Node version pinned in `.nvmrc` (22)
 - **ESLint** + **Prettier**
 - **GitHub Actions** for CI and the GitHub Pages deployment
 
@@ -28,7 +28,8 @@ npm run lint           # ESLint, zero warnings allowed
 npm run typecheck      # TypeScript only
 npm run format         # Prettier, write
 npm run format:check   # Prettier, verify only
-npm test               # Vitest (added in #24)
+npm test               # Vitest, single run
+npm run test:watch     # Vitest in watch mode
 npm audit              # known vulnerabilities in the locked dependencies
 ```
 
@@ -67,6 +68,8 @@ If a reason is worth keeping, it goes into the TSDoc of the enclosing function o
 A test that correctly expresses the desired behaviour is a contract: never weaken or delete it to get a run green. If it fails, assume the code is wrong. Change a test only when the desired behaviour itself changes, and say so in the PR.
 
 What gets tested: pure logic (command parser, project data, formatting) always; components where they have behaviour (keyboard input, focus, fallbacks). The 3D scene itself is verified by running the app.
+
+Tests live next to the code they test (`Foo.tsx` → `Foo.test.tsx`, `index.ts` → `index.test.ts`). Vitest runs in jsdom with Testing Library; `src/test/setup.ts` registers the jest-dom matchers and cleans up after each test. Query by role and accessible name (`getByRole("link", { name: ... })`), not by class or test id.
 
 ## Dependencies
 
@@ -108,8 +111,8 @@ New issues: `gh issue create`, then `gh project item-add 4 --owner theoleuthardt
 An issue is done when all of these hold:
 
 - [ ] Acceptance criteria of the issue are met
-- [ ] Tests written first and passing; no test weakened (from #24 on, when Vitest exists)
-- [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` pass locally (`npm test` from #24 on)
+- [ ] Tests written first and passing; no test weakened
+- [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` pass locally
 - [ ] `npm audit --audit-level=high` reports nothing new
 - [ ] Clean Code and comment rules respected
 - [ ] UI changes checked in the running app (`npm run dev`), including mobile width and `prefers-reduced-motion`
