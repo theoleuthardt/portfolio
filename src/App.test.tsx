@@ -70,4 +70,17 @@ describe("App", () => {
     render(<App />);
     expect(screen.getByText(/Welcome, guest/)).toBeInTheDocument();
   });
+
+  it("closes the panel with Escape while focus is inside it", async () => {
+    viewport(1440);
+    render(<App />);
+    expect(await screen.findByText(/Welcome, guest/)).toBeInTheDocument();
+    type("open flashi");
+    const link = within(
+      screen.getByRole("complementary", { name: "project" }),
+    ).getByRole("link", { name: /repository/ });
+    link.focus();
+    fireEvent.keyDown(link, { key: "Escape" });
+    expect(screen.queryByRole("complementary", { name: "project" })).toBeNull();
+  });
 });

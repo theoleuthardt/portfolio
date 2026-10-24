@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { findProject, projects } from "../content/projects";
 import { commandNames } from "../terminal/commands";
 import { complete } from "../terminal/complete";
@@ -38,7 +44,7 @@ export interface TerminalProps {
  * input with history (arrow keys) and completion (Tab). Only the screen of
  * the currently open project is expanded. Tab completes only when there is
  * something to complete, so Tab and Shift+Tab otherwise move focus as usual.
- * Escape closes the open project.
+ * Escape closes the open project wherever the focus is.
  */
 export function Terminal({
   onOpenProjectChange,
@@ -72,14 +78,23 @@ export function Terminal({
     inputRef.current?.focus();
   };
 
+  const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
+    if (event.key === "Escape" && session.openProjectId !== undefined) {
+      runCommand("close");
+    }
+  });
+
+  useEffect(() => {
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, []);
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) {
       return;
     }
     if (event.key === "Enter") {
       runCommand(input);
-    } else if (event.key === "Escape" && session.openProjectId !== undefined) {
-      runCommand("close");
     } else if (event.key === "Tab" && !event.shiftKey && input.trim() !== "") {
       const completion = complete(input, commandNames, projectIds);
       if (completion.input === input && completion.options.length === 0) {
