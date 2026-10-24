@@ -2,7 +2,7 @@
 
 ## Current state
 
-A static single-page app built with Vite, React and TypeScript. `npm run build` produces `dist/`, which a GitHub Actions workflow deploys to GitHub Pages on every push to `master` (domain `theocloud.dev` via `CNAME`). There is no backend and no runtime API; all content ships in the bundle.
+A static single-page app built with Vite, React and TypeScript. `npm run build` produces `dist/`, which the Deploy workflow publishes to GitHub Pages after CI has passed on `master` (domain `theocloud.dev`, see [DEPLOYMENT.md](DEPLOYMENT.md)). There is no backend and no runtime API; all content ships in the bundle.
 
 ```
 index.html → src/main.tsx → src/App.tsx
