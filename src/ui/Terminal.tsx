@@ -312,7 +312,7 @@ export function Terminal({
     entry.command === undefined && phase !== "ready" ? [] : entry.lines;
 
   return (
-    <CrtFrame controls={controls}>
+    <CrtFrame title={`guest@theocloud: ${session.cwd}`} controls={controls}>
       <div
         ref={logRef}
         data-boot-phase={phase}

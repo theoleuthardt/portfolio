@@ -3,7 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App, { SCENE_TIMEOUT_MS } from "./App";
 import { BOOT_REDUCED_HOLD_MS } from "./ui/useBootSequence";
 
-const sceneMock = vi.hoisted(() => ({ hangs: false }));
+const sceneMock = vi.hoisted(() => ({
+  hangs: false,
+  promptAnchor: undefined as (() => DOMRect | undefined) | undefined,
+}));
 
 vi.mock("./scene/Scene", async () => {
   const { useEffect } = await import("react");
@@ -11,10 +14,13 @@ vi.mock("./scene/Scene", async () => {
     default: function SceneMock({
       onReady,
       onSelectProject,
+      promptAnchor,
     }: {
       onReady: () => void;
       onSelectProject: (id: string) => void;
+      promptAnchor: () => DOMRect | undefined;
     }) {
+      sceneMock.promptAnchor = promptAnchor;
       useEffect(() => {
         if (!sceneMock.hangs) {
           onReady();
@@ -245,6 +251,37 @@ describe("terminal window", () => {
     expect(
       within(screen.getByRole("log")).getByText("/home/guest"),
     ).toBeInTheDocument();
+  });
+
+  it("names the window after the working directory", async () => {
+    viewport(390);
+    render(<App />);
+    await booted();
+    expect(screen.getByText("guest@theocloud: ~")).toBeInTheDocument();
+    type("cd projects");
+    expect(screen.getByText("guest@theocloud: ~/projects")).toBeInTheDocument();
+  });
+
+  it("maximizes the window and brings it back to its size", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    const maximize = screen.getByRole("button", { name: "maximize terminal" });
+    expect(maximize).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(maximize);
+    expect(maximize).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(maximize);
+    expect(maximize).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("draws no HUD line to a prompt that is folded away", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    type("open flashi");
+    expect(sceneMock.promptAnchor?.()).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    expect(sceneMock.promptAnchor?.()).toBeUndefined();
   });
 
   it("brings the terminal back when a rack module opens a project", async () => {

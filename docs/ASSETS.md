@@ -34,6 +34,16 @@ Downloaded from [Poly Haven](https://polyhaven.com) as 1K glTF and compressed wi
 
 All ten models together are about 1.7 MB; with the textures the lab's assets are about 2.5 MB (budget 3 MB).
 
+## Monitor wear (`src/assets/crt-*.svg`)
+
+Own drawings, no third-party source. Procedural SVG textures (`feTurbulence`) that give the CRT housing its worn look; Vite inlines them into the CSS.
+
+| File             | Used for                                                 | Size  |
+| ---------------- | -------------------------------------------------------- | ----- |
+| `crt-grime.svg`  | tiling stains, paint flakes and a few scratches          | ~1 KB |
+| `crt-rust.svg`   | rust patches in two corners of the housing and the bezel | ~1 KB |
+| `crt-cracks.svg` | hairline cracks in the lower right of the tube glass     | ~1 KB |
+
 ## Adding an asset
 
 1. Only CC0 or equivalently permissive sources.

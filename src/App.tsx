@@ -20,7 +20,7 @@ export const SCENE_TIMEOUT_MS = 8000;
  * the terminal sits in the lower part and shows project screens itself;
  * phones and touch tablets get the terminal only. The boot waits for the
  * scene, at most {@link SCENE_TIMEOUT_MS}. Where the scene is shown, the
- * terminal can be minimized into a bar or closed behind a button to free the
+ * terminal can be maximized, minimized into a bar or closed behind a button to free the
  * view of the lab; it stays mounted, so its session survives, and opening a
  * project from the rack brings it back.
  */
@@ -29,6 +29,7 @@ const App = () => {
   const [openProjectId, setOpenProjectId] = useState<string>();
   const [sceneSettled, setSceneSettled] = useState(false);
   const [terminalWindow, setTerminalWindow] = useState<TerminalWindow>("open");
+  const [maximized, setMaximized] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
   const restoreButton = useRef<HTMLButtonElement>(null);
   const connector = useRef<SVGPolylineElement>(null);
@@ -72,7 +73,9 @@ const App = () => {
           terminal.current?.run(`open ${id}`);
         }}
         connector={connector}
-        promptAnchor={() => terminal.current?.promptAnchor()}
+        promptAnchor={() =>
+          windowState === "open" ? terminal.current?.promptAnchor() : undefined
+        }
         focusLayout={wide ? "docked" : "sheet"}
       />
       {wide ? (
@@ -82,7 +85,11 @@ const App = () => {
       ) : null}
       <div
         hidden={windowState !== "open"}
-        className="relative z-10 h-full sm:h-[55%] lg:h-full lg:w-[min(46rem,55vw)]"
+        className={
+          maximized && sceneShown
+            ? "relative z-10 h-full"
+            : "relative z-10 h-full sm:mx-auto sm:mb-4 sm:aspect-[4/3] sm:h-auto sm:w-[min(calc(100%_-_3.5rem),calc(55dvh*4/3))] lg:mx-0 lg:my-auto lg:w-[min(40rem,44vw,calc((100dvh_-_6rem)*4/3))]"
+        }
       >
         <Terminal
           ref={terminal}
@@ -95,6 +102,8 @@ const App = () => {
               ? {
                   onMinimize: () => setTerminalWindow("minimized"),
                   onClose: () => setTerminalWindow("closed"),
+                  onToggleMaximize: () => setMaximized((current) => !current),
+                  maximized,
                 }
               : undefined
           }
