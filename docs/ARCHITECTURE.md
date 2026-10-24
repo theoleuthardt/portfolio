@@ -21,7 +21,10 @@ src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                environment/ (room kit, PBR surfaces via usePbr, palette)
                rack/ (geometry and LED blinking as pure functions, Rack, RackModule,
                canvas label textures)
+               props/ (lazy chunk: placed models, monitors, background racks,
+               neon sign, wall screens, signs, cables)
 public/textures/ CC0 PBR maps, see ASSETS.md
+public/models/   CC0 glTF props (meshopt), see ASSETS.md
 src/index.css  design tokens (@theme), base styles, CRT components
 ```
 

@@ -15,6 +15,25 @@ Downloaded from [Poly Haven](https://polyhaven.com) at 1K, converted to WebP. `*
 
 All twelve files together are about 0.8 MB.
 
+## Models (`public/models/`)
+
+Downloaded from [Poly Haven](https://polyhaven.com) as 1K glTF and compressed with `gltf-transform optimize` (meshopt geometry, WebP textures at 512 px, 256 px for small props). Loaded with meshopt (no Draco, no CDN decoder).
+
+| File                          | Source                                                                     | Used for              | Size   |
+| ----------------------------- | -------------------------------------------------------------------------- | --------------------- | ------ |
+| `metal_office_desk.glb`       | [Metal Office Desk](https://polyhaven.com/a/metal_office_desk)             | workbench             | 94 KB  |
+| `worn_metal_rack.glb`         | [Worn Metal Rack](https://polyhaven.com/a/worn_metal_rack)                 | shelves               | 110 KB |
+| `plastic_crate_01.glb`        | [Plastic Crate 01](https://polyhaven.com/a/plastic_crate_01)               | crates                | 217 KB |
+| `plastic_crate_03.glb`        | [Plastic Crate 03](https://polyhaven.com/a/plastic_crate_03)               | crates                | 252 KB |
+| `power_box_01.glb`            | [Power Box 01](https://polyhaven.com/a/power_box_01)                       | wall power box        | 196 KB |
+| `tool_cart.glb`               | [Tool Cart](https://polyhaven.com/a/tool_cart)                             | cart next to the rack | 295 KB |
+| `metal_toolbox.glb`           | [Metal Toolbox](https://polyhaven.com/a/metal_toolbox)                     | toolboxes             | 131 KB |
+| `utility_box_01.glb`          | [Utility Box 01](https://polyhaven.com/a/utility_box_01)                   | distribution boxes    | 56 KB  |
+| `industrial_storage_cart.glb` | [Industrial Storage Cart](https://polyhaven.com/a/industrial_storage_cart) | storage cart          | 232 KB |
+| `hanging_industrial_lamp.glb` | [Hanging Industrial Lamp](https://polyhaven.com/a/hanging_industrial_lamp) | ceiling lamps         | 133 KB |
+
+All ten models together are about 1.7 MB; with the textures the lab's assets are about 2.5 MB (budget 3 MB).
+
 ## Adding an asset
 
 1. Only CC0 or equivalently permissive sources.

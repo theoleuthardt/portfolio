@@ -1,6 +1,15 @@
 import { Environment, Lightformer, SpotLight } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { lazy, Suspense, useEffect, useMemo, type RefObject } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useEffectEvent,
+  useMemo,
+  useState,
+  type RefObject,
+} from "react";
+import { SceneErrorBoundary } from "../ui/SceneErrorBoundary";
 import { rackSlots, type RackSlot } from "../content/rack";
 import { Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
@@ -19,6 +28,7 @@ import { Rack } from "./rack/Rack";
 import { ROOM } from "./layout";
 
 const PostEffects = lazy(() => import("./PostEffects"));
+const Props = lazy(() => import("./props/Props"));
 
 const HAZE = "#06231c";
 const MINT = "#c8ffe9";
@@ -168,8 +178,9 @@ function LightBeams() {
 }
 
 /** Calls `onReady` once everything inside the same Suspense has loaded. */
-function ReadySignal({ onReady }: { onReady?: () => void }) {
-  useEffect(() => onReady?.(), [onReady]);
+function ReadySignal({ onReady }: { onReady: () => void }) {
+  const signal = useEffectEvent(onReady);
+  useEffect(() => signal(), []);
   return null;
 }
 
@@ -203,6 +214,7 @@ export default function Scene({
   focusLayout = "docked",
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const [labReady, setLabReady] = useState(false);
   const focusedSlot = SLOTS.find((slot) => slot.id === openProjectId);
   const focus = useMemo(
     () => (focusedSlot ? focusPose(focusedSlot, focusLayout) : undefined),
@@ -258,8 +270,20 @@ export default function Scene({
         <LabEnvironment />
         <Rack openProjectId={openProjectId} onSelectProject={onSelectProject} />
         <LightBeams />
-        <ReadySignal onReady={onReady} />
+        <ReadySignal
+          onReady={() => {
+            setLabReady(true);
+            onReady?.();
+          }}
+        />
       </Suspense>
+      {labReady ? (
+        <SceneErrorBoundary fallback={null}>
+          <Suspense fallback={null}>
+            <Props />
+          </Suspense>
+        </SceneErrorBoundary>
+      ) : null}
       <Suspense fallback={null}>
         <PostEffects />
       </Suspense>
