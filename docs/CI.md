@@ -2,12 +2,12 @@
 
 ## Workflows
 
-| Workflow                   | File                                      | Trigger                                    | What it does                                                                                                        |
-| -------------------------- | ----------------------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| CI                         | `.github/workflows/ci.yml`                | every pull request, every push to `master` | `npm ci`, lint, typecheck, format check, tests, build                                                               |
-| CI → npm audit             | `.github/workflows/ci.yml` (job `audit`)  | every pull request, every push to `master` | `npm audit --audit-level=high`: fails on high or critical findings                                                  |
-| Dependency Review          | `.github/workflows/dependency-review.yml` | every pull request                         | fails when the PR adds a dependency with a known high or critical vulnerability; posts a summary comment on failure |
-| React Portfolio Deployment | `.github/workflows/portfolio.yml`         | push to `master`, manual                   | builds and deploys `dist/` to GitHub Pages (reworked in #28)                                                        |
+| Workflow          | File                                      | Trigger                                                  | What it does                                                                                                        |
+| ----------------- | ----------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| CI                | `.github/workflows/ci.yml`                | every pull request, every push to `master`               | `npm ci`, lint, typecheck, format check, tests, build                                                               |
+| CI → npm audit    | `.github/workflows/ci.yml` (job `audit`)  | every pull request, every push to `master`               | `npm audit --audit-level=high`: fails on high or critical findings                                                  |
+| Dependency Review | `.github/workflows/dependency-review.yml` | every pull request                                       | fails when the PR adds a dependency with a known high or critical vulnerability; posts a summary comment on failure |
+| Deploy            | `.github/workflows/deploy.yml`            | after a successful CI run for a push to `master`, manual | builds the verified commit and deploys `dist/` to GitHub Pages ([DEPLOYMENT.md](DEPLOYMENT.md))                     |
 
 The CI job runs on the Node version from `.nvmrc`, with the npm cache keyed on `package-lock.json`. It has read-only repository permissions, does not keep the checkout credentials, and cancels an older run of the same pull request when a new commit arrives; runs on `master` are never cancelled, so every commit there is verified.
 
@@ -31,7 +31,3 @@ npm ci
 npm run lint && npm run typecheck && npm run format:check && npm test && npm run build
 npm audit --audit-level=high
 ```
-
-## Planned
-
-- Deployment only after green CI (#28)

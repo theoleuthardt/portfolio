@@ -13,7 +13,7 @@ Theo Leuthardt's personal developer portfolio, served at <https://theocloud.dev>
 - **Tailwind CSS** for the 2D overlay (moving to Tailwind 4 with design tokens in #30)
 - **Vitest** + Testing Library (jsdom) for tests; Node version pinned in `.nvmrc` (22)
 - **ESLint 10** (flat config in `eslint.config.js`, typescript-eslint, React Hooks and React Refresh rules) + **Prettier**
-- **GitHub Actions** for CI and the GitHub Pages deployment ([`docs/CI.md`](docs/CI.md))
+- **GitHub Actions** for CI ([`docs/CI.md`](docs/CI.md)) and the GitHub Pages deployment after green CI ([`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md))
 
 Default branch: `master`.
 
