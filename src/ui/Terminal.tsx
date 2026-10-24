@@ -1,9 +1,11 @@
 import {
   useEffect,
   useEffectEvent,
+  useImperativeHandle,
   useRef,
   useState,
   type KeyboardEvent,
+  type Ref,
 } from "react";
 import { findProject, projects } from "../content/projects";
 import { commandNames } from "../terminal/commands";
@@ -29,8 +31,15 @@ function Prompt({ command }: { command: string }) {
   );
 }
 
+/** What other parts of the page may do with the terminal. */
+export interface TerminalHandle {
+  /** Runs a command as if it had been typed, e.g. after a click in the scene. */
+  run: (command: string) => void;
+}
+
 /** Props of {@link Terminal}. */
 export interface TerminalProps {
+  ref?: Ref<TerminalHandle>;
   /** Called whenever the open project changes, with `undefined` on close. */
   onOpenProjectChange?: (projectId: string | undefined) => void;
   /** Show project screens in the log; off when a side panel shows them. */
@@ -47,6 +56,7 @@ export interface TerminalProps {
  * Escape closes the open project wherever the focus is.
  */
 export function Terminal({
+  ref,
   onOpenProjectChange,
   inlineProjectScreens = true,
   holdBoot = false,
@@ -77,6 +87,8 @@ export function Terminal({
     setOptions([]);
     inputRef.current?.focus();
   };
+
+  useImperativeHandle(ref, () => ({ run: runCommand }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
     if (

@@ -7,13 +7,27 @@ const sceneMock = vi.hoisted(() => ({ hangs: false }));
 vi.mock("./scene/Scene", async () => {
   const { useEffect } = await import("react");
   return {
-    default: function SceneMock({ onReady }: { onReady: () => void }) {
+    default: function SceneMock({
+      onReady,
+      onSelectProject,
+    }: {
+      onReady: () => void;
+      onSelectProject: (id: string) => void;
+    }) {
       useEffect(() => {
         if (!sceneMock.hangs) {
           onReady();
         }
       }, [onReady]);
-      return <div data-testid="scene" />;
+      return (
+        <button
+          type="button"
+          data-testid="scene"
+          onClick={() => onSelectProject("flashi")}
+        >
+          rack module flashi
+        </button>
+      );
     },
   };
 });
@@ -122,5 +136,20 @@ describe("App", () => {
     viewport(1440);
     render(<App />);
     expect(await screen.findByTestId("scene")).toBeInTheDocument();
+  });
+
+  it("opens a project through the terminal when its rack module is clicked", async () => {
+    viewport(1440);
+    render(<App />);
+    fireEvent.click(await screen.findByTestId("scene"));
+    expect(
+      within(screen.getByRole("complementary", { name: "project" })).getByRole(
+        "heading",
+        { name: "Flashi" },
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole("log")).getByText("open flashi"),
+    ).toBeInTheDocument();
   });
 });

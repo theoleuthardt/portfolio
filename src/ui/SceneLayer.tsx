@@ -12,6 +12,10 @@ export interface SceneLayerProps {
   webgl: boolean;
   /** Called when the scene is ready or has failed and the fallback shows. */
   onReady?: () => void;
+  /** The project whose module is ejected, if any. */
+  openProjectId?: string;
+  /** Called when a rack module is clicked. */
+  onSelectProject?: (projectId: string) => void;
 }
 
 /**
@@ -19,7 +23,12 @@ export interface SceneLayerProps {
  * WebGL, otherwise the lazily loaded 3D scene. If the scene fails, the
  * static rack takes its place.
  */
-export function SceneLayer({ webgl, onReady }: SceneLayerProps) {
+export function SceneLayer({
+  webgl,
+  onReady,
+  openProjectId,
+  onSelectProject,
+}: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
     return null;
@@ -29,7 +38,11 @@ export function SceneLayer({ webgl, onReady }: SceneLayerProps) {
       {webgl ? (
         <SceneErrorBoundary fallback={<RackFallback />} onError={onReady}>
           <Suspense fallback={null}>
-            <Scene onReady={onReady} />
+            <Scene
+              onReady={onReady}
+              openProjectId={openProjectId}
+              onSelectProject={onSelectProject}
+            />
           </Suspense>
         </SceneErrorBoundary>
       ) : (
