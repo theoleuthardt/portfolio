@@ -2,23 +2,18 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import { useMemo } from "react";
 import { Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
-import { cameraPosition, type RigSettings } from "./cameraRig";
+import { cameraPosition, LAB_RIG } from "./cameraRig";
 import { LabEnvironment } from "./environment/Environment";
 
 const HAZE = "#06231c";
 const TARGET = new Vector3(0, 0.6, 0);
 
-const rig: RigSettings = {
-  base: [0.6, 1.4, 9],
-  orbitRadians: 0.06,
-  orbitPeriodSeconds: 48,
-  parallax: 0.35,
-};
-
 function CameraRig({ reducedMotion }: { reducedMotion: boolean }) {
   const next = useMemo(() => new Vector3(), []);
   useFrame(({ camera, clock, pointer }, delta) => {
-    next.set(...cameraPosition(rig, clock.elapsedTime, pointer, reducedMotion));
+    next.set(
+      ...cameraPosition(LAB_RIG, clock.elapsedTime, pointer, reducedMotion),
+    );
     camera.position.lerp(next, reducedMotion ? 1 : 1 - Math.exp(-delta * 2));
     camera.lookAt(TARGET);
   });
@@ -42,7 +37,7 @@ export default function Scene({ onReady }: SceneProps) {
     <Canvas
       className="!absolute inset-0"
       dpr={[1, 1.75]}
-      camera={{ fov: 38, position: rig.base }}
+      camera={{ fov: 38, position: LAB_RIG.base }}
       frameloop={reducedMotion ? "demand" : "always"}
       eventSource={document.getElementById("root") ?? undefined}
       eventPrefix="client"

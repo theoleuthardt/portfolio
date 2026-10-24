@@ -28,6 +28,7 @@ export function InstancedBoxes({
       instanced.setMatrixAt(index, matrix),
     );
     instanced.instanceMatrix.needsUpdate = true;
+    instanced.computeBoundingSphere();
   }, [positions]);
   return (
     <instancedMesh ref={mesh} args={[undefined, undefined, positions.length]}>

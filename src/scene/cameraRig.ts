@@ -43,3 +43,11 @@ export function cameraPosition(
     z,
   ];
 }
+
+/** Camera rig of the lab scene. */
+export const LAB_RIG: RigSettings = {
+  base: [0.6, 1.4, 9],
+  orbitRadians: 0.06,
+  orbitPeriodSeconds: 48,
+  parallax: 0.35,
+};
