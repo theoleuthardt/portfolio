@@ -1,5 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap")
-layer(base);
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap");
 
 @import "tailwindcss";
 
@@ -18,28 +17,30 @@ layer(base);
   }
 }
 
-.rainbowText:hover {
-  background: repeating-linear-gradient(
-    -45deg,
-    red 0%,
-    yellow 7.14%,
-    rgb(0, 255, 0) 14.28%,
-    rgb(0, 255, 255) 21.4%,
-    cyan 28.56%,
-    blue 35.7%,
-    magenta 42.84%,
-    red 50%
-  );
-  background-size: 600vw 600vw;
-  -webkit-text-fill-color: transparent;
-  -webkit-background-clip: text;
-  animation: slide 10s linear infinite forwards;
-}
-@keyframes slide {
-  0% {
-    background-position-x: 0;
+@layer components {
+  .rainbowText:hover {
+    background: repeating-linear-gradient(
+      -45deg,
+      red 0%,
+      yellow 7.14%,
+      rgb(0, 255, 0) 14.28%,
+      rgb(0, 255, 255) 21.4%,
+      cyan 28.56%,
+      blue 35.7%,
+      magenta 42.84%,
+      red 50%
+    );
+    background-size: 600vw 600vw;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
+    animation: slide 10s linear infinite forwards;
   }
-  100% {
-    background-position-x: 600vw;
+  @keyframes slide {
+    0% {
+      background-position-x: 0;
+    }
+    100% {
+      background-position-x: 600vw;
+    }
   }
 }
