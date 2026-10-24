@@ -232,6 +232,13 @@ describe("Terminal", () => {
     expect(input()).toHaveValue("help ");
   });
 
+  it("starts over with Tab after a command was run", () => {
+    renderBooted(<Terminal />);
+    fireEvent.keyDown(input(), { key: "Tab" });
+    fireEvent.keyDown(input(), { key: "Enter" });
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+  });
+
   it("shows projects/ at home and changes into it on click", () => {
     renderBooted(<Terminal />);
     type("ls");

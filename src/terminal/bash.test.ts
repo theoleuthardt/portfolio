@@ -139,3 +139,16 @@ describe("path handling", () => {
     expect(long[0]).toMatch(/ flashi$/);
   });
 });
+
+describe("completed paths", () => {
+  it("accepts the trailing slash that completion adds", () => {
+    expect(run("cd projects/", home).action).toEqual({
+      type: "cd",
+      cwd: "~/projects",
+    });
+    expect(run("cd ../", inProjects).action).toEqual({ type: "cd", cwd: "~" });
+    expect(run("ls projects/", home).lines).toEqual(
+      run("ls", inProjects).lines,
+    );
+  });
+});

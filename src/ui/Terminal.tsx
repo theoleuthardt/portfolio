@@ -193,6 +193,7 @@ export function Terminal({
     }
     setLine({ text: "", cursor: 0 });
     setOptions([]);
+    idleTab.current = null;
     inputRef.current?.focus();
   };
 
