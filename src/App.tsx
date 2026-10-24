@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { findProject } from "./content/projects";
-import type { MonitorPose } from "./scene/monitor/CrtMonitor";
+import type { MonitorPose, ScreenPlacement } from "./scene/monitor/CrtMonitor";
+import { homography } from "./scene/monitor/seat";
 import { isPhoneViewport, supportsWebGL } from "./scene/device";
 import { ProjectPanel } from "./ui/ProjectPanel";
 import { SceneLayer } from "./ui/SceneLayer";
@@ -15,18 +16,23 @@ type TerminalWindow = "open" | "minimized" | "closed";
 /** Longest time the boot waits for the 3D scene before it finishes anyway. */
 export const SCENE_TIMEOUT_MS = 8000;
 
+/** Longest time the screen waits for the 3D terminal to be seated. */
+export const SEAT_TIMEOUT_MS = 2500;
+
 /**
- * Variant C: the scene fills the screen, the CRT terminal is docked left and
- * an opened project appears as a panel on the right (≥ 1024 px). Below that
- * the terminal sits in the lower part and shows project screens itself;
- * phones and touch tablets get the terminal only. The boot waits for the
- * scene, at most {@link SCENE_TIMEOUT_MS}. Where the scene is shown, the
- * terminal can be maximized, minimized into a bar or closed behind a button to free the
- * view of the lab; it stays mounted, so its session survives, and opening a
- * project from the rack brings it back. Once the scene is ready, the 3D
- * monitor in the scene replaces the 2D housing around the screen, except
- * while the window is maximized; folding the terminal away stands the
- * visitor up from the desk, restoring it sits them down again.
+ * Variant C: the scene fills the screen and an opened project appears as a
+ * panel on the right (≥ 1024 px). There, once the scene is ready, the
+ * visitor sits at a 3D terminal on a desk beside the rack and the HTML
+ * terminal is mapped onto its screen; the screen only shows once the scene
+ * reports them seated (or after {@link SEAT_TIMEOUT_MS}). Below 1024 px, while
+ * maximized or without the scene, the terminal keeps its 2D housing and
+ * shows project screens itself; phones and touch tablets get the terminal
+ * only. The boot waits for the scene, at most {@link SCENE_TIMEOUT_MS}. Where
+ * the scene is shown, the terminal can be maximized, minimized into a bar or
+ * closed behind a button, which stands the visitor up to look around; at
+ * the desk, maximizing leans in to the screen for a close look. It
+ * stays mounted, so its session survives, and opening a project from the
+ * rack brings it back.
  */
 const App = () => {
   const [webgl] = useState(() => supportsWebGL());
@@ -36,21 +42,27 @@ const App = () => {
   const [sceneFailed, setSceneFailed] = useState(false);
   const [terminalWindow, setTerminalWindow] = useState<TerminalWindow>("open");
   const [maximized, setMaximized] = useState(false);
+  const [seated, setSeated] = useState(false);
+  const [seatForced, setSeatForced] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
   const restoreButton = useRef<HTMLButtonElement>(null);
+  const windowElement = useRef<HTMLDivElement>(null);
   const connector = useRef<SVGPolylineElement>(null);
   const viewport = useViewport();
   const wide = viewport.width >= WIDE_SCREEN;
   const sceneShown = webgl && !isPhoneViewport(viewport);
   const sceneLoading = sceneShown && !sceneSettled;
   const windowState = sceneShown ? terminalWindow : "open";
-  const monitorAvailable =
-    sceneShown && sceneReady && !sceneFailed && !maximized;
-  const monitorPose: MonitorPose = !monitorAvailable
+  const deskAvailable = sceneShown && wide && sceneReady && !sceneFailed;
+  const monitorPose: MonitorPose = !deskAvailable
     ? "off"
-    : windowState === "open"
-      ? "seated"
-      : "standing";
+    : windowState !== "open"
+      ? "standing"
+      : maximized
+        ? "close"
+        : "seated";
+  const atScreen = monitorPose === "seated" || monitorPose === "close";
+  const waitingForSeat = atScreen && !seated && !seatForced;
   useEffect(() => {
     if (!sceneLoading) {
       return;
@@ -63,12 +75,57 @@ const App = () => {
   }, [sceneLoading]);
 
   useEffect(() => {
-    if (windowState === "open") {
-      terminal.current?.focus();
-    } else {
-      restoreButton.current?.focus();
+    if (monitorPose === "off") {
+      windowElement.current?.removeAttribute("style");
     }
-  }, [windowState]);
+  }, [monitorPose]);
+
+  useEffect(() => {
+    if (!waitingForSeat) {
+      return;
+    }
+    const timer = window.setTimeout(() => setSeatForced(true), SEAT_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [waitingForSeat]);
+
+  useEffect(() => {
+    if (windowState !== "open") {
+      restoreButton.current?.focus();
+    } else if (!waitingForSeat) {
+      terminal.current?.focus();
+    }
+  }, [windowState, waitingForSeat]);
+
+  /**
+   * Maps the terminal window onto the 3D terminal's screen, drawn at about
+   * its size on the page so the text stays sharp, or back into the page
+   * layout when there is no 3D screen.
+   */
+  const placeScreen = (placement: ScreenPlacement | undefined) => {
+    const element = windowElement.current;
+    if (element === null) {
+      return;
+    }
+    if (placement === undefined) {
+      if (element.hasAttribute("style")) {
+        element.removeAttribute("style");
+      }
+      return;
+    }
+    const width = Math.round(placement.width);
+    const height = Math.round(placement.height);
+    Object.assign(element.style, {
+      position: "fixed",
+      left: "0",
+      top: "0",
+      margin: "0",
+      aspectRatio: "auto",
+      width: `${width}px`,
+      height: `${height}px`,
+      transformOrigin: "0 0",
+      transform: `matrix3d(${homography(width, height, placement.quad).join(",")})`,
+    });
+  };
 
   const openProject =
     wide && openProjectId !== undefined
@@ -76,7 +133,10 @@ const App = () => {
       : undefined;
 
   return (
-    <main className="relative flex h-dvh flex-col justify-end overflow-hidden bg-void p-2 sm:p-6 lg:justify-start">
+    <main
+      data-look-surface
+      className="relative flex h-dvh flex-col justify-end overflow-hidden bg-void p-2 sm:p-6 lg:justify-start"
+    >
       <SceneLayer
         webgl={webgl}
         onReady={() => {
@@ -93,11 +153,14 @@ const App = () => {
         promptAnchor={() =>
           windowState === "open" ? terminal.current?.promptAnchor() : undefined
         }
-        focusLayout={wide ? "docked" : "sheet"}
-        screenRect={
-          monitorAvailable ? () => terminal.current?.screenRect() : undefined
-        }
+        onScreenPlacement={placeScreen}
         monitorPose={monitorPose}
+        onSeatedChange={(value) => {
+          setSeated(value);
+          if (!value) {
+            setSeatForced(false);
+          }
+        }}
       />
       {wide ? (
         <svg className="hud-connector" aria-hidden="true">
@@ -105,9 +168,13 @@ const App = () => {
         </svg>
       ) : null}
       <div
+        ref={windowElement}
+        data-terminal-window
         hidden={windowState !== "open"}
+        inert={waitingForSeat}
+        aria-hidden={waitingForSeat || undefined}
         className={
-          maximized && sceneShown
+          maximized && sceneShown && monitorPose === "off"
             ? "relative z-10 h-full"
             : "relative z-10 h-full sm:mb-[22dvh] sm:ml-[4vw] sm:aspect-[4/3] sm:h-auto sm:w-[min(calc(100%_-_15rem),calc(42dvh*4/3))] lg:mb-0 lg:ml-0 lg:mt-[3vh] lg:w-[min(36rem,40vw,calc((100dvh_-_16rem)*4/3))]"
         }
@@ -118,7 +185,8 @@ const App = () => {
           inlineProjectScreens={!wide}
           holdBoot={sceneLoading}
           rackHint={sceneShown}
-          housing={monitorPose !== "seated"}
+          housing={!atScreen}
+          powered={!waitingForSeat}
           controls={
             sceneShown
               ? {

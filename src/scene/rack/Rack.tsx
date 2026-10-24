@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { CatmullRomCurve3, DoubleSide, Vector3 } from "three";
+import { DoubleSide } from "three";
 import { findProject, RACK_UNITS } from "../../content/projects";
 import { rackSlots } from "../../content/rack";
 import { usePrefersReducedMotion } from "../../ui/usePrefersReducedMotion";
 import { InstancedBoxes, type Point3 } from "../environment/InstancedBoxes";
 import { usePbr } from "../environment/usePbr";
-import { evenlySpaced, ROOM } from "../layout";
+import { evenlySpaced } from "../layout";
 import { RACK, RACK_HEIGHT } from "./geometry";
 import { RackModule } from "./RackModule";
 
@@ -100,43 +100,10 @@ function Frame() {
       </mesh>
       <mesh position={[0, RACK.floorY + 0.012, HALF_D + 0.03]}>
         <boxGeometry args={[RACK.width + 0.04, 0.012, 0.02]} />
-        <meshBasicMaterial color="#2ef2c0" toneMapped={false} />
+        <meshBasicMaterial color="#4dff88" toneMapped={false} />
       </mesh>
     </group>
   );
-}
-
-function Cables() {
-  const paths = useMemo(
-    () =>
-      evenlySpaced(-0.35, 0.35, 6).map(
-        (x, i) =>
-          new CatmullRomCurve3([
-            new Vector3(x, RACK.floorY + RACK_HEIGHT, -HALF_D + 0.15),
-            new Vector3(
-              x * 1.2,
-              RACK.floorY + RACK_HEIGHT + 0.6 + i * 0.05,
-              -HALF_D - 0.2,
-            ),
-            new Vector3(
-              x * 1.6 - 0.4,
-              ROOM.ceiling - 0.3,
-              -HALF_D - 1.4 - i * 0.12,
-            ),
-          ]),
-      ),
-    [],
-  );
-  return paths.map((path, i) => (
-    <mesh key={i}>
-      <tubeGeometry args={[path, 24, 0.022, 8, false]} />
-      {i === 2 ? (
-        <meshBasicMaterial color="#2ef2c0" toneMapped={false} />
-      ) : (
-        <meshStandardMaterial color="#070a09" roughness={0.6} metalness={0.2} />
-      )}
-    </mesh>
-  ));
 }
 
 const usedUnits = slots.reduce((sum, slot) => sum + slot.units, 0);
@@ -169,7 +136,7 @@ function BlankingPanels() {
 }
 
 /**
- * The server rack: frame, side panels, cables into the ceiling and one module
+ * The server rack: frame, side panels and one module
  * per slot (contact panel, the projects, the about server).
  */
 export function Rack({ openProjectId, onSelectProject }: RackProps) {
@@ -177,7 +144,6 @@ export function Rack({ openProjectId, onSelectProject }: RackProps) {
   return (
     <group position={[RACK.x, 0, RACK.z]} rotation-y={RACK.rotationY}>
       <Frame />
-      <Cables />
       <BlankingPanels />
       {slots.map((slot, index) => {
         const project = findProject(slot.id);

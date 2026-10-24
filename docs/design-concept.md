@@ -14,27 +14,26 @@ It has to work for three kinds of visitors:
 
 ## 2. Look and feel
 
-**Mood: a Night City lab (Cyberpunk 2077 style).** A server lab in the style of Night City interiors such as the Afterlife: teal-green light everywhere, bright ceiling light panels behind grilles, a curved ceiling structure outlined with neon strips, a glossy tiled floor that mirrors the light, glass floor panels lit from below, haze hanging in the air, cable trays and pipes overhead, glass partitions, small red and pink accents and an own neon sign (no third-party branding). In the middle of it stands the rack; in front of it an **old-school CRT terminal**: green phosphor on black, a chunky bezel, curved glass, scanlines and glow. Motion only where it means something (boot, focus, activity); no starfield, no space.
+**Mood: a Night City lab (Cyberpunk 2077 style).** A server lab in the style of Night City interiors such as the Afterlife: green light everywhere, bright ceiling light panels behind grilles, a curved ceiling structure outlined with neon strips, a glossy tiled floor that mirrors the light, glass floor panels lit from below, haze hanging in the air, cable trays and pipes overhead, glass partitions, a few small red signals and an own neon sign (no third-party branding). In the middle of it stands the rack; in front of it an **old-school CRT terminal**: green phosphor on black, a chunky bezel, curved glass, scanlines and glow. Motion only where it means something (boot, focus, activity); no starfield, no space.
 
 ### Colour tokens
 
-The scene is lit in teal-green; the CRT terminal keeps its classic phosphor green. Amber, red and pink are the only other hues and appear as small signals and accents.
+The scene is lit in green (not turquoise) and everything else stays black; the CRT terminal keeps its classic phosphor green. Amber and red are the only other hues and appear only as small signals (warnings, alarms). No pink or purple accents (decided 2026-10-24).
 
 | Token                  | Value     | Use                                                                          |
 | ---------------------- | --------- | ---------------------------------------------------------------------------- |
 | `--color-void`         | `#020403` | page background, darkest scene areas                                         |
-| `--color-haze`         | `#06231c` | fog and haze colour                                                          |
+| `--color-haze`         | `#041a0b` | fog and haze colour                                                          |
 | `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                                            |
 | `--color-glass`        | `#031008` | CRT screen background, HUD panels (at least 96 % opacity plus backdrop blur) |
 | `--color-line`         | `#1d5a2c` | panel borders, chips, grid                                                   |
 | `--color-phosphor`     | `#33ff66` | terminal text, prompt, "online" LEDs, links, focus ring                      |
 | `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                                            |
 | `--color-text`         | `#b8f5c8` | long-form text in project screens                                            |
-| `--color-neon`         | `#2ef2c0` | scene neon strips, glass floor glow, sign                                    |
-| `--color-ceiling`      | `#c8ffe9` | ceiling light panels (the brightest light in the room)                       |
+| `--color-neon`         | `#4dff88` | scene neon strips, glass floor glow, sign                                    |
+| `--color-ceiling`      | `#d4ffdc` | ceiling light panels (the brightest light in the room)                       |
 | `--color-amber`        | `#ffb000` | activity LEDs, warnings, the fork badge                                      |
 | `--color-alert`        | `#ff3b3b` | errors, "command not found", red accent lights                               |
-| `--color-pink`         | `#ff3d8b` | rare accent lights and sign details in the scene                             |
 
 Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. HUD panels over the scene are at least 96 % opaque with a backdrop blur: even over the brightest ceiling colour the blended background keeps phosphor at 13.4:1, text at 14.5:1 and phosphor-dim at 4.9:1 (at 92 % phosphor-dim would drop to 4.48:1, below AA). Contrast is also checked on screenshots over the brightest scene areas. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
 
@@ -52,10 +51,10 @@ Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-
 
 ### Scene (Night City style)
 
-- **Light:** bright mint ceiling panels behind grilles as the key light, teal-green neon strips along the curved ceiling edge, floor edges and the rack, glass floor panels glowing from below, a few red and pink practical lights. Teal-green exponential fog plus soft light shafts give the haze.
+- **Light:** bright pale-green ceiling panels behind grilles as the key light, green neon strips along the curved ceiling edge, floor edges and the rack, glass floor panels glowing from below, a few red practical lights. Green exponential fog plus soft light shafts give the haze.
 - **Materials:** glossy dark floor tiles with real reflections (`MeshReflectorMaterial`), brushed metal with fine normal maps, frosted and clear glass, emissive neon with bloom, slightly dirty surfaces (roughness maps) so it does not look clean and synthetic.
 - **Space:** the rack stands on the right; behind it the lab opens up into the depth with more racks, a glass partition, a workbench with old monitors and the neon sign; cable trays and pipes run overhead.
-- **Post-processing:** selective bloom, vignette, a touch of tone mapping and colour grading towards teal. No glitch loops or chromatic aberration on text; the CRT feel lives in the terminal styling.
+- **Post-processing:** selective bloom, vignette, a touch of tone mapping and colour grading towards green. No glitch loops or chromatic aberration on text; the CRT feel lives in the terminal styling.
 
 ### Modeling (beyond the prototype)
 
@@ -181,7 +180,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 4. App shell: layout per breakpoint, shared state between terminal and scene, removal of the old Hero/Navbar/Projects and their dependencies
 5. Scene foundation: lazy `Canvas`, camera rig, WebGL detection and fallback, asset loading pipeline (glTF, meshopt/Draco, KTX2)
 6. Environment kit: reflective tiled floor, glass floor panels, curved ceiling with light panels and neon contour, walls, pillars, glass partition, cable trays, pipes
-7. Lighting and materials: baked lightmaps for the static room, neon and practical lights, fog and light shafts, teal colour grading
+7. Lighting and materials: baked lightmaps for the static room, neon and practical lights, fog and light shafts, green colour grading
 8. Detailed rack and modules: rails, screws, vented faces, SDF label text, LEDs and fans as instances, cables; hover and click
 9. Props and signage: workbench with CRT monitors, cable spools, "THEOCLOUD" neon sign, background racks
 10. Focus interaction: module slide-out, camera flights, project screen panel, HUD connector line

@@ -74,8 +74,6 @@ export interface TerminalHandle {
   promptAnchor: () => DOMRect | undefined;
   /** Moves the focus into the prompt, e.g. after the window is restored. */
   focus: () => void;
-  /** Screen rectangle of the tube glass, which the 3D monitor surrounds. */
-  screenRect: () => DOMRect | undefined;
 }
 
 /** Props of {@link Terminal}. */
@@ -93,6 +91,8 @@ export interface TerminalProps {
   controls?: CrtControls;
   /** Draw the 2D monitor housing; off while the 3D monitor surrounds it. */
   housing?: boolean;
+  /** Show the screen; off while the 3D terminal is still being seated. */
+  powered?: boolean;
 }
 
 /**
@@ -114,6 +114,7 @@ export function Terminal({
   rackHint = false,
   controls,
   housing = true,
+  powered = true,
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
@@ -125,7 +126,6 @@ export function Terminal({
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
-  const glassRef = useRef<HTMLDivElement>(null);
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
   const phase = useBootPhase(booted);
@@ -253,7 +253,6 @@ export function Terminal({
     run: runCommand,
     promptAnchor: () => inputRef.current?.getBoundingClientRect(),
     focus: () => inputRef.current?.focus(),
-    screenRect: () => glassRef.current?.getBoundingClientRect(),
   }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
@@ -323,7 +322,7 @@ export function Terminal({
       title={`guest@theocloud: ${session.cwd}`}
       controls={controls}
       housing={housing}
-      glassRef={glassRef}
+      powered={powered}
     >
       <div
         ref={logRef}

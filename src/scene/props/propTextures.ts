@@ -1,13 +1,14 @@
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
 
-const FONT = '"Share Tech Mono", ui-monospace, monospace';
+/** The font of every text drawn into a texture. */
+export const FONT = '"Share Tech Mono", ui-monospace, monospace';
 
 /**
  * A canvas texture drawn by `draw`. Text-bearing textures pass
  * `redrawWithFont`, so they are drawn again once the web font has loaded and
  * never keep the fallback font.
  */
-function canvasTexture(
+export function canvasTexture(
   width: number,
   height: number,
   draw: (context: CanvasRenderingContext2D) => void,
@@ -48,16 +49,16 @@ export function neonSignTexture(title: string, caption: string): CanvasTexture {
       context.textAlign = "center";
       context.textBaseline = "middle";
       context.font = `128px ${FONT}`;
-      context.shadowColor = "#2ef2c0";
+      context.shadowColor = "#4dff88";
       context.shadowBlur = 24;
-      context.strokeStyle = "#2ef2c0";
+      context.strokeStyle = "#4dff88";
       context.lineWidth = 5;
       context.strokeText(title, 512, 100);
-      context.fillStyle = "#d9fff3";
+      context.fillStyle = "#dcffe4";
       context.fillText(title, 512, 100);
       context.font = `40px ${FONT}`;
-      context.shadowColor = "#ff3d8b";
-      context.fillStyle = "#ff3d8b";
+      context.shadowColor = "#33ff66";
+      context.fillStyle = "#33ff66";
       context.fillText(caption, 512, 205);
     },
     true,
@@ -116,7 +117,7 @@ export function hudScreenTexture(title: string, seed: number): CanvasTexture {
       context.font = `22px ${FONT}`;
       context.fillStyle = "#33ff66";
       context.fillText(title, 20, 36);
-      context.strokeStyle = "#2ef2c0";
+      context.strokeStyle = "#4dff88";
       context.lineWidth = 3;
       context.beginPath();
       for (let i = 0; i <= 30; i++) {
@@ -186,8 +187,8 @@ export function brandPanelTexture(): CanvasTexture {
       context.fillStyle = "#b9ffcc";
       context.fillText("TheoCloud", 128, 400);
       context.font = `18px ${FONT}`;
-      context.shadowColor = "#ff3d8b";
-      context.fillStyle = "#ff3d8b";
+      context.shadowColor = "#33ff66";
+      context.fillStyle = "#33ff66";
       context.fillText("data systems", 128, 430);
       context.shadowBlur = 0;
       context.fillStyle = "#8f8a7c";

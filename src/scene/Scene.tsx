@@ -1,57 +1,156 @@
 import { Environment, Lightformer, SpotLight } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   lazy,
   Suspense,
   useEffect,
   useEffectEvent,
   useMemo,
+  useRef,
   useState,
   type RefObject,
 } from "react";
 import { SceneErrorBoundary } from "../ui/SceneErrorBoundary";
 import { rackSlots, type RackSlot } from "../content/rack";
-import { Vector3 } from "three";
+import { PerspectiveCamera, Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
-import { cameraPosition, LAB_RIG, standUp } from "./cameraRig";
+import { cameraPosition, fieldOfView, LAB_RIG } from "./cameraRig";
+import { drag, IDLE_LOOK, lookPose, relax, wheel, type Look } from "./look";
 import { LabEnvironment } from "./environment/Environment";
 import { connectorPoints, toScreen } from "./rack/connector";
-import {
-  approach,
-  focusPose,
-  moduleFront,
-  SLIDE_OUT,
-  type FocusLayout,
-  type FocusPose,
-} from "./rack/focus";
+import { approach, moduleFront, SLIDE_OUT } from "./rack/focus";
 import { Rack } from "./rack/Rack";
-import { CrtMonitor, type MonitorPose } from "./monitor/CrtMonitor";
-import type { ScreenRect } from "./monitor/placement";
-import { ROOM } from "./layout";
+import {
+  CrtMonitor,
+  type MonitorPose,
+  type ScreenPlacement,
+} from "./monitor/CrtMonitor";
+import { SEAT, seatFocus, standUp, type Pose } from "./monitor/seat";
+import { closePose } from "./monitor/terminal";
+import { BEAM_ZS, ROOM } from "./layout";
 
 const PostEffects = lazy(() => import("./PostEffects"));
 const Props = lazy(() => import("./props/Props"));
+const Lab = lazy(() => import("./lab/Lab"));
 
-const HAZE = "#06231c";
-const MINT = "#c8ffe9";
-const NEON = "#2ef2c0";
-const TARGET = new Vector3(0, 0.6, 0);
-const BEAM_ZS = [2, -3.5, -9];
+const HAZE = "#041a0b";
+const MINT = "#d4ffdc";
+const NEON = "#4dff88";
+const TARGET = new Vector3(...SEAT.target);
 const SLOTS = rackSlots();
+/**
+ * Frame priority of the camera rig: before everything else, so whatever
+ * hangs on the camera (the 3D terminal) follows it in the same frame.
+ */
+const CAMERA_FIRST = -1;
+
+/** Seconds without input before the look eases back to the rig. */
+const LOOK_IDLE_SECONDS = 4;
+
+/**
+ * The visitor's look around, driven by drag and wheel input. Only gestures
+ * that start on the page background (`data-look-surface`) count, never those
+ * on the terminal or the project panel. `sample` returns the look for the
+ * next frame: eased back to the rig after a few idle seconds, reset while a
+ * module is focused, and whether the visitor is moving it right now.
+ */
+function useLook(reducedMotion: boolean) {
+  const state = useRef({ look: IDLE_LOOK, lastInput: -Infinity });
+  const invalidate = useThree((three) => three.invalidate);
+  useEffect(() => {
+    let dragging: { x: number; y: number } | undefined;
+    let wake: number | undefined;
+    const touched = (look: Look) => {
+      state.current = { look, lastInput: performance.now() / 1000 };
+      invalidate();
+      window.clearTimeout(wake);
+      wake = window.setTimeout(invalidate, LOOK_IDLE_SECONDS * 1000 + 50);
+    };
+    const onSurface = (event: Event) =>
+      event.target instanceof Element &&
+      event.target.hasAttribute("data-look-surface");
+    const down = (event: PointerEvent) => {
+      if (event.button === 0 && onSurface(event)) {
+        dragging = { x: event.clientX, y: event.clientY };
+      }
+    };
+    const move = (event: PointerEvent) => {
+      if (dragging === undefined) {
+        return;
+      }
+      touched(
+        drag(
+          state.current.look,
+          event.clientX - dragging.x,
+          event.clientY - dragging.y,
+          window.innerHeight,
+        ),
+      );
+      dragging = { x: event.clientX, y: event.clientY };
+    };
+    const up = () => {
+      dragging = undefined;
+    };
+    const turn = (event: WheelEvent) => {
+      if (onSurface(event)) {
+        touched(wheel(state.current.look, event.deltaY));
+      }
+    };
+    window.addEventListener("pointerdown", down);
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+    window.addEventListener("wheel", turn, { passive: true });
+    return () => {
+      window.clearTimeout(wake);
+      window.removeEventListener("pointerdown", down);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+      window.removeEventListener("wheel", turn);
+    };
+  }, [invalidate]);
+  return {
+    sample: (delta: number, focused: boolean) => {
+      const now = performance.now() / 1000;
+      const { look, lastInput } = state.current;
+      const next = focused
+        ? IDLE_LOOK
+        : now - lastInput > LOOK_IDLE_SECONDS
+          ? relax(look, delta, reducedMotion)
+          : look;
+      state.current = { look: next, lastInput };
+      return { look: next, active: now - lastInput < 0.5 };
+    },
+  };
+}
 
 interface CameraRigProps {
   reducedMotion: boolean;
-  focus?: FocusPose;
-  /** The visitor has stood up from the desk; a focused module still wins. */
-  standing: boolean;
+  focus?: Pose;
+  /** Seated, leaning in, standing or without terminal; see MonitorPose. */
+  pose: MonitorPose;
 }
 
-function CameraRig({ reducedMotion, focus, standing }: CameraRigProps) {
+function CameraRig({ reducedMotion, focus, pose: where }: CameraRigProps) {
+  const standing = where === "standing";
+  const looking = useLook(reducedMotion);
   const next = useMemo(() => new Vector3(), []);
   const lookAt = useMemo(() => TARGET.clone(), []);
   const goal = useMemo(() => new Vector3(), []);
-  useFrame(({ camera, clock, pointer }, delta) => {
-    if (focus) {
+  useFrame(({ camera, clock, pointer, size }, delta) => {
+    const fov = fieldOfView(size.width / size.height);
+    if (camera instanceof PerspectiveCamera && camera.fov !== fov) {
+      camera.fov = fov;
+      camera.updateProjectionMatrix();
+    }
+    const close = where === "close";
+    const sample = looking.sample(delta, focus !== undefined || close);
+    if (close) {
+      const lean = closePose(fov);
+      next.set(...lean.position);
+      goal.set(...lean.target);
+    } else if (focus) {
       next.set(...focus.position);
       goal.set(...focus.target);
     } else {
@@ -61,10 +160,24 @@ function CameraRig({ reducedMotion, focus, standing }: CameraRigProps) {
         pointer,
         reducedMotion,
       );
-      next.set(...(standing ? standUp(seated) : seated));
-      goal.copy(TARGET);
+      const rest: Pose = { position: seated, target: SEAT.target };
+      const from = standing ? standUp(rest) : rest;
+      const pose = lookPose(from.position, from.target, {
+        ...sample.look,
+        zoom: standing ? sample.look.zoom : 0,
+      });
+      next.set(...pose.position);
+      goal.set(...pose.target);
     }
-    const speed = reducedMotion ? Infinity : focus ? 3.2 : standing ? 1.3 : 2;
+    const speed = reducedMotion
+      ? Infinity
+      : focus
+        ? 3.2
+        : sample.active
+          ? 6
+          : standing
+            ? 1.3
+            : 2;
     camera.position.set(
       approach(camera.position.x, next.x, delta, speed),
       approach(camera.position.y, next.y, delta, speed),
@@ -76,7 +189,7 @@ function CameraRig({ reducedMotion, focus, standing }: CameraRigProps) {
       approach(lookAt.z, goal.z, delta, speed),
     );
     camera.lookAt(lookAt);
-  });
+  }, CAMERA_FIRST);
   return null;
 }
 
@@ -128,7 +241,7 @@ function Connector({
 
 /**
  * Environment map made of light shapes that match the room (ceiling panels,
- * neon strips, a pink accent), so metal and tiles reflect the lab's own
+ * neon strips, a green accent), so metal and tiles reflect the lab's own
  * lights without downloading an HDRI.
  */
 function Reflections() {
@@ -157,7 +270,7 @@ function Reflections() {
       <Lightformer
         form="rect"
         intensity={3}
-        color="#ff3d8b"
+        color="#33ff66"
         position={[3.5, 1.6, ROOM.back + 0.5]}
         scale={[1.2, 0.1, 1]}
       />
@@ -204,12 +317,12 @@ export interface SceneProps {
   connector?: RefObject<SVGPolylineElement | null>;
   /** Where the HUD line starts: the terminal prompt. */
   promptAnchor?: () => DOMRect | undefined;
-  /** Where the terminal sits, so the focused module is framed beside it. */
-  focusLayout?: FocusLayout;
-  /** The terminal's screen, which the 3D monitor surrounds; none if absent. */
-  screenRect?: () => ScreenRect | undefined;
+  /** Called every frame with where the HTML screen goes, or `undefined`. */
+  onScreenPlacement?: (placement: ScreenPlacement | undefined) => void;
   /** Whether the visitor sits at the 3D terminal, stands, or there is none. */
   monitorPose?: MonitorPose;
+  /** Called when the 3D terminal is seated around the screen, or no more. */
+  onSeatedChange?: (seated: boolean) => void;
 }
 
 /**
@@ -223,16 +336,19 @@ export default function Scene({
   onSelectProject,
   connector,
   promptAnchor,
-  focusLayout = "docked",
-  screenRect,
+  onScreenPlacement,
   monitorPose = "off",
+  onSeatedChange,
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [labReady, setLabReady] = useState(false);
   const focusedSlot = SLOTS.find((slot) => slot.id === openProjectId);
   const focus = useMemo(
-    () => (focusedSlot ? focusPose(focusedSlot, focusLayout) : undefined),
-    [focusedSlot, focusLayout],
+    () =>
+      focusedSlot
+        ? seatFocus(SEAT, moduleFront(focusedSlot, SLIDE_OUT), 0.25)
+        : undefined,
+    [focusedSlot],
   );
   return (
     <Canvas
@@ -247,7 +363,7 @@ export default function Scene({
     >
       <color attach="background" args={[HAZE]} />
       <fogExp2 attach="fog" args={[HAZE, 0.03]} />
-      <ambientLight intensity={0.25} color="#7fffd8" />
+      <ambientLight intensity={0.25} color="#8cffa0" />
       <hemisphereLight args={[MINT, "#031008", 0.35]} />
       <pointLight
         position={[0, 2.6, 3]}
@@ -277,7 +393,7 @@ export default function Scene({
         position={[3.5, 1.6, ROOM.back + 1]}
         intensity={4}
         distance={6}
-        color="#ff3d8b"
+        color="#33ff66"
       />
       <Suspense fallback={null}>
         <Reflections />
@@ -295,6 +411,7 @@ export default function Scene({
         <SceneErrorBoundary fallback={null}>
           <Suspense fallback={null}>
             <Props />
+            <Lab openProjectId={openProjectId} />
           </Suspense>
         </SceneErrorBoundary>
       ) : null}
@@ -304,12 +421,12 @@ export default function Scene({
       <CameraRig
         reducedMotion={reducedMotion}
         focus={focus}
-        standing={monitorPose === "standing"}
+        pose={monitorPose}
       />
       <CrtMonitor
-        screenRect={screenRect}
         pose={monitorPose}
-        reducedMotion={reducedMotion}
+        onScreenPlacement={onScreenPlacement}
+        onSeatedChange={onSeatedChange}
       />
       <Connector
         line={connector}

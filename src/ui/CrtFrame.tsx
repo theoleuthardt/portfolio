@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from "react";
+import type { ReactNode } from "react";
 
 /** The window keys of the terminal app; absent where they make no sense. */
 export interface CrtControls {
@@ -15,12 +15,12 @@ export interface CrtFrameProps {
   children: ReactNode;
   controls?: CrtControls;
   /**
-   * Draw the housing; off while the 3D monitor in the scene surrounds the
-   * screen, which then keeps its place and size so the two line up.
+   * Draw the housing; off while the screen sits in the 3D terminal in the
+   * scene, which draws the housing itself.
    */
   housing?: boolean;
-  /** The tube glass, whose rectangle the 3D monitor is built around. */
-  glassRef?: Ref<HTMLDivElement>;
+  /** Show the screen; while off, the 3D terminal's own screen shows. */
+  powered?: boolean;
 }
 
 /**
@@ -35,12 +35,13 @@ export function CrtFrame({
   children,
   controls,
   housing = true,
-  glassRef,
+  powered = true,
 }: CrtFrameProps) {
+  const classes = ["crt", housing ? "" : "crt-bare", powered ? "" : "crt-off"];
   return (
-    <div className={housing ? "crt" : "crt crt-bare"}>
+    <div className={classes.filter(Boolean).join(" ")}>
       <div className="crt-bezel">
-        <div ref={glassRef} className="crt-glass">
+        <div className="crt-glass">
           <div className="crt-titlebar">
             <span className="crt-title">{title}</span>
             {controls ? (

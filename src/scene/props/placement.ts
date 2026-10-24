@@ -1,4 +1,4 @@
-import { ROOM } from "../layout";
+import { evenlySpaced, ROOM } from "../layout";
 
 /** The CC0 models in `public/models/` (see docs/ASSETS.md). */
 export const PROP_MODELS = [
@@ -123,3 +123,12 @@ export const MODEL_PROPS: readonly ModelProp[] = [
     rotationY: 0.5,
   },
 ];
+
+/** Where the row of dark racks at the back of the lab stands. */
+export const BACK_RACK_XS = evenlySpaced(-3.2, 3.2, 5);
+
+/** Depth of the row of back racks. */
+export const BACK_RACK_Z = -15;
+
+/** Height of the back racks' tops. */
+export const BACK_RACK_TOP = ROOM.floor + 2.2;

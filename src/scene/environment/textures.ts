@@ -23,7 +23,7 @@ export function glassFloorTexture(): CanvasTexture {
   const texture = canvasTexture(256, (context, size) => {
     context.fillStyle = "#0b3a2e";
     context.fillRect(0, 0, size, size);
-    context.strokeStyle = "#2ef2c0";
+    context.strokeStyle = "#4dff88";
     context.lineWidth = 3;
     context.strokeRect(10, 10, size - 20, size - 20);
     context.lineWidth = 2;
@@ -35,7 +35,7 @@ export function glassFloorTexture(): CanvasTexture {
       context.lineTo(size * 0.55, y + (i % 2 === 0 ? 14 : -14));
       context.lineTo(size - 24, y + (i % 2 === 0 ? 14 : -14));
       context.stroke();
-      context.fillStyle = "#c8ffe9";
+      context.fillStyle = "#d4ffdc";
       context.fillRect(size - 30, y - 4 + (i % 2 === 0 ? 14 : -14), 8, 8);
     }
   });
