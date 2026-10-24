@@ -395,6 +395,28 @@ describe("Terminal", () => {
   });
 });
 
+describe("Terminal tab title", () => {
+  it("follows the boot and the open project", () => {
+    render(<Terminal />);
+    expect(document.title).toBe("TheoCloud OS · booting 100%");
+    act(() => {
+      vi.advanceTimersByTime(BOOT_REDUCED_HOLD_MS);
+    });
+    expect(document.title).toBe("guest@theocloud:~$ █");
+    type("open flashi");
+    expect(document.title).toBe("guest@theocloud:~$ open flashi");
+  });
+
+  it("loses the signal while the tab is hidden", () => {
+    renderBooted(<Terminal />);
+    vi.spyOn(document, "hidden", "get").mockReturnValue(true);
+    act(() => {
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+    expect(document.title).toBe("▓ signal lost · theocloud");
+  });
+});
+
 describe("Terminal boot hold", () => {
   it("holds the boot at the lab sync step until the scene is ready", () => {
     const { rerender } = render(<Terminal holdBoot={true} />);

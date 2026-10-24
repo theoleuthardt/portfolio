@@ -31,6 +31,7 @@ import { BootScreen } from "./BootScreen";
 import { CrtFrame } from "./CrtFrame";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
+import { useTabTitle } from "./useTabTitle";
 import {
   BOOT_GLIDE_MS,
   useBootPhase,
@@ -117,6 +118,12 @@ export function Terminal({
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
   const phase = useBootPhase(booted);
+  useTabTitle({
+    phase,
+    percent: bootSteps[Math.min(bootReached, bootSteps.length) - 1].percent,
+    cwd: session.cwd,
+    openProjectId: session.openProjectId,
+  });
   const splash = useRef<HTMLDivElement>(null);
   const splashTop = useRef<number | null>(null);
 
