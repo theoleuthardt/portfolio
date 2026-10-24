@@ -5,6 +5,7 @@ import type { RackSlot } from "../../content/rack";
 import { InstancedBoxes, type Point3 } from "../environment/InstancedBoxes";
 import { evenlySpaced } from "../layout";
 import { usePbr } from "../environment/usePbr";
+import { approach, SLIDE_OUT } from "./focus";
 import { blinkLevel, RACK, slotCenterY } from "./geometry";
 import { labelTexture } from "./labelTexture";
 
@@ -86,9 +87,18 @@ export function RackModule({
   const label = useMemo(() => labelTexture(slot.id), [slot.id]);
   useEffect(() => () => label.dispose(), [label]);
   const activity = useRef<MeshBasicMaterial>(null);
+  const drawer = useRef<Group>(null);
   const lit = hovered || open;
 
-  useFrame(({ clock }) => {
+  useFrame(({ clock }, delta) => {
+    if (drawer.current) {
+      drawer.current.position.z = approach(
+        drawer.current.position.z,
+        open ? SLIDE_OUT : 0,
+        delta,
+        reducedMotion ? Infinity : 6,
+      );
+    }
     if (activity.current) {
       const on = reducedMotion ? 1 : blinkLevel(seed, clock.elapsedTime);
       activity.current.color
@@ -127,7 +137,8 @@ export function RackModule({
   const interactive = onSelect !== undefined;
   return (
     <group
-      position={[0, slotCenterY(slot), open ? 0.08 : 0]}
+      ref={drawer}
+      position={[0, slotCenterY(slot), 0]}
       onPointerOver={(event) => {
         if (!interactive || ignoresOverlay(event)) {
           return;
@@ -160,7 +171,7 @@ export function RackModule({
           metalness={1}
           roughness={1}
           emissive={PHOSPHOR}
-          emissiveIntensity={lit ? 0.05 : 0}
+          emissiveIntensity={lit ? 0.012 : 0}
         />
       </mesh>
       <InstancedBoxes positions={vents} size={[0.05, 0.008, 0.004]}>

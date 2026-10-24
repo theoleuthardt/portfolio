@@ -227,6 +227,24 @@
     background: none;
   }
 
+  .hud-connector {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .hud-connector polyline {
+    fill: none;
+    stroke: var(--color-phosphor);
+    stroke-width: 1;
+    stroke-dasharray: 4 5;
+    opacity: 0.75;
+    filter: drop-shadow(0 0 4px var(--color-phosphor));
+  }
+
   .hud-panel a {
     color: var(--color-phosphor);
     text-decoration: underline;

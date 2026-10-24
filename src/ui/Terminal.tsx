@@ -35,6 +35,8 @@ function Prompt({ command }: { command: string }) {
 export interface TerminalHandle {
   /** Runs a command as if it had been typed, e.g. after a click in the scene. */
   run: (command: string) => void;
+  /** Screen rectangle of the prompt input, where the HUD line starts. */
+  promptAnchor: () => DOMRect | undefined;
 }
 
 /** Props of {@link Terminal}. */
@@ -88,7 +90,10 @@ export function Terminal({
     inputRef.current?.focus();
   };
 
-  useImperativeHandle(ref, () => ({ run: runCommand }));
+  useImperativeHandle(ref, () => ({
+    run: runCommand,
+    promptAnchor: () => inputRef.current?.getBoundingClientRect(),
+  }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
     if (

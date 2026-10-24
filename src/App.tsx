@@ -23,6 +23,7 @@ const App = () => {
   const [openProjectId, setOpenProjectId] = useState<string>();
   const [sceneSettled, setSceneSettled] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
+  const connector = useRef<SVGPolylineElement>(null);
   const viewport = useViewport();
   const wide = viewport.width >= WIDE_SCREEN;
   const sceneLoading = webgl && !isPhoneViewport(viewport) && !sceneSettled;
@@ -49,7 +50,15 @@ const App = () => {
         onReady={() => setSceneSettled(true)}
         openProjectId={openProjectId}
         onSelectProject={(id) => terminal.current?.run(`open ${id}`)}
+        connector={connector}
+        promptAnchor={() => terminal.current?.promptAnchor()}
+        focusLayout={wide ? "docked" : "sheet"}
       />
+      {wide ? (
+        <svg className="hud-connector" aria-hidden="true">
+          <polyline ref={connector} />
+        </svg>
+      ) : null}
       <div className="relative z-10 h-full sm:h-[55%] lg:h-full lg:w-[min(46rem,55vw)]">
         <Terminal
           ref={terminal}
