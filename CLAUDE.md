@@ -108,8 +108,8 @@ New issues: `gh issue create`, then `gh project item-add 4 --owner theoleuthardt
 An issue is done when all of these hold:
 
 - [ ] Acceptance criteria of the issue are met
-- [ ] Tests written first and passing; no test weakened
-- [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` pass locally
+- [ ] Tests written first and passing; no test weakened (from #24 on, when Vitest exists)
+- [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` pass locally (`npm test` from #24 on)
 - [ ] `npm audit --audit-level=high` reports nothing new
 - [ ] Clean Code and comment rules respected
 - [ ] UI changes checked in the running app (`npm run dev`), including mobile width and `prefers-reduced-motion`
