@@ -24,9 +24,10 @@ export interface CrtFrameProps {
 }
 
 /**
- * A worn CRT tube monitor: a weathered metal housing with a riveted bezel,
- * the curved glass set back into it and a front panel with vents, knobs, the
- * model plate, buttons and the power LED. On the screen runs the terminal
+ * A worn CRT tube monitor, the 2D sibling of the 3D terminal: an off-white
+ * housing with the curved glass set back into a bevelled bezel and a front
+ * panel with vents, the glowing brand plate, the model plate, buttons and
+ * the power LED. On the screen runs the terminal
  * app as a window with a title bar and the minimize, maximize and close keys.
  */
 export function CrtFrame({
@@ -80,11 +81,9 @@ export function CrtFrame({
         {housing ? (
           <>
             <span className="crt-vents" />
-            <span className="crt-knobs">
-              <span className="crt-knob" />
-              BRT
-              <span className="crt-knob" />
-              CONT
+            <span className="crt-brand">
+              <span className="crt-brand-name">TheoCloud</span>
+              <span className="crt-brand-line">data systems</span>
             </span>
             <span className="crt-plate">THEO-TERM 3270</span>
             <span className="crt-power">
