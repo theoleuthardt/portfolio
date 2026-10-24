@@ -5,19 +5,19 @@ import {
   useLayoutEffect,
   useMemo,
   useRef,
-  useState,
   type RefObject,
 } from "react";
 import {
   BoxGeometry,
   Color,
   ExtrudeGeometry,
-  Group,
   InstancedMesh,
+  DoubleSide,
   MeshStandardMaterial,
   Object3D,
   PerspectiveCamera,
   Shape,
+  Vector3,
   type CanvasTexture,
 } from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
@@ -29,11 +29,20 @@ import {
   numpadKeys,
   type Key,
 } from "./keyboard";
-import { screenPlacement, type ScreenRect } from "./placement";
+import { type Point2, type Quad, SCREEN } from "./seat";
+import {
+  closePose,
+  SCREEN_CENTRE,
+  SCREEN_CORNERS,
+  SCREEN_DEPTH,
+  SEAT_EYES,
+  TERMINAL_FLOOR,
+  TERMINAL_FRAME,
+  TERMINAL_ORIENTATION,
+} from "./terminal";
 import { wearTexture } from "./wearTexture";
 
-/** Distance of the screen from the camera, in metres. */
-const DISTANCE = 1.2;
+const ASPECT = SCREEN.aspect;
 const SIDE = 0.07;
 const PANEL = 0.36;
 const TOP = 0.08;
@@ -51,9 +60,7 @@ const KEYPAD_GAP = 0.6;
 const PLASTIC = "#cdc5ae";
 const DARK = "#1d1b17";
 const PHOSPHOR = "#33ff66";
-const NEON = "#2ef2c0";
-const PINK = "#ff3d8b";
-const LEG = 1.6;
+const NEON = "#4dff88";
 const KEY_DARK = new Color("#34332f");
 const KEY_GREY = new Color("#7a776d");
 const KEY_RED = new Color("#a8322a");
@@ -359,23 +366,27 @@ function Deck({ aspect, plastic }: Omit<PartProps, "dark">) {
 }
 
 /**
- * The desk the terminal stands on: dark gunmetal with a neon strip along
- * its front edge, and a pink underglow beneath the keyboard deck.
+ * The desk the terminal stands on, its legs on the floor `floor` units
+ * below the screen centre: dark gunmetal with a neon strip along its front
+ * edge, a green underglow beneath the keyboard deck, and a chair.
  */
-function Desk({ aspect }: { aspect: number }) {
-  const box = outline(aspect);
+function Desk({ floor }: { floor: number }) {
+  const box = outline(ASPECT);
   const top = box.bottom - DECK_HEIGHT - 0.01;
-  const depth = 1.1;
-  const centreZ = 0.2;
+  const width = 5.6;
+  const depth = 2.5;
+  const centreX = box.centreX + 1.05;
+  const centreZ = 0.15;
+  const leg = top - 0.04 - floor;
+  const seat = floor + 1.33;
   return (
     <group>
-      <mesh position={[box.centreX, top - 0.02, centreZ]}>
-        <boxGeometry args={[box.width + 0.5, 0.04, depth]} />
+      <mesh position={[centreX, top - 0.02, centreZ]}>
+        <boxGeometry args={[width, 0.04, depth]} />
         <meshStandardMaterial
           color="#15181a"
           roughness={0.38}
           metalness={0.65}
-          fog={false}
         />
       </mesh>
       {[-1, 1].flatMap((side) =>
@@ -383,12 +394,12 @@ function Desk({ aspect }: { aspect: number }) {
           <mesh
             key={`${side}${end}`}
             position={[
-              box.centreX + side * (box.width / 2 + 0.17),
-              top - 0.04 - LEG / 2,
-              centreZ + end * (depth / 2 - 0.08),
+              centreX + side * (width / 2 - 0.12),
+              top - 0.04 - leg / 2,
+              centreZ + end * (depth / 2 - 0.12),
             ]}
           >
-            <boxGeometry args={[0.04, LEG, 0.04]} />
+            <boxGeometry args={[0.1, leg, 0.1]} />
             <meshStandardMaterial
               color="#15181a"
               roughness={0.45}
@@ -397,8 +408,8 @@ function Desk({ aspect }: { aspect: number }) {
           </mesh>
         )),
       )}
-      <mesh position={[box.centreX, top - 0.022, centreZ + depth / 2 + 0.003]}>
-        <boxGeometry args={[box.width + 0.5, 0.008, 0.006]} />
+      <mesh position={[centreX, top - 0.022, centreZ + depth / 2 + 0.003]}>
+        <boxGeometry args={[width, 0.008, 0.006]} />
         <meshStandardMaterial
           color={NEON}
           emissive={NEON}
@@ -409,64 +420,150 @@ function Desk({ aspect }: { aspect: number }) {
       <mesh position={[box.centreX, top + 0.004, DECK_FRONT - 0.02]}>
         <boxGeometry args={[box.width * 0.9, 0.006, 0.01]} />
         <meshStandardMaterial
-          color={PINK}
-          emissive={PINK}
+          color={PHOSPHOR}
+          emissive={PHOSPHOR}
           emissiveIntensity={2.5}
           toneMapped={false}
         />
       </mesh>
-      <pointLight
-        position={[box.centreX, top + 0.03, DECK_FRONT + 0.05]}
-        intensity={0.25}
-        distance={0.8}
-        color={PINK}
-      />
+      <group position={[2.6, top, -0.75]} rotation-y={-0.5}>
+        <mesh position-y={0.04}>
+          <cylinderGeometry args={[0.22, 0.26, 0.08, 24]} />
+          <meshStandardMaterial
+            color="#1b1e1d"
+            metalness={0.7}
+            roughness={0.4}
+          />
+        </mesh>
+        <mesh position={[0, 0.75, 0.15]} rotation-x={0.35}>
+          <cylinderGeometry args={[0.03, 0.03, 1.5, 10]} />
+          <meshStandardMaterial
+            color="#2a2f2d"
+            metalness={0.8}
+            roughness={0.35}
+          />
+        </mesh>
+        <mesh position={[0, 1.42, 0.62]} rotation-x={-0.9}>
+          <coneGeometry args={[0.28, 0.42, 20, 1, true]} />
+          <meshStandardMaterial
+            color="#141716"
+            metalness={0.7}
+            roughness={0.4}
+            side={DoubleSide}
+          />
+        </mesh>
+        <pointLight
+          position={[0, 0.9, 0.85]}
+          intensity={0.6}
+          distance={1.6}
+          color="#ffe2b0"
+        />
+      </group>
+      <group position={[1.75, top, -0.35]}>
+        <mesh position-y={0.17}>
+          <cylinderGeometry args={[0.12, 0.11, 0.34, 20]} />
+          <meshStandardMaterial color="#1b1e1d" roughness={0.4} />
+        </mesh>
+        <mesh position={[0.15, 0.18, 0]} rotation-x={Math.PI / 2}>
+          <torusGeometry args={[0.07, 0.02, 8, 16]} />
+          <meshStandardMaterial color="#1b1e1d" roughness={0.4} />
+        </mesh>
+      </group>
+      {[0, 0.04, 0.08].map((lift, index) => (
+        <mesh
+          key={lift}
+          position={[1.95, top + 0.01 + lift * 0.1, 0.35]}
+          rotation-y={0.3 - index * 0.2}
+        >
+          <boxGeometry args={[0.6, 0.008, 0.82]} />
+          <meshStandardMaterial color="#d9dcd6" roughness={0.9} />
+        </mesh>
+      ))}
+      <group position={[0.55, 0, 2.25]}>
+        <mesh position-y={seat}>
+          <boxGeometry args={[1.3, 0.2, 1.2]} />
+          <meshStandardMaterial color="#121414" roughness={0.85} />
+        </mesh>
+        <mesh position={[0, seat + 0.95, 0.62]} rotation-x={-0.12}>
+          <boxGeometry args={[1.2, 1.6, 0.16]} />
+          <meshStandardMaterial color="#121414" roughness={0.85} />
+        </mesh>
+        <mesh position-y={(seat + floor) / 2}>
+          <cylinderGeometry args={[0.07, 0.07, seat - floor - 0.25, 12]} />
+          <meshStandardMaterial
+            color="#5d6460"
+            metalness={0.9}
+            roughness={0.3}
+          />
+        </mesh>
+        {[0, 1, 2, 3, 4].map((spoke) => (
+          <mesh
+            key={spoke}
+            position={[
+              Math.sin((spoke * 2 * Math.PI) / 5) * 0.45,
+              floor + 0.14,
+              Math.cos((spoke * 2 * Math.PI) / 5) * 0.45,
+            ]}
+            rotation-y={(spoke * 2 * Math.PI) / 5}
+          >
+            <boxGeometry args={[0.09, 0.07, 0.9]} />
+            <meshStandardMaterial
+              color="#1b1e1d"
+              metalness={0.6}
+              roughness={0.4}
+            />
+          </mesh>
+        ))}
+      </group>
     </group>
   );
 }
 
 /**
- * Where the visitor is: seated at the 3D terminal (it moves with the camera
- * around the page's screen), standing (it stays on the desk in the room
- * while the camera rises), or without one (`off`).
+ * Where the visitor is: seated at the terminal (its screen shows the HTML
+ * terminal), leaning in close to its screen, standing (the terminal stays on
+ * the desk while the camera rises), or without one (`off`).
  */
-export type MonitorPose = "seated" | "standing" | "off";
+export type MonitorPose = "seated" | "close" | "standing" | "off";
+
+/** Where the page has to draw the HTML screen to cover the 3D one. */
+export interface ScreenPlacement {
+  quad: Quad;
+  /** The element's size in CSS pixels at rest, so it is drawn at about 1:1. */
+  width: number;
+  height: number;
+}
 
 /** Props of {@link CrtMonitor}. */
 export interface CrtMonitorProps {
-  /** The terminal's tube glass on the page. */
-  screenRect?: () => ScreenRect | undefined;
   pose: MonitorPose;
-  reducedMotion: boolean;
+  /** Called every frame while seated, with `undefined` when it is not. */
+  onScreenPlacement?: (placement: ScreenPlacement | undefined) => void;
   /**
-   * Called when the terminal is seated and exactly around the screen, and
-   * when it no longer is, so the page shows the screen only then.
+   * Called when the visitor sits at the terminal with its screen in view,
+   * and when they no longer do, so the page shows the screen only then.
    */
   onSeatedChange?: (seated: boolean) => void;
 }
 
+const SEATED_DISTANCE = 0.12;
+
 /**
  * The terminal the visitor sits at, as a 3D model in the style of the
  * integrated terminals of the 1980s: a screen unit with a brand panel and a
- * keyboard deck in one worn case, on a desk. It travels with the camera, and
- * every frame it is placed so that its screen hole projects exactly onto the
- * terminal's glass on the page; the real HTML terminal is drawn on top, so
- * text stays crisp and accessible, while perspective shows the depth. When
- * the visitor stands up it stays parked on the desk; when they sit down it
- * glides back onto the camera.
+ * keyboard deck in one worn case, on a desk beside rack-01, with a chair.
+ * It stands still in the room. Every frame while seated it projects its
+ * screen corners onto the page, and the page maps the real HTML terminal
+ * onto them, so the terminal reads as a program on this computer while its
+ * text stays real, selectable and accessible.
  */
 export function CrtMonitor({
-  screenRect,
   pose,
-  reducedMotion,
+  onScreenPlacement,
   onSeatedChange,
 }: CrtMonitorProps) {
-  const mount = useRef<Group>(null);
-  const lastRect = useRef<ScreenRect>(undefined);
-  const parked = useRef(false);
   const reported = useRef(false);
-  const model = useRef<Group>(null);
-  const [aspect, setAspect] = useState(0.75);
+  const point = useMemo(() => new Vector3(), []);
   const invalidate = useThree((state) => state.invalidate);
   const wear = useMemo(() => wearTexture(), []);
   const brand = useMemo(() => brandPanelTexture(), []);
@@ -478,12 +575,11 @@ export function CrtMonitor({
         map: wear,
         roughness: 0.72,
         envMapIntensity: 0.35,
-        fog: false,
       }),
     [wear],
   );
   const dark = useMemo(
-    () => new MeshStandardMaterial({ color: DARK, roughness: 0.8, fog: false }),
+    () => new MeshStandardMaterial({ color: DARK, roughness: 0.8 }),
     [],
   );
   useEffect(
@@ -496,87 +592,61 @@ export function CrtMonitor({
     },
     [wear, brand, screen, plastic, dark],
   );
-  useEffect(() => invalidate(), [screenRect, pose, invalidate]);
-  useFrame(({ camera, size }, delta) => {
-    const group = mount.current;
-    const inner = model.current;
-    if (group === null || inner === null) {
-      return;
-    }
-    const rect = screenRect?.();
-    if (rect !== undefined && rect.width > 0) {
-      lastRect.current = {
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height,
-      };
-    }
-    const shown = pose !== "off" && lastRect.current !== undefined;
-    group.visible = shown;
-    const report = (seated: boolean) => {
-      if (reported.current !== seated) {
-        reported.current = seated;
-        onSeatedChange?.(seated);
-      }
-    };
-    if (!shown || lastRect.current === undefined) {
-      parked.current = false;
-      report(false);
-      return;
-    }
-    if (pose === "standing") {
-      parked.current = true;
-      report(false);
-      return;
-    }
-    if (parked.current && !reducedMotion) {
-      const blend = 1 - Math.exp(-delta * 5);
-      group.position.lerp(camera.position, blend);
-      group.quaternion.slerp(camera.quaternion, blend);
-      parked.current =
-        group.position.distanceTo(camera.position) > 0.001 ||
-        group.quaternion.angleTo(camera.quaternion) > 0.001;
-    } else {
-      parked.current = false;
-      group.position.copy(camera.position);
-      group.quaternion.copy(camera.quaternion);
-    }
-    report(!parked.current);
+  useEffect(() => invalidate(), [pose, invalidate]);
+  useFrame(({ camera, size }) => {
     const fov = camera instanceof PerspectiveCamera ? camera.fov : 38;
-    const placement = screenPlacement(lastRect.current, size, fov, DISTANCE);
-    inner.position.set(...placement.position);
-    inner.scale.setScalar(placement.width);
-    const next = placement.height / placement.width;
-    if (Math.abs(next - aspect) > 0.005) {
-      setAspect(next);
+    const atScreen = pose === "seated" || pose === "close";
+    const eyes =
+      pose === "close" ? new Vector3(...closePose(fov).position) : SEAT_EYES;
+    const seatedNow =
+      atScreen && camera.position.distanceTo(eyes) < SEATED_DISTANCE;
+    camera.updateMatrixWorld();
+    const quad = SCREEN_CORNERS.map((corner) => {
+      point.set(...corner).project(camera);
+      return point.z < 1
+        ? ([
+            ((point.x + 1) / 2) * size.width,
+            ((1 - point.y) / 2) * size.height,
+          ] as Point2)
+        : undefined;
+    });
+    const visible = quad.every((corner) => corner !== undefined);
+    if (atScreen && visible) {
+      const depth =
+        pose === "close" ? eyes.distanceTo(SCREEN_CENTRE) : SCREEN_DEPTH;
+      const width =
+        (SCREEN.width * size.height) /
+        (2 * depth * Math.tan((fov * Math.PI) / 360));
+      onScreenPlacement?.({
+        quad: quad as Quad,
+        width,
+        height: width * SCREEN.aspect,
+      });
+    } else {
+      onScreenPlacement?.(undefined);
+    }
+    const seated = seatedNow && visible;
+    if (reported.current !== seated) {
+      reported.current = seated;
+      onSeatedChange?.(seated);
     }
   });
   return (
-    <group ref={mount} visible={false}>
-      <pointLight
-        position={[-0.5, 0.6, -0.2]}
-        intensity={1.1}
-        distance={3}
-        color="#fff4e0"
+    <group
+      position={TERMINAL_FRAME.centre}
+      quaternion={TERMINAL_ORIENTATION}
+      scale={SCREEN.width}
+      visible={pose !== "off"}
+    >
+      <ScreenUnit
+        aspect={ASPECT}
+        plastic={plastic}
+        dark={dark}
+        brand={brand}
+        screen={screen}
       />
-      <group ref={model}>
-        <pointLight
-          position={[0, -aspect / 2 - 0.1, 0.35]}
-          intensity={0.2}
-          distance={1.5}
-          color={PHOSPHOR}
-        />
-        <ScreenUnit
-          aspect={aspect}
-          plastic={plastic}
-          dark={dark}
-          brand={brand}
-          screen={screen}
-        />
-        <Deck aspect={aspect} plastic={plastic} />
-        <Desk aspect={aspect} />
-      </group>
+      <Deck aspect={ASPECT} plastic={plastic} />
+      <Desk floor={TERMINAL_FLOOR} />
     </group>
   );
 }

@@ -1,13 +1,25 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import App, { SCENE_TIMEOUT_MS, SEAT_TIMEOUT_MS } from "./App";
+import type { ScreenPlacement as Placement } from "./scene/monitor/CrtMonitor";
 import { BOOT_REDUCED_HOLD_MS } from "./ui/useBootSequence";
+
+/** The window around the terminal, which the page moves onto the 3D screen. */
+const terminalWindow = () => {
+  const window = screen
+    .getByRole("textbox", { name: "terminal input" })
+    .closest<HTMLElement>("[data-terminal-window]");
+  if (window === null) {
+    throw new Error("terminal window missing");
+  }
+  return window;
+};
 
 const sceneMock = vi.hoisted(() => ({
   hangs: false,
   fails: false,
   promptAnchor: undefined as (() => DOMRect | undefined) | undefined,
-  screenRect: undefined as (() => DOMRect | undefined) | undefined,
+  place: undefined as ((placement: Placement | undefined) => void) | undefined,
   monitorPose: undefined as string | undefined,
   reportsSeat: true,
   seat: undefined as (() => void) | undefined,
@@ -20,14 +32,14 @@ vi.mock("./scene/Scene", async () => {
       onReady,
       onSelectProject,
       promptAnchor,
-      screenRect,
+      onScreenPlacement,
       monitorPose,
       onSeatedChange,
     }: {
       onReady: () => void;
       onSelectProject: (id: string) => void;
       promptAnchor: () => DOMRect | undefined;
-      screenRect?: () => DOMRect | undefined;
+      onScreenPlacement?: (placement: Placement | undefined) => void;
       monitorPose?: string;
       onSeatedChange?: (seated: boolean) => void;
     }) {
@@ -35,14 +47,15 @@ vi.mock("./scene/Scene", async () => {
         throw new Error("WebGL context lost");
       }
       sceneMock.promptAnchor = promptAnchor;
-      sceneMock.screenRect = screenRect;
+      sceneMock.place = onScreenPlacement;
       sceneMock.monitorPose = monitorPose;
-      sceneMock.seat = () => onSeatedChange?.(monitorPose === "seated");
+      const atScreen = monitorPose === "seated" || monitorPose === "close";
+      sceneMock.seat = () => onSeatedChange?.(atScreen);
       useEffect(() => {
-        if (monitorPose !== "seated" || sceneMock.reportsSeat) {
-          onSeatedChange?.(monitorPose === "seated");
+        if (!atScreen || sceneMock.reportsSeat) {
+          onSeatedChange?.(atScreen);
         }
-      }, [monitorPose, onSeatedChange]);
+      }, [atScreen, onSeatedChange]);
       useEffect(() => {
         if (!sceneMock.hangs) {
           onReady();
@@ -92,7 +105,7 @@ beforeEach(() => sessionStorage.clear());
 afterEach(() => {
   sceneMock.hangs = false;
   sceneMock.fails = false;
-  sceneMock.screenRect = undefined;
+  sceneMock.place = undefined;
   sceneMock.monitorPose = undefined;
   sceneMock.reportsSeat = true;
   vi.restoreAllMocks();
@@ -334,8 +347,51 @@ describe("3D monitor", () => {
     viewport(1440);
     render(<App />);
     await booted();
-    expect(sceneMock.screenRect?.()).toBeDefined();
+    expect(sceneMock.monitorPose).toBe("seated");
     expect(screen.queryByText("THEO-TERM 3270")).toBeNull();
+  });
+
+  it("maps the HTML screen onto the 3D terminal's screen", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    act(() =>
+      sceneMock.place?.({
+        quad: [
+          [100, 80],
+          [520, 100],
+          [510, 420],
+          [90, 400],
+        ],
+        width: 400,
+        height: 300,
+      }),
+    );
+    const window = terminalWindow();
+    expect(window.style.transform).toMatch(/^matrix3d\(/);
+    expect(window.style.width).toBe("400px");
+    expect(window.style.height).toBe("300px");
+  });
+
+  it("returns the screen to the page layout when the 3D screen is gone", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    act(() =>
+      sceneMock.place?.({
+        quad: [
+          [0, 0],
+          [400, 0],
+          [400, 300],
+          [0, 300],
+        ],
+        width: 400,
+        height: 300,
+      }),
+    );
+    act(() => sceneMock.place?.(undefined));
+    expect(terminalWindow().style.transform).toBe("");
+    expect(terminalWindow().style.width).toBe("");
   });
 
   it("keeps the 2D housing on phones and while the scene never loads", async () => {
@@ -350,7 +406,15 @@ describe("3D monitor", () => {
     render(<App />);
     await act(() => vi.advanceTimersByTimeAsync(SCENE_TIMEOUT_MS + 5000));
     expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
-    expect(sceneMock.screenRect).toBeUndefined();
+    expect(sceneMock.monitorPose).toBe("off");
+  });
+
+  it("keeps the 2D housing below 1024 px, where the 3D screen would be too small", async () => {
+    viewport(800);
+    render(<App />);
+    await booted();
+    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
+    expect(sceneMock.monitorPose).toBe("off");
   });
 
   it("keeps the 2D housing when the scene fails", async () => {
@@ -362,13 +426,15 @@ describe("3D monitor", () => {
     expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
   });
 
-  it("goes back to the 2D housing while the window is maximized", async () => {
+  it("leans in to the screen when the window is maximized at the desk", async () => {
     viewport(1440);
     render(<App />);
     await booted();
     fireEvent.click(screen.getByRole("button", { name: "maximize terminal" }));
-    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
-    expect(sceneMock.screenRect).toBeUndefined();
+    expect(sceneMock.monitorPose).toBe("close");
+    expect(screen.queryByText("THEO-TERM 3270")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "maximize terminal" }));
+    expect(sceneMock.monitorPose).toBe("seated");
   });
 
   it("stands up from the desk while the terminal is folded away", async () => {
@@ -414,11 +480,12 @@ describe("3D monitor", () => {
     ).toBeInTheDocument();
   });
 
-  it("puts no 3D monitor in the scene while the window is maximized", async () => {
-    viewport(1440);
+  it("maximizes the 2D terminal below 1024 px", async () => {
+    viewport(800);
     render(<App />);
     await booted();
     fireEvent.click(screen.getByRole("button", { name: "maximize terminal" }));
     expect(sceneMock.monitorPose).toBe("off");
+    expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
   });
 });

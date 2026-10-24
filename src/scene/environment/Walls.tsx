@@ -119,7 +119,7 @@ function Vents() {
   );
 }
 
-/** A red and a pink practical light on the back wall. */
+/** A red and a green practical light on the back wall. */
 function Practicals() {
   return (
     <group position={[0, ROOM.ceiling - 1, ROOM.back + 0.05]}>
@@ -129,7 +129,7 @@ function Practicals() {
       </mesh>
       <mesh position={[3.5, -0.6, 0]}>
         <boxGeometry args={[1.2, 0.05, 0.02]} />
-        <meshBasicMaterial color={glow(palette.pink, 2.5)} toneMapped={false} />
+        <meshBasicMaterial color={glow(palette.neon, 2.5)} toneMapped={false} />
       </mesh>
     </group>
   );

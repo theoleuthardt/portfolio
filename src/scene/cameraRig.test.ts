@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cameraPosition, standUp, type RigSettings } from "./cameraRig";
+import { cameraPosition, fieldOfView, type RigSettings } from "./cameraRig";
 
 const settings: RigSettings = {
   base: [0, 1, 10],
@@ -36,11 +36,17 @@ describe("cameraPosition", () => {
   });
 });
 
-describe("standUp", () => {
-  it("raises the eyes and steps back from the desk", () => {
-    const [x, y, z] = standUp([0.6, 1.4, 9]);
-    expect(x).toBe(0.6);
-    expect(y).toBeGreaterThan(1.4);
-    expect(z).toBeGreaterThan(9);
+describe("fieldOfView", () => {
+  it("keeps the base field of view on wide screens", () => {
+    expect(fieldOfView(16 / 9)).toBe(38);
+    expect(fieldOfView(1.6)).toBeCloseTo(38, 0);
+  });
+
+  it("widens on narrower screens so the sides stay in view", () => {
+    const narrow = fieldOfView(0.8);
+    expect(narrow).toBeGreaterThan(38);
+    const horizontal = (fov: number, aspect: number) =>
+      2 * Math.atan(Math.tan((fov * Math.PI) / 360) * aspect);
+    expect(horizontal(narrow, 0.8)).toBeCloseTo(horizontal(38, 1.6), 5);
   });
 });

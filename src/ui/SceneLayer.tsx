@@ -1,7 +1,6 @@
 import { lazy, Suspense, type RefObject } from "react";
-import type { MonitorPose } from "../scene/monitor/CrtMonitor";
+import type { MonitorPose, ScreenPlacement } from "../scene/monitor/CrtMonitor";
 import { isPhoneViewport } from "../scene/device";
-import type { FocusLayout } from "../scene/rack/focus";
 import { RackFallback } from "./RackFallback";
 import { SceneErrorBoundary } from "./SceneErrorBoundary";
 import { useViewport } from "./useViewport";
@@ -24,10 +23,8 @@ export interface SceneLayerProps {
   connector?: RefObject<SVGPolylineElement | null>;
   /** Where the HUD line starts: the terminal prompt. */
   promptAnchor?: () => DOMRect | undefined;
-  /** Where the terminal sits, so the focused module is framed beside it. */
-  focusLayout?: FocusLayout;
-  /** The terminal's screen, which the 3D monitor surrounds; none if absent. */
-  screenRect?: () => DOMRect | undefined;
+  /** Called every frame with where the HTML screen goes, or `undefined`. */
+  onScreenPlacement?: (placement: ScreenPlacement | undefined) => void;
   /** Whether the visitor sits at the 3D terminal, stands, or there is none. */
   monitorPose?: MonitorPose;
   /** Called when the 3D terminal is seated around the screen, or no more. */
@@ -47,8 +44,7 @@ export function SceneLayer({
   onSelectProject,
   connector,
   promptAnchor,
-  focusLayout,
-  screenRect,
+  onScreenPlacement,
   monitorPose,
   onSeatedChange,
 }: SceneLayerProps) {
@@ -73,8 +69,7 @@ export function SceneLayer({
               onSelectProject={onSelectProject}
               connector={connector}
               promptAnchor={promptAnchor}
-              focusLayout={focusLayout}
-              screenRect={screenRect}
+              onScreenPlacement={onScreenPlacement}
               monitorPose={monitorPose}
               onSeatedChange={onSeatedChange}
             />

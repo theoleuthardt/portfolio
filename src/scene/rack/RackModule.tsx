@@ -26,6 +26,9 @@ export interface RackModuleProps {
   onSelect?: () => void;
 }
 
+/** Pixels a click may move before it counts as a drag to look around. */
+const DRAG_TOLERANCE = 5;
+
 function ignoresOverlay(event: ThreeEvent<PointerEvent | MouseEvent>): boolean {
   const target = event.nativeEvent.target;
   return (
@@ -152,7 +155,11 @@ export function RackModule({
         document.body.style.cursor = "";
       }}
       onClick={(event) => {
-        if (!interactive || ignoresOverlay(event)) {
+        if (
+          !interactive ||
+          ignoresOverlay(event) ||
+          event.delta > DRAG_TOLERANCE
+        ) {
           return;
         }
         event.stopPropagation();

@@ -2,18 +2,17 @@
 
 @theme {
   --color-void: #020403;
-  --color-haze: #06231c;
+  --color-haze: #041a0b;
   --color-bezel: #141816;
   --color-glass: #031008;
   --color-line: #1d5a2c;
   --color-phosphor: #33ff66;
   --color-phosphor-dim: #1d9a3f;
   --color-text: #b8f5c8;
-  --color-neon: #2ef2c0;
-  --color-ceiling: #c8ffe9;
+  --color-neon: #4dff88;
+  --color-ceiling: #d4ffdc;
   --color-amber: #ffb000;
   --color-alert: #ff3b3b;
-  --color-pink: #ff3d8b;
 
   --font-terminal: "Share Tech Mono", ui-monospace, monospace;
 
@@ -67,7 +66,7 @@
       inset -5px 0 10px rgb(60 50 30 / 0.35),
       0 7px 0 #6e6656,
       0 9px 0 #0d0c0a,
-      0 20px 34px -14px rgb(255 61 139 / 0.6),
+      0 20px 34px -14px rgb(51 255 102 / 0.35),
       0 30px 80px rgb(0 0 0 / 0.85);
   }
 
@@ -491,8 +490,8 @@
 
   .crt-brand-line {
     font-size: 0.5rem;
-    color: var(--color-pink);
-    text-shadow: 0 0 5px var(--color-pink);
+    color: var(--color-phosphor-dim);
+    text-shadow: 0 0 5px var(--color-phosphor-dim);
   }
 
   .crt-button {
@@ -505,10 +504,22 @@
       inset 0 1px 0 rgb(255 255 255 / 0.15);
   }
 
-  .crt-bare,
+  .crt.crt-bare,
   .crt-bare .crt-bezel {
+    padding: 0;
+    border-radius: 0;
     background: none;
     box-shadow: none;
+  }
+
+  .crt-bare .crt-text {
+    padding: 0.75rem 1.25rem 1.5rem;
+    font-size: var(--text-terminal-sm);
+    line-height: var(--text-terminal-sm--line-height);
+  }
+
+  .crt-bare .crt-strip {
+    display: none;
   }
 
   .crt-off {

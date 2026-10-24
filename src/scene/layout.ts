@@ -11,6 +11,9 @@ export const ROOM = {
   ceiling: 3.2,
 } as const;
 
+/** Depths of the volumetric light beams under the ceiling panels. */
+export const BEAM_ZS = [2, -3.5, -9] as const;
+
 /** Positions of a `cols` × `rows` grid with the given spacing, centred on `center`. */
 export function centeredGrid(
   cols: number,

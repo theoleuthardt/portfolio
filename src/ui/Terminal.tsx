@@ -74,8 +74,6 @@ export interface TerminalHandle {
   promptAnchor: () => DOMRect | undefined;
   /** Moves the focus into the prompt, e.g. after the window is restored. */
   focus: () => void;
-  /** Screen rectangle of the tube glass, which the 3D monitor surrounds. */
-  screenRect: () => DOMRect | undefined;
 }
 
 /** Props of {@link Terminal}. */
@@ -128,7 +126,6 @@ export function Terminal({
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
-  const glassRef = useRef<HTMLDivElement>(null);
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
   const phase = useBootPhase(booted);
@@ -256,7 +253,6 @@ export function Terminal({
     run: runCommand,
     promptAnchor: () => inputRef.current?.getBoundingClientRect(),
     focus: () => inputRef.current?.focus(),
-    screenRect: () => glassRef.current?.getBoundingClientRect(),
   }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
@@ -327,7 +323,6 @@ export function Terminal({
       controls={controls}
       housing={housing}
       powered={powered}
-      glassRef={glassRef}
     >
       <div
         ref={logRef}

@@ -5,7 +5,13 @@ import { InstancedBoxes, type Point3 } from "../environment/InstancedBoxes";
 import { evenlySpaced, ROOM } from "../layout";
 import { RACK } from "../rack/geometry";
 import { CatmullRomCurve3, Vector3 } from "three";
-import { DESK_TOP, MODEL_PROPS, type PropModel } from "./placement";
+import {
+  BACK_RACK_XS,
+  BACK_RACK_Z,
+  DESK_TOP,
+  MODEL_PROPS,
+  type PropModel,
+} from "./placement";
 import {
   crtScreenTexture,
   hazardStripesTexture,
@@ -52,8 +58,6 @@ function DeskMonitors() {
 }
 
 /** A row of dark racks in the haze at the back of the lab. */
-const BACK_RACK_XS = evenlySpaced(-3.2, 3.2, 5);
-
 function BackgroundRacks() {
   const xs = BACK_RACK_XS;
   const leds = useMemo<Point3[]>(
@@ -68,7 +72,7 @@ function BackgroundRacks() {
   return (
     <group>
       {xs.map((x) => (
-        <mesh key={x} position={[x, ROOM.floor + 1.1, -15]}>
+        <mesh key={x} position={[x, ROOM.floor + 1.1, BACK_RACK_Z]}>
           <boxGeometry args={[1, 2.2, 1]} />
           <meshStandardMaterial
             color="#0b100e"
@@ -317,8 +321,8 @@ const SIGNS: {
   },
   {
     text: "→ RACK-01",
-    plate: "#140208",
-    ink: "#ff3d8b",
+    plate: "#020a04",
+    ink: "#33ff66",
     glow: 2.2,
     position: [-6.93, 1.9, 0.5],
     rotationY: Math.PI / 2,

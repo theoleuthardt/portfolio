@@ -1,3 +1,5 @@
+import { SEAT } from "./monitor/seat";
+
 /** A point in scene space. */
 export type Vector3 = [number, number, number];
 
@@ -44,18 +46,27 @@ export function cameraPosition(
   ];
 }
 
-/** Camera rig of the lab scene. */
+/** Camera rig of the lab scene: seated at the desk, barely drifting. */
 export const LAB_RIG: RigSettings = {
-  base: [0.6, 1.4, 9],
-  orbitRadians: 0.06,
+  base: SEAT.position,
+  orbitRadians: 0.004,
   orbitPeriodSeconds: 48,
-  parallax: 0.35,
+  parallax: 0.05,
 };
 
+const BASE_FOV = 38;
+const BASE_ASPECT = 1.6;
+
 /**
- * The eye position after standing up from the desk at `seated`: higher and
- * a step back, so the desk with the terminal stays in view below.
+ * Vertical field of view in degrees for a viewport of `aspect` (width /
+ * height): the base 38° from 16:10 up, wider below, so the horizontal view
+ * never gets narrower than at 16:10 and the terminal and the rack both stay
+ * in sight.
  */
-export function standUp([x, y, z]: Vector3): Vector3 {
-  return [x, y + 0.55, z + 0.75];
+export function fieldOfView(aspect: number): number {
+  if (aspect >= BASE_ASPECT) {
+    return BASE_FOV;
+  }
+  const halfWidth = Math.tan((BASE_FOV * Math.PI) / 360) * BASE_ASPECT;
+  return (2 * Math.atan(halfWidth / aspect) * 180) / Math.PI;
 }

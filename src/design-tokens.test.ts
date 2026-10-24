@@ -25,7 +25,6 @@ describe("design tokens", () => {
       "ceiling",
       "amber",
       "alert",
-      "pink",
     ]) {
       expect(token(`color-${name}`)).toMatch(/^#[0-9a-f]{6}$/);
     }
