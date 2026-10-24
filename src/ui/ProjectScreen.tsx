@@ -6,9 +6,19 @@ export interface ProjectScreenProps {
   project: Project;
 }
 
-/** The detail screen of a project, shown after `open <project>`. */
+/**
+ * The detail screen of a project, shown after `open <project>`. Links to
+ * the website, releases and packages appear only when the project has them.
+ */
 export function ProjectScreen({ project }: ProjectScreenProps) {
   const headingId = useId();
+  const links = [
+    ["repository", project.repository],
+    ["website", project.website],
+    ["releases", project.releases],
+    ["packages", project.packages],
+    ["upstream", project.fork?.upstream],
+  ] as const;
   return (
     <section aria-labelledby={headingId} className="crt-screen my-3">
       <p className="text-hud uppercase text-phosphor-dim">
@@ -28,18 +38,13 @@ export function ProjectScreen({ project }: ProjectScreenProps) {
         ))}
       </ul>
       <p className="flex flex-wrap gap-4">
-        <a href={project.repository} target="_blank" rel="noopener noreferrer">
-          &gt; repository ↗
-        </a>
-        {project.fork ? (
-          <a
-            href={project.fork.upstream}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            &gt; upstream ↗
-          </a>
-        ) : null}
+        {links.map(([label, url]) =>
+          url === undefined ? null : (
+            <a key={label} href={url} target="_blank" rel="noopener noreferrer">
+              &gt; {label} ↗
+            </a>
+          ),
+        )}
       </p>
     </section>
   );

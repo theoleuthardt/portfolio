@@ -17,12 +17,22 @@ export interface Project {
   summary: string;
   stack: readonly string[];
   repository: string;
+  /** Live site of the project, if it is deployed somewhere public. */
+  website?: string;
+  /** GitHub releases page, if the repository publishes releases. */
+  releases?: string;
+  /** GitHub packages of the repository, e.g. container images on GHCR. */
+  packages?: string;
   /** Height of the module in rack units. */
   units: 1 | 2;
   fork?: Fork;
 }
 
-/** The projects in rack order, top to bottom. */
+/**
+ * The projects in rack order, top to bottom. Releases and packages were
+ * collected once from the GitHub API; none of the repositories sets a
+ * homepage or a public deployment URL yet.
+ */
 export const projects: readonly Project[] = [
   {
     id: "backlog-manager",
@@ -32,6 +42,9 @@ export const projects: readonly Project[] = [
       "Organise your gaming backlog: track games with HowLongToBeat and IGDB data, sort them into categories by drag and drop, sync playtimes from Steam and import or export CSV files. A Python/Litestar REST API backs a React/Vite frontend that ships as a Tauri desktop app.",
     stack: ["Python", "Litestar", "PostgreSQL", "React", "Vite", "Tauri"],
     repository: "https://github.com/theoleuthardt/backlog-manager",
+    releases: "https://github.com/theoleuthardt/backlog-manager/releases",
+    packages:
+      "https://github.com/theoleuthardt?tab=packages&repo_name=backlog-manager",
     units: 2,
   },
   {
@@ -50,6 +63,9 @@ export const projects: readonly Project[] = [
       "Podman",
     ],
     repository: "https://github.com/theoleuthardt/trust-issues",
+    releases: "https://github.com/theoleuthardt/trust-issues/releases",
+    packages:
+      "https://github.com/theoleuthardt?tab=packages&repo_name=trust-issues",
     units: 2,
   },
   {
@@ -60,6 +76,7 @@ export const projects: readonly Project[] = [
       "A self-hosted learning app for flashcard decks and quizzes, organised by topics and studied with spaced repetition (SM-2). Built to learn Russian, works for anything: multiple-choice quizzes with explanations, daily mixes, Discord reminders, multiple users and an installable PWA.",
     stack: ["React", "TypeScript", "Vite", "Express", "Docker"],
     repository: "https://github.com/theoleuthardt/flashi",
+    packages: "https://github.com/theoleuthardt?tab=packages&repo_name=flashi",
     units: 2,
   },
   {
@@ -80,6 +97,8 @@ export const projects: readonly Project[] = [
       "A Podman container for developing the Backlog Manager with Claude Code, running permanently in a privileged Debian LXC on Proxmox and controlled remotely. It bundles Claude Code, Flutter, Node, uv, the GitHub CLI, go-task and a review script that uses CodeRabbit with an Ollama fallback.",
     stack: ["Podman", "Debian", "Proxmox", "Claude Code", "Shell"],
     repository: "https://github.com/theoleuthardt/claude-devcontainer",
+    packages:
+      "https://github.com/theoleuthardt?tab=packages&repo_name=claude-devcontainer",
     units: 1,
   },
   {
@@ -101,6 +120,7 @@ export const projects: readonly Project[] = [
       "A remake of the iconic dinosaur endless runner from Chrome's offline page: run through the desert, jump over cacti and chase the high score while the game speeds up over time. Written in C++ with raylib and built with CMake.",
     stack: ["C++", "raylib", "CMake"],
     repository: "https://github.com/theoleuthardt/DinoGame",
+    releases: "https://github.com/theoleuthardt/DinoGame/releases",
     units: 1,
   },
 ];
