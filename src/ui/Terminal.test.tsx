@@ -76,6 +76,17 @@ describe("Terminal", () => {
     expect(within(log()).getByText("available commands:")).toBeInTheDocument();
   });
 
+  it("explains the commands in help and runs one on click", () => {
+    render(<Terminal />);
+    type("help");
+    expect(within(log()).getByText(/opens a project/i)).toBeInTheDocument();
+    const lsButtons = within(log()).getAllByRole("button", { name: "ls" });
+    fireEvent.click(lsButtons[lsButtons.length - 1]);
+    expect(
+      within(log()).getByRole("button", { name: /^trust-issues/ }),
+    ).toBeInTheDocument();
+  });
+
   it("opens a project screen from a project row", () => {
     render(<Terminal />);
     type("ls");

@@ -9,10 +9,25 @@ describe("run", () => {
     expect(run("   ", context)).toEqual({ lines: [] });
   });
 
-  it("lists the available commands as chips for help", () => {
-    const result = run("help", context);
-    const chips = result.lines.find((line) => line.kind === "chips");
-    expect(chips).toEqual({ kind: "chips", commands: commandNames });
+  it("explains every command in help", () => {
+    const described = run("help", context).lines.filter(
+      (line) => line.kind === "command",
+    );
+    expect(
+      described.map((line) => line.kind === "command" && line.name),
+    ).toEqual(commandNames);
+    for (const line of described) {
+      expect(
+        line.kind === "command" && line.description.length,
+      ).toBeGreaterThan(10);
+    }
+  });
+
+  it("shows the arguments a command takes in help", () => {
+    const open = run("help", context).lines.find(
+      (line) => line.kind === "command" && line.name === "open",
+    );
+    expect(open).toMatchObject({ usage: "open <project>" });
   });
 
   it("lists every project with its tagline for ls and projects", () => {
@@ -35,10 +50,13 @@ describe("run", () => {
     });
   });
 
-  it("asks for a project name when open has no argument", () => {
+  it("offers the projects as a question when open has no argument", () => {
     const result = run("open", context);
     expect(result.action).toBeUndefined();
-    expect(result.lines[0].kind).toBe("error");
+    expect(result.lines).toEqual([
+      { kind: "text", text: "open which project?" },
+      { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
+    ]);
   });
 
   it("suggests the closest project for a misspelled name", () => {
