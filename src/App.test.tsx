@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import App, { SCENE_TIMEOUT_MS } from "./App";
+import App, { SCENE_TIMEOUT_MS, SEAT_TIMEOUT_MS } from "./App";
 import { BOOT_REDUCED_HOLD_MS } from "./ui/useBootSequence";
 
 const sceneMock = vi.hoisted(() => ({
@@ -9,6 +9,8 @@ const sceneMock = vi.hoisted(() => ({
   promptAnchor: undefined as (() => DOMRect | undefined) | undefined,
   screenRect: undefined as (() => DOMRect | undefined) | undefined,
   monitorPose: undefined as string | undefined,
+  reportsSeat: true,
+  seat: undefined as (() => void) | undefined,
 }));
 
 vi.mock("./scene/Scene", async () => {
@@ -20,12 +22,14 @@ vi.mock("./scene/Scene", async () => {
       promptAnchor,
       screenRect,
       monitorPose,
+      onSeatedChange,
     }: {
       onReady: () => void;
       onSelectProject: (id: string) => void;
       promptAnchor: () => DOMRect | undefined;
       screenRect?: () => DOMRect | undefined;
       monitorPose?: string;
+      onSeatedChange?: (seated: boolean) => void;
     }) {
       if (sceneMock.fails) {
         throw new Error("WebGL context lost");
@@ -33,6 +37,12 @@ vi.mock("./scene/Scene", async () => {
       sceneMock.promptAnchor = promptAnchor;
       sceneMock.screenRect = screenRect;
       sceneMock.monitorPose = monitorPose;
+      sceneMock.seat = () => onSeatedChange?.(monitorPose === "seated");
+      useEffect(() => {
+        if (monitorPose !== "seated" || sceneMock.reportsSeat) {
+          onSeatedChange?.(monitorPose === "seated");
+        }
+      }, [monitorPose, onSeatedChange]);
       useEffect(() => {
         if (!sceneMock.hangs) {
           onReady();
@@ -84,6 +94,7 @@ afterEach(() => {
   sceneMock.fails = false;
   sceneMock.screenRect = undefined;
   sceneMock.monitorPose = undefined;
+  sceneMock.reportsSeat = true;
   vi.restoreAllMocks();
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -371,6 +382,36 @@ describe("3D monitor", () => {
     expect(sceneMock.monitorPose).toBe("seated");
     fireEvent.click(screen.getByRole("button", { name: "close terminal" }));
     expect(sceneMock.monitorPose).toBe("standing");
+  });
+
+  it("shows the screen only once the 3D terminal is seated around it", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    sceneMock.reportsSeat = false;
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    fireEvent.click(screen.getByRole("button", { name: "restore terminal" }));
+    expect(
+      screen.queryByRole("textbox", { name: "terminal input" }),
+    ).toBeNull();
+    act(() => sceneMock.seat?.());
+    expect(
+      screen.getByRole("textbox", { name: "terminal input" }),
+    ).toHaveFocus();
+  });
+
+  it("shows the screen anyway if the 3D terminal never reports", async () => {
+    viewport(1440);
+    render(<App />);
+    await booted();
+    sceneMock.reportsSeat = false;
+    vi.useFakeTimers();
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    fireEvent.click(screen.getByRole("button", { name: "restore terminal" }));
+    await act(() => vi.advanceTimersByTimeAsync(SEAT_TIMEOUT_MS));
+    expect(
+      screen.getByRole("textbox", { name: "terminal input" }),
+    ).toBeInTheDocument();
   });
 
   it("puts no 3D monitor in the scene while the window is maximized", async () => {

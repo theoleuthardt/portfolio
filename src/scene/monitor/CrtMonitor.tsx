@@ -438,6 +438,11 @@ export interface CrtMonitorProps {
   screenRect?: () => ScreenRect | undefined;
   pose: MonitorPose;
   reducedMotion: boolean;
+  /**
+   * Called when the terminal is seated and exactly around the screen, and
+   * when it no longer is, so the page shows the screen only then.
+   */
+  onSeatedChange?: (seated: boolean) => void;
 }
 
 /**
@@ -454,10 +459,12 @@ export function CrtMonitor({
   screenRect,
   pose,
   reducedMotion,
+  onSeatedChange,
 }: CrtMonitorProps) {
   const mount = useRef<Group>(null);
   const lastRect = useRef<ScreenRect>(undefined);
   const parked = useRef(false);
+  const reported = useRef(false);
   const model = useRef<Group>(null);
   const [aspect, setAspect] = useState(0.75);
   const invalidate = useThree((state) => state.invalidate);
@@ -507,12 +514,20 @@ export function CrtMonitor({
     }
     const shown = pose !== "off" && lastRect.current !== undefined;
     group.visible = shown;
+    const report = (seated: boolean) => {
+      if (reported.current !== seated) {
+        reported.current = seated;
+        onSeatedChange?.(seated);
+      }
+    };
     if (!shown || lastRect.current === undefined) {
       parked.current = false;
+      report(false);
       return;
     }
     if (pose === "standing") {
       parked.current = true;
+      report(false);
       return;
     }
     if (parked.current && !reducedMotion) {
@@ -527,6 +542,7 @@ export function CrtMonitor({
       group.position.copy(camera.position);
       group.quaternion.copy(camera.quaternion);
     }
+    report(!parked.current);
     const fov = camera instanceof PerspectiveCamera ? camera.fov : 38;
     const placement = screenPlacement(lastRect.current, size, fov, DISTANCE);
     inner.position.set(...placement.position);

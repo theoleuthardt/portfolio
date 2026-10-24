@@ -93,6 +93,8 @@ export interface TerminalProps {
   controls?: CrtControls;
   /** Draw the 2D monitor housing; off while the 3D monitor surrounds it. */
   housing?: boolean;
+  /** Show the screen; off while the 3D terminal is still being seated. */
+  powered?: boolean;
 }
 
 /**
@@ -114,6 +116,7 @@ export function Terminal({
   rackHint = false,
   controls,
   housing = true,
+  powered = true,
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
@@ -323,6 +326,7 @@ export function Terminal({
       title={`guest@theocloud: ${session.cwd}`}
       controls={controls}
       housing={housing}
+      powered={powered}
       glassRef={glassRef}
     >
       <div

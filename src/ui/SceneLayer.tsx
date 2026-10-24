@@ -30,6 +30,8 @@ export interface SceneLayerProps {
   screenRect?: () => DOMRect | undefined;
   /** Whether the visitor sits at the 3D terminal, stands, or there is none. */
   monitorPose?: MonitorPose;
+  /** Called when the 3D terminal is seated around the screen, or no more. */
+  onSeatedChange?: (seated: boolean) => void;
 }
 
 /**
@@ -48,6 +50,7 @@ export function SceneLayer({
   focusLayout,
   screenRect,
   monitorPose,
+  onSeatedChange,
 }: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
@@ -73,6 +76,7 @@ export function SceneLayer({
               focusLayout={focusLayout}
               screenRect={screenRect}
               monitorPose={monitorPose}
+              onSeatedChange={onSeatedChange}
             />
           </Suspense>
         </SceneErrorBoundary>

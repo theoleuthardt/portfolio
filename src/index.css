@@ -511,6 +511,10 @@
     box-shadow: none;
   }
 
+  .crt-off {
+    visibility: hidden;
+  }
+
   .crt-bare::before {
     display: none;
   }
@@ -635,8 +639,8 @@
       animation: crt-flicker 7s steps(1) infinite;
     }
 
-    .crt-bare .crt-titlebar,
-    .crt-bare .crt-viewport {
+    .crt-bare:not(.crt-off) .crt-titlebar,
+    .crt-bare:not(.crt-off) .crt-viewport {
       animation: crt-power-on 1.1s ease-out both;
     }
 

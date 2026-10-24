@@ -19,6 +19,8 @@ export interface CrtFrameProps {
    * screen, which then keeps its place and size so the two line up.
    */
   housing?: boolean;
+  /** Show the screen; while off, the 3D terminal's own screen shows. */
+  powered?: boolean;
   /** The tube glass, whose rectangle the 3D monitor is built around. */
   glassRef?: Ref<HTMLDivElement>;
 }
@@ -35,10 +37,12 @@ export function CrtFrame({
   children,
   controls,
   housing = true,
+  powered = true,
   glassRef,
 }: CrtFrameProps) {
+  const classes = ["crt", housing ? "" : "crt-bare", powered ? "" : "crt-off"];
   return (
-    <div className={housing ? "crt" : "crt crt-bare"}>
+    <div className={classes.filter(Boolean).join(" ")}>
       <div className="crt-bezel">
         <div ref={glassRef} className="crt-glass">
           <div className="crt-titlebar">

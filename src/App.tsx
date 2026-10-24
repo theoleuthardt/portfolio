@@ -15,6 +15,9 @@ type TerminalWindow = "open" | "minimized" | "closed";
 /** Longest time the boot waits for the 3D scene before it finishes anyway. */
 export const SCENE_TIMEOUT_MS = 8000;
 
+/** Longest time the screen waits for the 3D terminal to be seated. */
+export const SEAT_TIMEOUT_MS = 2500;
+
 /**
  * Variant C: the scene fills the screen, the CRT terminal is docked left and
  * an opened project appears as a panel on the right (≥ 1024 px). Below that
@@ -26,7 +29,9 @@ export const SCENE_TIMEOUT_MS = 8000;
  * project from the rack brings it back. Once the scene is ready, the 3D
  * monitor in the scene replaces the 2D housing around the screen, except
  * while the window is maximized; folding the terminal away stands the
- * visitor up from the desk, restoring it sits them down again.
+ * visitor up from the desk, restoring it sits them down again. The screen
+ * only shows once the scene reports the 3D terminal seated around it (or
+ * after {@link SEAT_TIMEOUT_MS}), so it never floats apart from it.
  */
 const App = () => {
   const [webgl] = useState(() => supportsWebGL());
@@ -36,6 +41,8 @@ const App = () => {
   const [sceneFailed, setSceneFailed] = useState(false);
   const [terminalWindow, setTerminalWindow] = useState<TerminalWindow>("open");
   const [maximized, setMaximized] = useState(false);
+  const [seated, setSeated] = useState(false);
+  const [seatForced, setSeatForced] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
   const restoreButton = useRef<HTMLButtonElement>(null);
   const connector = useRef<SVGPolylineElement>(null);
@@ -51,6 +58,7 @@ const App = () => {
     : windowState === "open"
       ? "seated"
       : "standing";
+  const waitingForSeat = monitorPose === "seated" && !seated && !seatForced;
   useEffect(() => {
     if (!sceneLoading) {
       return;
@@ -63,12 +71,20 @@ const App = () => {
   }, [sceneLoading]);
 
   useEffect(() => {
-    if (windowState === "open") {
-      terminal.current?.focus();
-    } else {
-      restoreButton.current?.focus();
+    if (!waitingForSeat) {
+      return;
     }
-  }, [windowState]);
+    const timer = window.setTimeout(() => setSeatForced(true), SEAT_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [waitingForSeat]);
+
+  useEffect(() => {
+    if (windowState !== "open") {
+      restoreButton.current?.focus();
+    } else if (!waitingForSeat) {
+      terminal.current?.focus();
+    }
+  }, [windowState, waitingForSeat]);
 
   const openProject =
     wide && openProjectId !== undefined
@@ -98,6 +114,12 @@ const App = () => {
           monitorAvailable ? () => terminal.current?.screenRect() : undefined
         }
         monitorPose={monitorPose}
+        onSeatedChange={(value) => {
+          setSeated(value);
+          if (!value) {
+            setSeatForced(false);
+          }
+        }}
       />
       {wide ? (
         <svg className="hud-connector" aria-hidden="true">
@@ -106,6 +128,8 @@ const App = () => {
       ) : null}
       <div
         hidden={windowState !== "open"}
+        inert={waitingForSeat}
+        aria-hidden={waitingForSeat || undefined}
         className={
           maximized && sceneShown
             ? "relative z-10 h-full"
@@ -119,6 +143,7 @@ const App = () => {
           holdBoot={sceneLoading}
           rackHint={sceneShown}
           housing={monitorPose !== "seated"}
+          powered={!waitingForSeat}
           controls={
             sceneShown
               ? {

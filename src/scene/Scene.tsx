@@ -38,6 +38,11 @@ const NEON = "#2ef2c0";
 const TARGET = new Vector3(0, 0.6, 0);
 const BEAM_ZS = [2, -3.5, -9];
 const SLOTS = rackSlots();
+/**
+ * Frame priority of the camera rig: before everything else, so whatever
+ * hangs on the camera (the 3D terminal) follows it in the same frame.
+ */
+const CAMERA_FIRST = -1;
 
 interface CameraRigProps {
   reducedMotion: boolean;
@@ -76,7 +81,7 @@ function CameraRig({ reducedMotion, focus, standing }: CameraRigProps) {
       approach(lookAt.z, goal.z, delta, speed),
     );
     camera.lookAt(lookAt);
-  });
+  }, CAMERA_FIRST);
   return null;
 }
 
@@ -210,6 +215,8 @@ export interface SceneProps {
   screenRect?: () => ScreenRect | undefined;
   /** Whether the visitor sits at the 3D terminal, stands, or there is none. */
   monitorPose?: MonitorPose;
+  /** Called when the 3D terminal is seated around the screen, or no more. */
+  onSeatedChange?: (seated: boolean) => void;
 }
 
 /**
@@ -226,6 +233,7 @@ export default function Scene({
   focusLayout = "docked",
   screenRect,
   monitorPose = "off",
+  onSeatedChange,
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [labReady, setLabReady] = useState(false);
@@ -310,6 +318,7 @@ export default function Scene({
         screenRect={screenRect}
         pose={monitorPose}
         reducedMotion={reducedMotion}
+        onSeatedChange={onSeatedChange}
       />
       <Connector
         line={connector}
