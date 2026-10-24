@@ -32,6 +32,12 @@ describe("bootSteps", () => {
   });
 });
 
+describe("lab sync step", () => {
+  it("is the step right before ready", () => {
+    expect(bootSteps[bootSteps.length - 2].label).toBe("syncing lab");
+  });
+});
+
 describe("OS_NAME", () => {
   it("is TheoCloud OS", () => {
     expect(OS_NAME).toBe("TheoCloud OS");

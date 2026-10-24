@@ -10,6 +10,8 @@ const Scene = lazy(() => import("../scene/Scene"));
 export interface SceneLayerProps {
   /** Result of the WebGL check, made once at startup. */
   webgl: boolean;
+  /** Called when the scene is ready or has failed and the fallback shows. */
+  onReady?: () => void;
 }
 
 /**
@@ -17,7 +19,7 @@ export interface SceneLayerProps {
  * WebGL, otherwise the lazily loaded 3D scene. If the scene fails, the
  * static rack takes its place.
  */
-export function SceneLayer({ webgl }: SceneLayerProps) {
+export function SceneLayer({ webgl, onReady }: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
     return null;
@@ -25,9 +27,9 @@ export function SceneLayer({ webgl }: SceneLayerProps) {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 flex items-center justify-end pr-[8vw]">
       {webgl ? (
-        <SceneErrorBoundary fallback={<RackFallback />}>
+        <SceneErrorBoundary fallback={<RackFallback />} onError={onReady}>
           <Suspense fallback={null}>
-            <Scene />
+            <Scene onReady={onReady} />
           </Suspense>
         </SceneErrorBoundary>
       ) : (

@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import { findProject, projects } from "../content/projects";
 import { commandNames } from "../terminal/commands";
 import { complete } from "../terminal/complete";
@@ -23,19 +29,34 @@ function Prompt({ command }: { command: string }) {
   );
 }
 
+/** Props of {@link Terminal}. */
+export interface TerminalProps {
+  /** Called whenever the open project changes, with `undefined` on close. */
+  onOpenProjectChange?: (projectId: string | undefined) => void;
+  /** Show project screens in the log; off when a side panel shows them. */
+  inlineProjectScreens?: boolean;
+  /** Keep the boot sequence before its last step, e.g. while the scene loads. */
+  holdBoot?: boolean;
+}
+
 /**
  * The CRT terminal: boot sequence, command log, project screens and the
  * input with history (arrow keys) and completion (Tab). Only the screen of
  * the currently open project is expanded. Tab completes only when there is
  * something to complete, so Tab and Shift+Tab otherwise move focus as usual.
+ * Escape closes the open project wherever the focus is.
  */
-export function Terminal() {
+export function Terminal({
+  onOpenProjectChange,
+  inlineProjectScreens = true,
+  holdBoot = false,
+}: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
-  const bootReached = useBootSequence(bootSteps.length);
+  const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
 
   useEffect(() => {
@@ -47,11 +68,30 @@ export function Terminal() {
   }, [session.log, bootReached]);
 
   const runCommand = (command: string) => {
-    setSession((current) => submit(current, command).session);
+    const next = submit(session, command).session;
+    setSession(next);
+    if (next.openProjectId !== session.openProjectId) {
+      onOpenProjectChange?.(next.openProjectId);
+    }
     setInput("");
     setOptions([]);
     inputRef.current?.focus();
   };
+
+  const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
+    if (
+      event.key === "Escape" &&
+      !event.isComposing &&
+      session.openProjectId !== undefined
+    ) {
+      runCommand("close");
+    }
+  });
+
+  useEffect(() => {
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, []);
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) {
@@ -104,7 +144,9 @@ export function Terminal() {
         <div role="log" aria-live="polite" aria-label="terminal output">
           {session.log.map((entry) => {
             const project =
-              entry.id === expandedEntryId && entry.projectId !== undefined
+              inlineProjectScreens &&
+              entry.id === expandedEntryId &&
+              entry.projectId !== undefined
                 ? findProject(entry.projectId)
                 : undefined;
             return (

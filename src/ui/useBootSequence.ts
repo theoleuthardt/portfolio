@@ -25,11 +25,14 @@ function markBooted(): void {
 
 /**
  * Number of boot steps reached. Counts up one step at a time on the first
- * visit of a session; shows everything at once with reduced motion, for
- * returning visitors and after any key press or pointer press. When the
+ * visit of a session; jumps as far as allowed at once with reduced motion,
+ * for returning visitors and after any key press or pointer press. When the
  * browser blocks session storage, every visit counts as the first one.
+ * While `hold` is set the count stops one step before the end for everyone,
+ * including reduced motion and returning visitors, so the last step reflects
+ * the real loading of the 3D scene. Once complete, the boot stays complete.
  */
-export function useBootSequence(total: number): number {
+export function useBootSequence(total: number, hold = false): number {
   const reducedMotion = usePrefersReducedMotion();
   const [visible, setVisible] = useState(() =>
     reducedMotion || alreadyBooted() ? total : 1,
@@ -38,7 +41,9 @@ export function useBootSequence(total: number): number {
 
   useEffect(() => {
     if (done) {
-      markBooted();
+      if (!hold) {
+        markBooted();
+      }
       return;
     }
     const skip = () => setVisible(total);
@@ -53,7 +58,15 @@ export function useBootSequence(total: number): number {
       window.removeEventListener("keydown", skip);
       window.removeEventListener("pointerdown", skip);
     };
-  }, [done, total]);
+  }, [done, hold, total]);
 
-  return reducedMotion ? total : visible;
+  const reached = reducedMotion ? total : visible;
+  const [finished, setFinished] = useState(false);
+  if (!finished && !hold && reached >= total) {
+    setFinished(true);
+  }
+  if (finished) {
+    return total;
+  }
+  return hold ? Math.min(reached, total - 1) : reached;
 }
