@@ -7,6 +7,7 @@ A static single-page app built with Vite, React and TypeScript. `npm run build` 
 ```
 index.html → src/main.tsx (fonts, styles) → src/App.tsx → ui/Terminal
 src/content/   projects as typed data (Project, findProject, RACK_UNITS),
+               friends' sites (Friend, findFriend: `friends`, `open <site>`),
                rack layout (rackSlots)
 src/terminal/  pure logic: parse, suggest (did you mean), complete (Tab),
                history, commands (registry, output lines, actions),

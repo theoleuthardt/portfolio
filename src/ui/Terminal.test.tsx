@@ -543,3 +543,36 @@ describe("Terminal boot sequence", () => {
     expect(phase()).toBe("splash");
   });
 });
+
+describe("Terminal links to friends", () => {
+  it("opens a friend's site in a new tab", () => {
+    const open = vi.fn();
+    vi.stubGlobal("open", open);
+    renderBooted(<Terminal />);
+    type("open domifolio");
+    expect(open).toHaveBeenCalledWith(
+      "https://diewilhelms.de/",
+      "_blank",
+      "noopener,noreferrer",
+    );
+    expect(
+      within(log()).getByText("> opening DomiFolio in a new tab ..."),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the site as a link that opens in a new tab", () => {
+    renderBooted(<Terminal />);
+    type("domi");
+    const link = within(log()).getByRole("link", { name: /DomiFolio/ });
+    expect(link).toHaveAttribute("href", "https://diewilhelms.de/");
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("completes the site after open with Tab", () => {
+    renderBooted(<Terminal />);
+    fireEvent.change(input(), { target: { value: "open dom" } });
+    fireEvent.keyDown(input(), { key: "Tab" });
+    expect(input()).toHaveValue("open domifolio");
+  });
+});

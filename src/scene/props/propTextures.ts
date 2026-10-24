@@ -197,3 +197,32 @@ export function brandPanelTexture(): CanvasTexture {
     true,
   );
 }
+
+/** A postcard propped up on the desk, linking a friend's site. */
+export function postcardTexture(title: string, address: string): CanvasTexture {
+  return canvasTexture(
+    384,
+    256,
+    (context) => {
+      context.fillStyle = "#0c1a10";
+      context.fillRect(0, 0, 384, 256);
+      context.strokeStyle = "#33ff66";
+      context.lineWidth = 4;
+      context.strokeRect(10, 10, 364, 236);
+      context.textAlign = "center";
+      context.font = `44px ${FONT}`;
+      context.shadowColor = "#33ff66";
+      context.shadowBlur = 12;
+      context.fillStyle = "#b9ffcc";
+      context.fillText(`${title} ↗`, 192, 112);
+      context.shadowBlur = 0;
+      context.font = `22px ${FONT}`;
+      context.fillStyle = "#4dff88";
+      context.fillText(address, 192, 168);
+      context.font = `16px ${FONT}`;
+      context.fillStyle = "#8f8a7c";
+      context.fillText("click to visit", 192, 214);
+    },
+    true,
+  );
+}

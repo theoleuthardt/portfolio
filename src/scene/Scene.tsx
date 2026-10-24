@@ -311,7 +311,7 @@ export interface SceneProps {
   onReady?: () => void;
   /** The project whose module is ejected, if any. */
   openProjectId?: string;
-  /** Called when a rack module is clicked. */
+  /** Called when a rack module or a friend's postcard is clicked. */
   onSelectProject?: (projectId: string) => void;
   /** SVG polyline the scene draws the HUD line into, from prompt to module. */
   connector?: RefObject<SVGPolylineElement | null>;
@@ -427,6 +427,7 @@ export default function Scene({
         pose={monitorPose}
         onScreenPlacement={onScreenPlacement}
         onSeatedChange={onSeatedChange}
+        onOpen={onSelectProject}
       />
       <Connector
         line={connector}

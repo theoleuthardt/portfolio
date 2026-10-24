@@ -8,6 +8,7 @@ import {
   type KeyboardEvent,
   type Ref,
 } from "react";
+import { friends } from "../content/friends";
 import { findProject, projects } from "../content/projects";
 import { commandNames } from "../terminal/commands";
 import { complete } from "../terminal/complete";
@@ -39,6 +40,7 @@ import {
 } from "./useBootSequence";
 
 const projectIds = projects.map((project) => project.id);
+const friendIds = friends.map((friend) => friend.id);
 const promptFor = (cwd: Cwd = "~") => `guest@theocloud:${cwd}$`;
 
 function Prompt({ command, cwd }: { command: string; cwd?: Cwd }) {
@@ -204,7 +206,10 @@ export function Terminal({
   };
 
   const runCommand = (command: string) => {
-    const next = submit(session, command).session;
+    const { session: next, action } = submit(session, command);
+    if (action?.type === "visit") {
+      window.open(action.url, "_blank", "noopener,noreferrer");
+    }
     setSession(next);
     if (next.openProjectId !== session.openProjectId) {
       onOpenProjectChange?.(next.openProjectId);
@@ -284,7 +289,13 @@ export function Terminal({
     if (event.key === "Enter") {
       runCommand(input);
     } else if (event.key === "Tab" && !event.shiftKey) {
-      const completion = complete(input, commandNames, projectIds, session.cwd);
+      const completion = complete(
+        input,
+        commandNames,
+        projectIds,
+        session.cwd,
+        friendIds,
+      );
       const changed = completion.input !== input;
       if (!changed && idleTab.current === input) {
         idleTab.current = null;
@@ -329,8 +340,8 @@ export function Terminal({
         data-boot-phase={phase}
         className={
           phase === "splash"
-            ? "crt-text boot-splash h-full overflow-y-auto"
-            : "crt-text h-full overflow-y-auto"
+            ? "crt-text boot-splash @container h-full overflow-y-auto"
+            : "crt-text @container h-full overflow-y-auto"
         }
         onClick={() => {
           if (window.getSelection()?.isCollapsed !== false) {

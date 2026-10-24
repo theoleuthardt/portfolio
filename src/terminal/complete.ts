@@ -41,7 +41,7 @@ function completeWord(
 /**
  * Tab completion like a shell: the first word completes to a command name
  * (with a trailing space when unique); arguments complete per command:
- * project ids after `open` and `cat`; after `cd` the directory reachable from
+ * project ids after `open` and `cat`, and friends' sites after `open`; after `cd` the directory reachable from
  * `cwd` (`projects/` at home, `../` inside it); after `ls` that directory and
  * the projects; command names after `man`. Options are sorted alphabetically.
  */
@@ -50,13 +50,14 @@ export function complete(
   commands: readonly string[],
   projectIds: readonly string[],
   cwd: Cwd = "~",
+  friendIds: readonly string[] = [],
 ): Completion {
   const atHome = cwd === "~";
   const argument = /^(\s*(\S+)\s+)(\S*)$/.exec(input);
   if (argument) {
     const [, before, command, partial] = argument;
     const candidates = new Map<string, readonly string[]>([
-      ["open", projectIds],
+      ["open", [...projectIds, ...friendIds]],
       ["cat", projectIds],
       ["cd", atHome ? ["projects/"] : ["../"]],
       ["ls", atHome ? ["projects/", ...projectIds] : projectIds],
