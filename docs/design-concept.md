@@ -14,24 +14,27 @@ It has to work for three kinds of visitors:
 
 ## 2. Look and feel
 
-**Mood: a cyberpunk cyber lab at night.** A dark, cramped server room lit almost only in green: wet concrete floor, panelled walls with thin neon strips, cable bundles running from the racks up into the ceiling, more racks blinking in the haze behind. In front of it sits an **old-school CRT terminal**: green phosphor on black, a chunky bezel, curved glass, scanlines and glow. Motion only where it means something (boot, focus, activity); no starfield, no space.
+**Mood: a Night City lab (Cyberpunk 2077 style).** A server lab in the style of Night City interiors such as the Afterlife: teal-green light everywhere, bright ceiling light panels behind grilles, a curved ceiling structure outlined with neon strips, a glossy tiled floor that mirrors the light, glass floor panels lit from below, haze hanging in the air, cable trays and pipes overhead, glass partitions, small red and pink accents and an own neon sign (no third-party branding). In the middle of it stands the rack; in front of it an **old-school CRT terminal**: green phosphor on black, a chunky bezel, curved glass, scanlines and glow. Motion only where it means something (boot, focus, activity); no starfield, no space.
 
 ### Colour tokens
 
-Green is the light source of the whole site; amber and red are the only other hues and appear only as small signals.
+The scene is lit in teal-green; the CRT terminal keeps its classic phosphor green. Red and pink are the only other hues and appear as small accents.
 
-| Token                  | Value     | Use                                                           |
-| ---------------------- | --------- | ------------------------------------------------------------- |
-| `--color-void`         | `#020403` | page and scene background                                     |
-| `--color-haze`         | `#020a05` | fog colour                                                    |
-| `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                             |
-| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at 82 % opacity)           |
-| `--color-line`         | `#1d5a2c` | panel borders, chips, grid                                    |
-| `--color-phosphor`     | `#33ff66` | terminal text, prompt, neon, "online" LEDs, links, focus ring |
-| `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                             |
-| `--color-text`         | `#b8f5c8` | long-form text in project screens                             |
-| `--color-amber`        | `#ffb000` | activity LEDs, warnings, the fork badge                       |
-| `--color-alert`        | `#ff3b3b` | errors, "command not found"                                   |
+| Token                  | Value     | Use                                                     |
+| ---------------------- | --------- | ------------------------------------------------------- |
+| `--color-void`         | `#020403` | page background, darkest scene areas                    |
+| `--color-haze`         | `#06231c` | fog and haze colour                                     |
+| `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                       |
+| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at 82 % opacity)     |
+| `--color-line`         | `#1d5a2c` | panel borders, chips, grid                              |
+| `--color-phosphor`     | `#33ff66` | terminal text, prompt, "online" LEDs, links, focus ring |
+| `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                       |
+| `--color-text`         | `#b8f5c8` | long-form text in project screens                       |
+| `--color-neon`         | `#2ef2c0` | scene neon strips, glass floor glow, sign               |
+| `--color-ceiling`      | `#c8ffe9` | ceiling light panels (the brightest light in the room)  |
+| `--color-amber`        | `#ffb000` | activity LEDs, warnings, the fork badge                 |
+| `--color-alert`        | `#ff3b3b` | errors, "command not found", red accent lights          |
+| `--color-pink`         | `#ff3d8b` | rare accent lights and sign details in the scene        |
 
 Contrast: phosphor, phosphor-dim and text on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
 
@@ -48,12 +51,21 @@ Contrast: phosphor, phosphor-dim and text on `--color-glass` reach WCAG AA for b
 - Phosphor: three-layer text glow, scanlines every 3 px, a faint vignette, a blinking block cursor, inverted text for highlights (`HELP`).
 - Life: subtle brightness flicker and a rolling scan bar every few seconds; both are off with `prefers-reduced-motion`, and the flicker never exceeds 3 changes per second (no seizure risk).
 
-### Scene
+### Scene (Night City style)
 
-- Lighting: a soft green key light from above the rack, a green back light on the wall, low green ambient; neon strips along floor and walls; green-tinted exponential fog so the background racks fade into haze.
-- Rack: brushed dark metal, label strips, LEDs, fans, cables from the top into the ceiling (one of them glowing).
-- Room: panelled back wall, reflective wet floor, two or three background racks with random blinking LEDs, a few drifting dust particles in the light.
-- Post-processing budget: bloom (selective on emissive parts) + vignette. No glitch loops or heavy chromatic aberration on text; the CRT feel comes from the terminal styling, not from distorting the whole screen.
+- **Light:** bright mint ceiling panels behind grilles as the key light, teal-green neon strips along the curved ceiling edge, floor edges and the rack, glass floor panels glowing from below, a few red and pink practical lights. Teal-green exponential fog plus soft light shafts give the haze.
+- **Materials:** glossy dark floor tiles with real reflections (`MeshReflectorMaterial`), brushed metal with fine normal maps, frosted and clear glass, emissive neon with bloom, slightly dirty surfaces (roughness maps) so it does not look clean and synthetic.
+- **Space:** the rack stands on the right; behind it the lab opens up into the depth with more racks, a glass partition, a workbench with old monitors and the neon sign; cable trays and pipes run overhead.
+- **Post-processing:** selective bloom, vignette, a touch of tone mapping and colour grading towards teal. No glitch loops or chromatic aberration on text; the CRT feel lives in the terminal styling.
+
+### Modeling (beyond the prototype)
+
+The mockup below only shows the **layout**. To reach the Night City look the implementation needs real Three.js modeling work:
+
+- **Environment kit:** floor tiles with reflector and grating strips, glass floor panels with an emissive pattern underneath, curved ceiling beam with neon contour, ceiling grid with light panels, wall panels, pillars, glass partition, vents, cable trays, pipes.
+- **Detailed rack:** frame with rails, screws and handles, vented module faces, label strips with real text (SDF text), LEDs, fans, cable management at the back and cables into the ceiling.
+- **Props:** workbench with CRT monitors, cable spools, a small neon sign "THEOCLOUD", warning stripes.
+- **Production:** procedural geometry where it is simple (tiles, grids, LEDs as instanced meshes); larger props as glTF models made in Blender, compressed with meshopt or Draco and KTX2 textures; **baked lightmaps** for the static environment so the room looks lit like a game interior without real-time global illumination; only rack, LEDs, neon and the active module are lit dynamically.
 
 ## 3. Rack and content model
 
@@ -103,7 +115,7 @@ Full-screen scene: the rack stands on the right at a three-quarter angle, a serv
 
 ![Mockup of variant C: terminal HUD on the left, rack with the trust-issues module slid out, project screen on the right](design/mockup-variant-c.png)
 
-The mockup is a throwaway prototype (plain Three.js, procedural geometry, bloom, CSS CRT) rendered in headless Chromium with a system monospace font instead of VT323; it is not part of the code base.
+The mockup is a throwaway prototype (plain Three.js, procedural boxes, bloom, CSS CRT, system monospace font instead of VT323) and shows the **layout only**; the Night City look comes from the modeling work in section 2. It is not part of the code base.
 
 ## 5. Interaction
 
@@ -157,7 +169,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 
 - First paint without the 3D chunk: the terminal is usable after the main bundle (React + terminal, ≤ 110 KB gzip).
 - The scene is a lazily loaded chunk (`three`, `@react-three/fiber`, `@react-three/drei`, post-processing; ≤ 260 KB gzip), loaded after the boot text starts.
-- All geometry is procedural (boxes, instanced LEDs and screws); no GLTF downloads. Textures: one small tiling metal normal map at most.
+- 3D assets (glTF models, lightmaps, KTX2 textures) are streamed after the terminal is usable: ≤ 3 MB compressed in total, the environment shell first, props afterwards. Simple parts stay procedural and instanced.
 - Device pixel ratio clamped to 1–1.75; `frameloop="demand"` while nothing animates; rendering pauses when the tab is hidden.
 - Target: 60 fps on a mid-range laptop, ≥ 30 fps on a recent phone.
 
@@ -165,15 +177,18 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 
 1. Content model: `src/content/` with the seven projects (README summaries, stack, links, fork flag), about and contact data — tests for completeness
 2. Terminal core: parser, command registry, history, tab completion, "did you mean" — pure TypeScript, test-first
-3. Terminal UI: HUD panel, output log (`aria-live`), input, command chips, boot sequence, reduced-motion handling
+3. CRT terminal UI: bezel, glass, scanlines, glow, output log (`aria-live`), input, command chips, boot sequence, reduced-motion handling
 4. App shell: layout per breakpoint, shared state between terminal and scene, removal of the old Hero/Navbar/Projects and their dependencies
-5. Scene foundation: lazy `Canvas`, lighting, fog, camera rig, WebGL detection and fallback
-6. Rack and modules: procedural rack, modules with labels, LEDs and fans, hover and click
-7. Focus interaction: module slide-out, camera flights, project screen panel, HUD connector line
-8. Post-processing and polish: bloom, vignette, idle animation, performance tuning (`frameloop`, DPR, visibility)
-9. Easter eggs: `neofetch`, `play dino`, `sudo`
-10. Quality: performance and bundle budget check in CI, a11y pass (keyboard, screen reader, contrast), `index.html` meta / Open Graph, `noscript`
-11. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono, CRT terminal styling (#30)
+5. Scene foundation: lazy `Canvas`, camera rig, WebGL detection and fallback, asset loading pipeline (glTF, meshopt/Draco, KTX2)
+6. Environment kit: reflective tiled floor, glass floor panels, curved ceiling with light panels and neon contour, walls, pillars, glass partition, cable trays, pipes
+7. Lighting and materials: baked lightmaps for the static room, neon and practical lights, fog and light shafts, teal colour grading
+8. Detailed rack and modules: rails, screws, vented faces, SDF label text, LEDs and fans as instances, cables; hover and click
+9. Props and signage: workbench with CRT monitors, cable spools, "THEOCLOUD" neon sign, background racks
+10. Focus interaction: module slide-out, camera flights, project screen panel, HUD connector line
+11. Post-processing and performance: selective bloom, vignette, idle animation, `frameloop`, DPR, visibility, asset budget
+12. Easter eggs: `neofetch`, `play dino`, `sudo`
+13. Quality: performance and bundle budget check in CI, a11y pass (keyboard, screen reader, contrast), `index.html` meta / Open Graph, `noscript`
+14. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono (#30)
 
 The order and scope get confirmed once the variant is chosen; new dependencies are audited before they are added.
 
