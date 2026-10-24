@@ -63,7 +63,7 @@ Projekte, die auf GitHub existieren, aber hier fehlen (zum Beispiel Backlog Mana
 | ----------------------------------------------------------- | --------------------- | ----------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | `src/assets/logo_me.png`                                    | 84 KB, 256×256        | Navbar, Favicon         | überarbeiten | Behalten als Avatar/Favicon, aber als WebP und mit eigenen Favicon-Größen.                                                          |
 | `public/logo_me.png`                                        | 84 KB                 | ungenutzt               | verwerfen    | Duplikat von `src/assets/logo_me.png`.                                                                                              |
-| `src/assets/python.png`                                     | **821 KB**, 3000×3000 | Projekt-Icon (40×40 px) | überarbeiten | 92 % aller Asset-Bytes. Auf ein Icon in passender Größe oder ein SVG verkleinern.                                                   |
+| `src/assets/python.png`                                     | **821 KB**, 3000×3000 | Projekt-Icon (40×40 px) | überarbeiten | Rund 79 % der Bytes in `src/assets/` (821 von 1 038 KB). Auf ein Icon in passender Größe oder ein SVG verkleinern.                  |
 | `src/assets/godot.png`                                      | 102 KB, 2048×2048     | Projekt-Icon            | überarbeiten | Wie python.png.                                                                                                                     |
 | `src/assets/docker.png`, `network.png`, `dinosaur-game.png` | 1–8 KB                | Projekt-Icons           | überarbeiten | Größe ist in Ordnung. Im Rack werden sie Texturen bzw. Labels, ein einheitlicher Stil wäre gut.                                     |
 | `src/assets/toolbox.svg`                                    | 2 KB                  | Projekt-Icon            | behalten     | Ist bereits ein SVG.                                                                                                                |
@@ -74,7 +74,7 @@ Projekte, die auf GitHub existieren, aber hier fehlen (zum Beispiel Backlog Mana
 
 ## 5. Abhängigkeiten
 
-Installierte Versionen laut `npm outdated`. Die CVE-Bewertung folgt in #22, Major-Updates nur nach Rückfrage.
+Direkte Abhängigkeiten aus `package.json`, installierte Versionen laut `npm outdated` nach `npm ci` (ohne `--all`, also ohne transitive Pakete). Die CVE-Bewertung folgt in #22, Major-Updates nur nach Rückfrage.
 
 | Paket                                                         | Version          | Bewertung    | Begründung                                                                                                                                            |
 | ------------------------------------------------------------- | ---------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
