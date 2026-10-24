@@ -93,23 +93,23 @@ All three share sections 2 and 3; they differ in how terminal and rack share the
 
 The terminal fills most of the viewport (left 60 %); the rack is a calm backdrop on the right, slightly out of focus, and only turns and glows when a command targets a module.
 
-- - lightest GPU load, strongest "real terminal" feel, simplest mobile story
-- − the 3D work is mostly background; less "wow"
+- Pro: lightest GPU load, strongest "real terminal" feel, simplest mobile story
+- Con: the 3D work is mostly background; less "wow"
 
 ### B — Rack first
 
 The rack is centre stage and fills the screen. The terminal lives **inside the scene** on a monitor on a cart next to the rack (rendered as HTML on a 3D plane). The camera moves between monitor and modules.
 
-- - most immersive, strongest 3D showcase
-- − text on a 3D plane is harder to read, to make accessible and to use on phones; highest effort
+- Pro: most immersive, strongest 3D showcase
+- Con: text on a 3D plane is harder to read, to make accessible and to use on phones; highest effort
 
-### C — Hybrid HUD (recommended)
+### C — Hybrid HUD (chosen)
 
 Full-screen scene: the rack stands on the right at a three-quarter angle, a server aisle with cable trays runs into the haze behind it towards a glowing door, and the camera looks down the aisle. The terminal is a crisp **2D CRT terminal docked on the left**, visually tied to the scene by a thin phosphor HUD line that connects the prompt to the active module. Opening a project slides the module out and shows its screen as a second HUD panel on the right.
 
-- - 3D stays the hero, text stays real HTML (sharp, accessible, selectable)
-- - works on mobile: terminal full-screen, rack as a small strip on top that still reacts
-- − connecting line and two panels need careful layout at medium widths
+- Pro: 3D stays the hero, text stays real HTML (sharp, accessible, selectable)
+- Pro: works on mobile: the terminal alone carries all content
+- Con: connecting line and two panels need careful layout at medium widths
 
 **Decision: C** (chosen by Theo). It shows off the Three.js work without making the content depend on it. On phones only the terminal is shown (section 6).
 
