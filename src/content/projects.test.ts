@@ -38,6 +38,46 @@ describe("projects", () => {
     }
   });
 
+  it("links releases where the repository publishes them", () => {
+    const withReleases = projects.filter(
+      (project) => project.releases !== undefined,
+    );
+    expect(withReleases.map((project) => project.id)).toEqual([
+      "backlog-manager",
+      "trust-issues",
+      "dinogame",
+    ]);
+    for (const project of withReleases) {
+      expect(project.releases).toBe(`${project.repository}/releases`);
+    }
+  });
+
+  it("links the container packages where the repository publishes them", () => {
+    const withPackages = projects.filter(
+      (project) => project.packages !== undefined,
+    );
+    expect(withPackages.map((project) => project.id)).toEqual([
+      "backlog-manager",
+      "trust-issues",
+      "flashi",
+      "claude-devcontainer",
+    ]);
+    for (const project of withPackages) {
+      const name = project.repository.split("/").pop();
+      expect(project.packages).toBe(
+        `https://github.com/theoleuthardt?tab=packages&repo_name=${name}`,
+      );
+    }
+  });
+
+  it("links a website only as https", () => {
+    for (const project of projects) {
+      if (project.website !== undefined) {
+        expect(project.website).toMatch(httpsUrl);
+      }
+    }
+  });
+
   it("marks only OpenNutriTracker as a fork and names its upstream", () => {
     const forks = projects.filter((project) => project.fork !== undefined);
     expect(forks.map((project) => project.id)).toEqual(["opennutritracker"]);
