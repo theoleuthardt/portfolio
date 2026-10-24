@@ -5,15 +5,17 @@
 A static single-page app built with Vite, React and TypeScript. `npm run build` produces `dist/`, which the Deploy workflow publishes to GitHub Pages after CI has passed on `master` (domain `theocloud.dev`, see [DEPLOYMENT.md](DEPLOYMENT.md)). There is no backend and no runtime API; all content ships in the bundle.
 
 ```
-index.html → src/main.tsx → src/App.tsx
-                              ├─ components/Navbar   (navigation, mobile menu)
-                              ├─ components/Hero     (typewriter greeting)
-                              └─ components/Projects (project cards)
-src/constants/index.ts  content: navLinks, projects
-src/assets/             icons and images
+index.html → src/main.tsx (fonts, styles) → src/App.tsx → ui/Terminal
+src/content/   projects as typed data (Project, findProject, RACK_UNITS)
+src/terminal/  pure logic: parse, suggest (did you mean), complete (Tab),
+               history, commands (registry, output lines, actions),
+               boot (boot output), session (log, history, open project)
+src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
+               ProjectScreen, CrtFrame, useBootSequence, usePrefersReducedMotion
+src/index.css  design tokens (@theme), base styles, CRT components
 ```
 
-Rating of every part: [content-audit.md](content-audit.md).
+Today the CRT terminal is the whole page (the phone layout of variant C); the scene and the wide-screen layout follow in #66 and #67. The old page is described in [content-audit.md](content-audit.md).
 
 ## Target picture
 
