@@ -18,7 +18,7 @@ description: Review an open PR of this repo with the local review script (CodeRa
 3. **Review again** after fixes until no valid findings remain.
 4. **Merge gate**, both must hold:
    ```bash
-   gh pr view <n> --json mergeable,mergeStateStatus   # MERGEABLE
+   gh pr view <n> --json mergeable,mergeStateStatus   # mergeable: MERGEABLE, mergeStateStatus: CLEAN
    gh pr checks <n>                                   # all green
    ```
    Until the PR CI from #25 exists there are no checks; then a mergeable, reviewed PR may be merged. A red check is fixed at its cause, never skipped or disabled. PR #31 / issue #20 is closed only by Theo.
