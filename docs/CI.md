@@ -25,6 +25,7 @@ A PR is merged only when `gh pr view <n> --json mergeable` reports `MERGEABLE` a
 nvm use
 npm ci
 npm run lint && npm run typecheck && npm run format:check && npm test && npm run build
+npm audit --audit-level=high
 ```
 
 ## Planned
