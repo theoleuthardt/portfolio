@@ -1,6 +1,6 @@
 ---
 name: issue-workflow
-description: Work on a GitHub issue of this repo end to end - branch, board status, test-first implementation, local checks, PR. Use when asked to work on, start or implement an issue (e.g. "mach #29", "work on issue 24").
+description: 'Work on a GitHub issue of this repo end to end - branch, board status, test-first implementation, local checks, PR. Use when asked to work on, start or implement an issue (e.g. "mach #29", "work on issue 24").'
 ---
 
 # Issue workflow
@@ -30,5 +30,6 @@ Follow these steps in order. Details and rules: `CLAUDE.md` (Workflow, Definitio
    git commit -m "feat: <what> (#<n>)"
    git -c credential.helper='!gh auth git-credential' push -u origin <branch>
    ```
-9. **PR:** `gh pr create --base master --title "<conventional title>" --body "Closes #<n> ..."` using `.github/pull_request_template.md`.
+9. **PR:** copy `.github/pull_request_template.md` to a temp file, fill in every section (`Closes #<n>` first), then
+   `gh pr create --base master --title "<conventional title>" --body-file <filled file>`.
 10. Continue with the `pr-review` skill.
