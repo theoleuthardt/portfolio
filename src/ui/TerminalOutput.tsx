@@ -10,11 +10,13 @@ export interface TerminalOutputProps {
 export function TerminalOutput({ line, onRun }: TerminalOutputProps) {
   switch (line.kind) {
     case "text":
-      return <p className="text-phosphor">{line.text}</p>;
+      return <p className="whitespace-pre-wrap text-phosphor">{line.text}</p>;
     case "muted":
-      return <p className="text-phosphor-dim">{line.text}</p>;
+      return (
+        <p className="whitespace-pre-wrap text-phosphor-dim">{line.text}</p>
+      );
     case "error":
-      return <p className="text-alert">{line.text}</p>;
+      return <p className="whitespace-pre-wrap text-alert">{line.text}</p>;
     case "chips":
       return (
         <p className="my-2 flex flex-wrap gap-2">
