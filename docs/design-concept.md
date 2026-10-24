@@ -167,7 +167,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 ## 7. Performance budget
 
 - First paint without the 3D chunk: the terminal is usable after the main bundle (React + terminal, ≤ 110 KB gzip).
-- The scene is a lazily loaded chunk (`three`, `@react-three/fiber`, `@react-three/drei`; ≤ 280 KB gzip), loaded after the terminal is usable. Post-processing is a second lazy chunk (≤ 120 KB gzip) that follows once the lab is visible. The budget was raised from 260 KB when the realistic look (#69) was added.
+- The scene is a lazily loaded chunk (`three`, `@react-three/fiber`, `@react-three/drei`; ≤ 280 KB gzip), loaded after the terminal is usable. Post-processing is a second lazy chunk (≤ 120 KB gzip) that follows once the lab is visible. Props (models, signs, screens) are a third lazy chunk (≤ 40 KB gzip plus their glTF files). The scene path counts the shared three/fiber/drei chunk plus the scene chunk. The budget was raised from 260 KB when the realistic look (#69) was added.
 - 3D assets (glTF models, lightmaps, KTX2 textures) are streamed after the terminal is usable: ≤ 3 MB compressed in total, the environment shell first, props afterwards. Simple parts stay procedural and instanced.
 - Device pixel ratio clamped to 1–1.75; `frameloop="demand"` while nothing animates; rendering pauses when the tab is hidden.
 - Target: 60 fps on a mid-range laptop, ≥ 30 fps on a recent tablet. Phones load no scene (section 6).

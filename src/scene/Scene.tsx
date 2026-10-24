@@ -19,6 +19,7 @@ import { Rack } from "./rack/Rack";
 import { ROOM } from "./layout";
 
 const PostEffects = lazy(() => import("./PostEffects"));
+const Props = lazy(() => import("./props/Props"));
 
 const HAZE = "#06231c";
 const MINT = "#c8ffe9";
@@ -259,6 +260,9 @@ export default function Scene({
         <Rack openProjectId={openProjectId} onSelectProject={onSelectProject} />
         <LightBeams />
         <ReadySignal onReady={onReady} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <Props />
       </Suspense>
       <Suspense fallback={null}>
         <PostEffects />
