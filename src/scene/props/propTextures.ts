@@ -161,7 +161,7 @@ export function signTexture(
       context.font = `40px ${FONT}`;
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.fillText(text, 256, 50);
+      context.fillText(text, 256, 50, 470);
     },
     true,
   );
