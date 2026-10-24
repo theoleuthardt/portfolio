@@ -18,7 +18,7 @@ It has to work for three kinds of visitors:
 
 ### Colour tokens
 
-The scene is lit in teal-green; the CRT terminal keeps its classic phosphor green. Red and pink are the only other hues and appear as small accents.
+The scene is lit in teal-green; the CRT terminal keeps its classic phosphor green. Amber, red and pink are the only other hues and appear as small signals and accents.
 
 | Token                  | Value     | Use                                                                          |
 | ---------------------- | --------- | ---------------------------------------------------------------------------- |
@@ -36,7 +36,7 @@ The scene is lit in teal-green; the CRT terminal keeps its classic phosphor gree
 | `--color-alert`        | `#ff3b3b` | errors, "command not found", red accent lights                               |
 | `--color-pink`         | `#ff3d8b` | rare accent lights and sign details in the scene                             |
 
-Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. HUD panels over the scene are at least 96 % opaque with a backdrop blur: even over the brightest ceiling colour the blended background keeps phosphor at 13.4:1, text at 14.5:1 and phosphor-dim at 4.9:1 (at 92 % phosphor-dim would drop to 4.5:1). Contrast is also checked on screenshots over the brightest scene areas. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
+Contrast: phosphor (14.5:1), phosphor-dim (5.3:1) and text (15.7:1) on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. HUD panels over the scene are at least 96 % opaque with a backdrop blur: even over the brightest ceiling colour the blended background keeps phosphor at 13.4:1, text at 14.5:1 and phosphor-dim at 4.9:1 (at 92 % phosphor-dim would drop to 4.48:1, below AA). Contrast is also checked on screenshots over the brightest scene areas. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
 
 ### Typography
 
@@ -190,7 +190,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 13. Quality: performance and bundle budget check in CI, a11y pass (keyboard, screen reader, contrast), `index.html` meta / Open Graph, `noscript`
 14. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono (#30)
 
-The order and scope get confirmed once the variant is chosen; new dependencies are audited before they are added.
+This plan is the basis for the issues under #18 and #19; each issue may refine its scope, and new dependencies are audited before they are added.
 
 ## 9. Later: Backlog Manager as its own racks
 
