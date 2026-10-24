@@ -36,8 +36,9 @@ describe("LAB", () => {
     for (const [name, placement] of Object.entries(LAB)) {
       const [x, , z] = placement.position;
       const bearing = Math.atan2(x - position[0], -(z - position[2]));
-      const turn = Math.abs(bearing - ahead);
-      expect(turn, name).toBeLessThanOrEqual(LOOK_LIMITS.yaw + halfView);
+      const turn = bearing - ahead;
+      expect(turn, name).toBeLessThanOrEqual(LOOK_LIMITS.yawRight + halfView);
+      expect(-turn, name).toBeLessThanOrEqual(LOOK_LIMITS.yawLeft + halfView);
     }
   });
 });

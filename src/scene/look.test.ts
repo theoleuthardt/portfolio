@@ -29,10 +29,10 @@ describe("drag", () => {
 
   it("stops at the yaw and pitch limits", () => {
     const far = drag(IDLE_LOOK, 99999, 99999, 900);
-    expect(far.yaw).toBe(LOOK_LIMITS.yaw);
+    expect(far.yaw).toBe(LOOK_LIMITS.yawLeft);
     expect(far.pitch).toBe(LOOK_LIMITS.pitchUp);
     const other = drag(IDLE_LOOK, -99999, -99999, 900);
-    expect(other.yaw).toBe(-LOOK_LIMITS.yaw);
+    expect(other.yaw).toBe(-LOOK_LIMITS.yawRight);
     expect(other.pitch).toBe(-LOOK_LIMITS.pitchDown);
   });
 });

@@ -14,9 +14,13 @@ export interface Look {
 /** No look at all: the camera rig's own view. */
 export const IDLE_LOOK: Look = { yaw: 0, pitch: 0, zoom: 0 };
 
-/** How far the look may go from the rig's view. */
+/**
+ * How far the look may go from the rig's view: further to the left, where
+ * the lab's side wall is, than to the right, behind the rack.
+ */
 export const LOOK_LIMITS = {
-  yaw: 1.7,
+  yawLeft: 1.7,
+  yawRight: 1,
   pitchUp: 0.35,
   pitchDown: 0.3,
   zoomIn: 4,
@@ -40,8 +44,8 @@ export function drag(look: Look, dx: number, dy: number, height: number): Look {
     ...look,
     yaw: clamp(
       look.yaw + (dx / height) * RADIANS_PER_VIEWPORT,
-      -LOOK_LIMITS.yaw,
-      LOOK_LIMITS.yaw,
+      -LOOK_LIMITS.yawRight,
+      LOOK_LIMITS.yawLeft,
     ),
     pitch: clamp(
       look.pitch + (dy / height) * RADIANS_PER_VIEWPORT,
