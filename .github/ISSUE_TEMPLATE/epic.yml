@@ -1,0 +1,15 @@
+name: Epic
+description: A group of related tasks, tracked through sub-issues
+labels: [epic]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What belongs to this epic and what does not

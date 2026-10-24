@@ -1,1 +1,1 @@
-declare module 'animated-backgrounds';
+declare module "animated-backgrounds";
