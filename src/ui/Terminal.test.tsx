@@ -223,6 +223,15 @@ describe("Terminal", () => {
     );
   });
 
+  it("lets a second Tab without anything new move focus on", () => {
+    renderBooted(<Terminal />);
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(true);
+    fireEvent.change(input(), { target: { value: "hel" } });
+    expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
+    expect(input()).toHaveValue("help ");
+  });
+
   it("shows projects/ at home and changes into it on click", () => {
     renderBooted(<Terminal />);
     type("ls");

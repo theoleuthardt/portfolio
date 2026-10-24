@@ -96,3 +96,18 @@ describe("complete with inherited object property names", () => {
     });
   });
 });
+
+describe("complete relative to the working directory", () => {
+  const all = ["cat", "cd", "ls", "open"];
+  const ids = ["flashi", "trust-issues"];
+
+  it("offers projects/ at home and ../ inside projects for cd", () => {
+    expect(complete("cd ", all, ids, "~").options).toEqual(["projects/"]);
+    expect(complete("cd ", all, ids, "~/projects").options).toEqual(["../"]);
+  });
+
+  it("completes project ids for ls inside projects and at home", () => {
+    expect(complete("ls fla", all, ids, "~/projects").input).toBe("ls flashi");
+    expect(complete("ls fla", all, ids, "~").input).toBe("ls flashi");
+  });
+});

@@ -1,3 +1,5 @@
+import type { Cwd } from "./commands";
+
 /** Result of a tab completion: the new input and the matching options. */
 export interface Completion {
   input: string;
@@ -39,22 +41,25 @@ function completeWord(
 /**
  * Tab completion like a shell: the first word completes to a command name
  * (with a trailing space when unique); arguments complete per command:
- * project ids after `open` and `cat`, the `projects/` directory after `cd`
- * and `ls`, command names after `man`. Options are sorted alphabetically.
+ * project ids after `open` and `cat`; after `cd` the directory reachable from
+ * `cwd` (`projects/` at home, `../` inside it); after `ls` that directory and
+ * the projects; command names after `man`. Options are sorted alphabetically.
  */
 export function complete(
   input: string,
   commands: readonly string[],
   projectIds: readonly string[],
+  cwd: Cwd = "~",
 ): Completion {
+  const atHome = cwd === "~";
   const argument = /^(\s*(\S+)\s+)(\S*)$/.exec(input);
   if (argument) {
     const [, before, command, partial] = argument;
     const candidates = new Map<string, readonly string[]>([
       ["open", projectIds],
       ["cat", projectIds],
-      ["cd", ["projects/"]],
-      ["ls", ["projects/"]],
+      ["cd", atHome ? ["projects/"] : ["../"]],
+      ["ls", atHome ? ["projects/", ...projectIds] : projectIds],
       ["man", commands],
     ]);
     return completeWord(

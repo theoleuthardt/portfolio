@@ -89,8 +89,9 @@ export interface TerminalProps {
 /**
  * The CRT terminal: boot sequence, command log, project screens and the
  * input with history (arrow keys) and completion (Tab). Only the screen of
- * the currently open project is expanded. Tab always completes, like in a
- * terminal; Shift+Tab leaves the terminal.
+ * the currently open project is expanded. Tab completes like in a terminal;
+ * a second Tab that would change nothing moves focus on, Shift+Tab moves it
+ * back, so keyboard users can always leave the terminal.
  * Escape closes the open project wherever the focus is. The line edits like
  * bash/readline (Ctrl+A/E/U/K/W, Ctrl+C cancels, Ctrl+L clears the screen)
  * and shows a block cursor; the real input is invisible on top of it, so
@@ -108,6 +109,7 @@ export function Terminal({
   const [cursor, setCursor] = useState(0);
   const [focused, setFocused] = useState(false);
   const caretTarget = useRef<number | null>(null);
+  const idleTab = useRef<string | null>(null);
   const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -262,8 +264,14 @@ export function Terminal({
     if (event.key === "Enter") {
       runCommand(input);
     } else if (event.key === "Tab" && !event.shiftKey) {
+      const completion = complete(input, commandNames, projectIds, session.cwd);
+      const changed = completion.input !== input;
+      if (!changed && idleTab.current === input) {
+        idleTab.current = null;
+        return;
+      }
       event.preventDefault();
-      const completion = complete(input, commandNames, projectIds);
+      idleTab.current = changed ? null : input;
       setLine({ text: completion.input, cursor: completion.input.length });
       setOptions(completion.options.length > 1 ? completion.options : []);
     } else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
@@ -348,6 +356,7 @@ export function Terminal({
                 className="crt-input"
                 value={input}
                 onChange={(event) => {
+                  idleTab.current = null;
                   setInput(event.target.value);
                   syncCursor(event.target);
                   setOptions([]);
