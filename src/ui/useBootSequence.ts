@@ -8,13 +8,26 @@ export const BOOT_STEP_MS = 350;
 export const BOOTED_KEY = "theocloud.booted";
 
 function alreadyBooted(): boolean {
-  return sessionStorage.getItem(BOOTED_KEY) === "1";
+  try {
+    return sessionStorage.getItem(BOOTED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markBooted(): void {
+  try {
+    sessionStorage.setItem(BOOTED_KEY, "1");
+  } catch {
+    return;
+  }
 }
 
 /**
  * Number of boot lines to show. Counts up one line per step on the first
  * visit of a session; shows everything at once with reduced motion, for
- * returning visitors and after any key press or pointer press.
+ * returning visitors and after any key press or pointer press. When the
+ * browser blocks session storage, every visit counts as the first one.
  */
 export function useBootSequence(total: number): number {
   const reducedMotion = usePrefersReducedMotion();
@@ -25,7 +38,7 @@ export function useBootSequence(total: number): number {
 
   useEffect(() => {
     if (done) {
-      sessionStorage.setItem(BOOTED_KEY, "1");
+      markBooted();
       return;
     }
     const skip = () => setVisible(total);

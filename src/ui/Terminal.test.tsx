@@ -37,6 +37,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("Terminal", () => {
@@ -113,6 +114,31 @@ describe("Terminal", () => {
     fireEvent.change(input(), { target: { value: "cl" } });
     fireEvent.keyDown(input(), { key: "Tab" });
     expect(screen.getByText("clear close")).toBeInTheDocument();
+  });
+
+  it("gives every opened project screen its own accessible name", () => {
+    render(<Terminal />);
+    type("open flashi");
+    type("open flashi");
+    expect(
+      within(log()).getAllByRole("region", { name: /^Flashi/ }),
+    ).toHaveLength(2);
+    const ids = [...document.querySelectorAll("[id]")].map((node) => node.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it("still works when session storage is blocked", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new DOMException("blocked", "SecurityError");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("blocked", "SecurityError");
+    });
+    render(<Terminal />);
+    type("ls");
+    expect(
+      within(log()).getByRole("button", { name: /^flashi/ }),
+    ).toBeInTheDocument();
   });
 
   it("clears the log", () => {

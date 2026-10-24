@@ -1,3 +1,4 @@
+import { useId } from "react";
 import type { Project } from "../content/projects";
 
 /** Props of {@link ProjectScreen}. */
@@ -7,18 +8,13 @@ export interface ProjectScreenProps {
 
 /** The detail screen of a project, shown after `open <project>`. */
 export function ProjectScreen({ project }: ProjectScreenProps) {
+  const headingId = useId();
   return (
-    <section
-      aria-labelledby={`project-${project.id}`}
-      className="crt-screen my-3"
-    >
+    <section aria-labelledby={headingId} className="crt-screen my-3">
       <p className="text-hud uppercase text-phosphor-dim">
         module {project.id} // rack-01 · running
       </p>
-      <h2
-        id={`project-${project.id}`}
-        className="text-screen-title text-phosphor"
-      >
+      <h2 id={headingId} className="text-screen-title text-phosphor">
         {project.title}
         {project.fork ? <span className="text-amber"> [fork]</span> : null}
       </h2>
