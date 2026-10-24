@@ -14,35 +14,46 @@ It has to work for three kinds of visitors:
 
 ## 2. Look and feel
 
-**Mood:** a dark server room at night. Near-black space, brushed gunmetal, phosphor-green terminal text, cyan HUD lines, status LEDs and fans. Calm and precise rather than flashy; motion only where it means something (boot, focus, activity).
+**Mood: a cyberpunk cyber lab at night.** A dark, cramped server room lit almost only in green: wet concrete floor, panelled walls with thin neon strips, cable bundles running from the racks up into the ceiling, more racks blinking in the haze behind. In front of it sits an **old-school CRT terminal**: green phosphor on black, a chunky bezel, curved glass, scanlines and glow. Motion only where it means something (boot, focus, activity); no starfield, no space.
 
 ### Colour tokens
 
-| Token              | Value                       | Use                                      |
-| ------------------ | --------------------------- | ---------------------------------------- |
-| `--color-void`     | `#05070a`                   | page and scene background, fog           |
-| `--color-panel`    | `#0b0f14` (at 85 % opacity) | terminal and HUD panels                  |
-| `--color-metal`    | `#1b2027`                   | rack frame, module faces                 |
-| `--color-line`     | `#24303b`                   | panel borders, grid                      |
-| `--color-phosphor` | `#39ff88`                   | terminal text, prompt, "online" LEDs     |
-| `--color-signal`   | `#3fd0ff`                   | HUD lines, links, focus rings, selection |
-| `--color-amber`    | `#ffb020`                   | activity LEDs, warnings, the fork badge  |
-| `--color-alert`    | `#ff4d5e`                   | errors, "command not found"              |
-| `--color-muted`    | `#7d8b99`                   | secondary text, timestamps               |
-| `--color-text`     | `#d7e1ea`                   | long-form text in project screens        |
+Green is the light source of the whole site; amber and red are the only other hues and appear only as small signals.
 
-Contrast: phosphor, signal, text and muted on `--color-panel` all reach WCAG AA for body text; amber and alert are used for short labels only.
+| Token                  | Value     | Use                                                           |
+| ---------------------- | --------- | ------------------------------------------------------------- |
+| `--color-void`         | `#020403` | page and scene background                                     |
+| `--color-haze`         | `#020a05` | fog colour                                                    |
+| `--color-bezel`        | `#141816` | CRT housing, rack metal base tone                             |
+| `--color-glass`        | `#031008` | CRT screen background, HUD panels (at 82 % opacity)           |
+| `--color-line`         | `#1d5a2c` | panel borders, chips, grid                                    |
+| `--color-phosphor`     | `#33ff66` | terminal text, prompt, neon, "online" LEDs, links, focus ring |
+| `--color-phosphor-dim` | `#1d9a3f` | boot log, secondary terminal text                             |
+| `--color-text`         | `#b8f5c8` | long-form text in project screens                             |
+| `--color-amber`        | `#ffb000` | activity LEDs, warnings, the fork badge                       |
+| `--color-alert`        | `#ff3b3b` | errors, "command not found"                                   |
+
+Contrast: phosphor, phosphor-dim and text on `--color-glass` reach WCAG AA for body text; amber and alert are used for short labels only. The focus ring is a 2 px phosphor outline plus glow, so it stays visible on the green scene.
 
 ### Typography
 
-- **JetBrains Mono** (OFL, self-hosted, no Google Fonts) for everything: terminal, HUD labels, headings. Weights 400 / 700.
-- Sizes: terminal 15 px desktop / 14 px mobile, line height 1.55; HUD labels 11 px uppercase with 0.12 em tracking; project screen headings 22 px.
+- **VT323** (OFL, self-hosted) for the CRT terminal: the boot log, prompt and command output, 20 px desktop / 18 px mobile, line height 1.3, so it reads like a real 80-column terminal.
+- **JetBrains Mono** (OFL, self-hosted) for longer text: project screens, HUD labels (11 px uppercase, 0.2 em tracking), headings. Weights 400 / 700.
+- No Google Fonts; both are bundled.
 
-### Effects
+### CRT terminal
 
-- **Scene:** bloom on emissive LEDs and the screen of the focused module, exponential fog in `--color-void`, one cool key light, rim light from behind the rack, slowly spinning fans, blinking activity LEDs (random, low frequency).
-- **Overlay:** faint scanlines and a vignette on the terminal panel (CSS), a blinking block cursor, 1 px HUD frame corners.
-- **Post-processing budget:** bloom + vignette only; no chromatic aberration or glitch loops (they hurt readability and motion-sensitive visitors).
+- Housing: rounded bezel in `--color-bezel` with a model plate ("THEO-TERM 3270") and a green power LED.
+- Glass: slightly curved (CSS perspective plus an SVG barrel filter where supported), inner shadow at the edges, a soft reflection highlight top-left.
+- Phosphor: three-layer text glow, scanlines every 3 px, a faint vignette, a blinking block cursor, inverted text for highlights (`HELP`).
+- Life: subtle brightness flicker and a rolling scan bar every few seconds; both are off with `prefers-reduced-motion`, and the flicker never exceeds 3 changes per second (no seizure risk).
+
+### Scene
+
+- Lighting: a soft green key light from above the rack, a green back light on the wall, low green ambient; neon strips along floor and walls; green-tinted exponential fog so the background racks fade into haze.
+- Rack: brushed dark metal, label strips, LEDs, fans, cables from the top into the ceiling (one of them glowing).
+- Room: panelled back wall, reflective wet floor, two or three background racks with random blinking LEDs, a few drifting dust particles in the light.
+- Post-processing budget: bloom (selective on emissive parts) + vignette. No glitch loops or heavy chromatic aberration on text; the CRT feel comes from the terminal styling, not from distorting the whole screen.
 
 ## 3. Rack and content model
 
@@ -82,7 +93,7 @@ The rack is centre stage and fills the screen. The terminal lives **inside the s
 
 ### C — Hybrid HUD (recommended)
 
-Full-screen scene with the rack slightly right of centre and the camera at a three-quarter angle. The terminal is a crisp **2D HUD panel docked on the left**, visually tied to the scene by a thin cyan HUD line that connects the prompt to the active module. Opening a project slides the module out and shows its screen as a second HUD panel on the right.
+Full-screen scene: the rack stands on the right at a three-quarter angle, a server aisle with cable trays runs into the haze behind it towards a glowing door, and the camera looks down the aisle. The terminal is a crisp **2D CRT terminal docked on the left**, visually tied to the scene by a thin phosphor HUD line that connects the prompt to the active module. Opening a project slides the module out and shows its screen as a second HUD panel on the right.
 
 - - 3D stays the hero, text stays real HTML (sharp, accessible, selectable)
 - - works on mobile: terminal full-screen, rack as a small strip on top that still reacts
@@ -92,7 +103,7 @@ Full-screen scene with the rack slightly right of centre and the camera at a thr
 
 ![Mockup of variant C: terminal HUD on the left, rack with the trust-issues module slid out, project screen on the right](design/mockup-variant-c.png)
 
-The mockup is a throwaway prototype (plain Three.js, procedural geometry, bloom) rendered in headless Chromium; it is not part of the code base.
+The mockup is a throwaway prototype (plain Three.js, procedural geometry, bloom, CSS CRT) rendered in headless Chromium with a system monospace font instead of VT323; it is not part of the code base.
 
 ## 5. Interaction
 
@@ -162,7 +173,7 @@ Idle: very slow orbit (a few degrees) with mouse parallax. Focus: 0.9 s eased fl
 8. Post-processing and polish: bloom, vignette, idle animation, performance tuning (`frameloop`, DPR, visibility)
 9. Easter eggs: `neofetch`, `play dino`, `sudo`
 10. Quality: performance and bundle budget check in CI, a11y pass (keyboard, screen reader, contrast), `index.html` meta / Open Graph, `noscript`
-11. Design tokens in Tailwind `@theme` and self-hosted JetBrains Mono (#30)
+11. Design tokens in Tailwind `@theme`, self-hosted VT323 and JetBrains Mono, CRT terminal styling (#30)
 
 The order and scope get confirmed once the variant is chosen; new dependencies are audited before they are added.
 
