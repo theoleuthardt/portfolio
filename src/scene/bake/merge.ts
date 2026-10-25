@@ -39,6 +39,17 @@ function materialKey(material: Material): string | undefined {
     material.opacity,
     material.side,
     material.toneMapped,
+    material.fog,
+    material.depthWrite,
+    material.depthTest,
+    material.blending,
+    material.alphaTest,
+    material.alphaMap?.uuid ?? "",
+    material.wireframe,
+    standard?.flatShading ?? "",
+    standard?.envMapIntensity ?? "",
+    standard?.aoMap?.uuid ?? "",
+    standard?.lightMap?.uuid ?? "",
     standard?.roughness ?? "",
     standard?.metalness ?? "",
     standard?.emissive.getHexString() ?? "",
@@ -112,13 +123,14 @@ function prepared(mesh: Mesh, toRoot: Matrix4): BufferGeometry | undefined {
 }
 
 /**
- * Merges the static meshes below `root` that share a material into one mesh
- * per material, in `root`'s space, so they draw in one call instead of
- * many. Meshes or groups marked `userData.dynamic` (anything that moves or
- * changes), instanced meshes, multi-material meshes, meshes with vertex
- * colours, morphing meshes and meshes with other materials or attributes
- * are left alone, and so are the meshes of a material whose geometries
- * cannot merge. Call after the world matrices are up to date.
+ * Merges the visible static meshes below `root` that render the same (equal
+ * material settings) into one mesh per material, in `root`'s space, so they
+ * draw in one call instead of many. Meshes or groups marked
+ * `userData.dynamic` (anything that moves or changes), hidden meshes,
+ * instanced meshes, multi-material meshes, meshes with vertex colours,
+ * morphing meshes and meshes with other materials or attributes are left
+ * alone, and so are the meshes of a material whose geometries cannot merge.
+ * Call after the world matrices are up to date.
  */
 export function mergeStatic(root: Object3D): MergedStatic {
   const toRoot = new Matrix4().copy(root.matrixWorld).invert();
@@ -126,7 +138,7 @@ export function mergeStatic(root: Object3D): MergedStatic {
     string,
     { material: Material; geometries: BufferGeometry[]; meshes: Mesh[] }
   >();
-  root.traverse((object) => {
+  root.traverseVisible((object) => {
     if (
       !(object instanceof Mesh) ||
       "isInstancedMesh" in object ||

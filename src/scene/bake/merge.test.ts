@@ -117,6 +117,38 @@ describe("mergeStatic", () => {
     expect(mergeStatic(root).sources).not.toContain(morphing);
   });
 
+  it("keeps materials apart that differ in fog, depth or blending", () => {
+    const root = new Group();
+    const fogged = grey();
+    const clear = grey();
+    clear.fog = false;
+    const overlay = grey();
+    overlay.depthWrite = false;
+    root.add(
+      new Mesh(new BoxGeometry(), fogged),
+      new Mesh(new BoxGeometry(), clear),
+      new Mesh(new BoxGeometry(), overlay),
+    );
+    root.updateMatrixWorld(true);
+    expect(mergeStatic(root).meshes).toHaveLength(3);
+  });
+
+  it("leaves hidden meshes and meshes in hidden groups out", () => {
+    const root = new Group();
+    const hidden = new Mesh(new BoxGeometry(), grey());
+    hidden.visible = false;
+    const folded = new Group();
+    folded.visible = false;
+    const inside = new Mesh(new BoxGeometry(), grey());
+    folded.add(inside);
+    root.add(hidden, folded, new Mesh(new BoxGeometry(), grey()));
+    root.updateMatrixWorld(true);
+    const { sources } = mergeStatic(root);
+    expect(sources).not.toContain(hidden);
+    expect(sources).not.toContain(inside);
+    expect(sources).toHaveLength(1);
+  });
+
   it("leaves meshes with vertex colours alone", () => {
     const root = new Group();
     const tinted = new Mesh(
