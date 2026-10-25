@@ -89,6 +89,11 @@ describe("accessibility", () => {
     type("help");
     type("ls -la");
     type("open flashi");
+    if (width >= 1024) {
+      expect(
+        screen.getByRole("complementary", { name: "project" }),
+      ).toBeInTheDocument();
+    }
     expect(await violations()).toEqual([]);
   });
 

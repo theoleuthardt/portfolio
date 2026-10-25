@@ -8,18 +8,27 @@ const manifest = JSON.parse(
   readFileSync(join(DIST, ".vite", "manifest.json"), "utf8"),
 ) as Manifest;
 const sizes = new Map(
-  Object.values(manifest).map(({ file }) => [
-    file,
-    gzipSync(readFileSync(join(DIST, file))).length,
-  ]),
+  Object.values(manifest)
+    .flatMap(({ file, css = [] }) => [file, ...css])
+    .map((output) => [
+      output,
+      gzipSync(readFileSync(join(DIST, output))).length,
+    ]),
 );
-const assetBytes = ["models", "textures"]
-  .flatMap((folder) =>
-    readdirSync(join(DIST, folder)).map(
-      (name) => statSync(join(DIST, folder, name)).size,
-    ),
-  )
-  .reduce((sum, size) => sum + size, 0);
+
+/** Bytes of the regular files below `dir`, recursively. */
+const fileBytes = (dir: string): number =>
+  readdirSync(dir, { withFileTypes: true }).reduce((sum, entry) => {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) {
+      return sum + fileBytes(path);
+    }
+    return sum + (entry.isFile() ? statSync(path).size : 0);
+  }, 0);
+const assetBytes = ["models", "textures"].reduce(
+  (sum, folder) => sum + fileBytes(join(DIST, folder)),
+  0,
+);
 
 const report = checkBudgets(manifest, sizes, assetBytes);
 const kb = (bytes: number) => `${(bytes / 1000).toFixed(1)} kB`;

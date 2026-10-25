@@ -4,11 +4,11 @@ How the portfolio is held to its performance and accessibility goals, and the la
 
 ## Bundle budget
 
-`npm run budget` (after `npm run build`, also run in CI) checks every loading step of [design-concept.md](design-concept.md) section 7 against its limit. A step costs its chunk plus every chunk it imports statically that no earlier step has loaded yet, following Vite's build manifest (`dist/.vite/manifest.json`); sizes are gzip in kB (1000 bytes), as Vite reports them.
+`npm run budget` (after `npm run build`, also run in CI) checks every loading step of [design-concept.md](design-concept.md) section 7 against its limit. A step costs its chunk plus every chunk it imports statically that no earlier step has loaded yet, following Vite's build manifest (`dist/.vite/manifest.json`); sizes are gzip in kB (1000 bytes) of the JavaScript and its stylesheets, as Vite reports them. An entry missing from the manifest fails the check.
 
 | Step            | Starts with                 | Limit   | 2026-10-25 |
 | --------------- | --------------------------- | ------- | ---------- |
-| main            | `index.html`                | 110 kB  | 93.0 kB    |
+| main            | `index.html` (JS and CSS)   | 110 kB  | 101.0 kB   |
 | scene           | `src/scene/Scene.tsx`       | 280 kB  | 279.8 kB   |
 | post-processing | `src/scene/PostEffects.tsx` | 120 kB  | 104.4 kB   |
 | props           | `src/scene/props/Props.tsx` | 40 kB   | 24.7 kB    |

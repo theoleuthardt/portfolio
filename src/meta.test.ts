@@ -28,6 +28,12 @@ describe("index.html", () => {
     expect(meta("name", "twitter:card")).toBe("summary_large_image");
   });
 
+  it("has a full title for clients without JavaScript", () => {
+    expect(html).toContain(
+      "<title>TheoCloud OS – Theo Leuthardt's portfolio</title>",
+    );
+  });
+
   it("keeps the theme colour and the language", () => {
     expect(meta("name", "theme-color")).toBe("#031008");
     expect(html).toContain('<html lang="en">');

@@ -1,6 +1,7 @@
 /** One entry of Vite's build manifest. */
 export interface ManifestChunk {
   file: string;
+  css?: string[];
   isEntry?: boolean;
   imports?: string[];
   dynamicImports?: string[];
@@ -62,7 +63,8 @@ function staticClosure(manifest: Manifest, key: string): Set<string> {
 }
 
 /**
- * Checks each loading step against its limit: a step costs its chunk plus
+ * Checks each loading step against its limit: a step costs its chunk (with
+ * its stylesheets) plus
  * every statically imported chunk that no earlier step has loaded yet, in
  * gzip bytes from `sizes` (keyed by output file). The static assets are
  * checked as a whole. An entry missing from the manifest throws, so a moved
@@ -83,7 +85,10 @@ export function checkBudgets(
     for (const key of staticClosure(manifest, entry)) {
       if (!loaded.has(key)) {
         loaded.add(key);
-        size += sizes.get(manifest[key].file) ?? 0;
+        const { file, css = [] } = manifest[key];
+        for (const output of [file, ...css]) {
+          size += sizes.get(output) ?? 0;
+        }
       }
     }
     return { name, size, limit, ok: size <= limit };

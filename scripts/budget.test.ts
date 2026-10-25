@@ -4,6 +4,7 @@ import { BUDGETS, checkBudgets, type Manifest } from "./budget";
 const manifest: Manifest = {
   "index.html": {
     file: "assets/index.js",
+    css: ["assets/index.css"],
     isEntry: true,
     dynamicImports: ["src/scene/Scene.tsx"],
   },
@@ -21,7 +22,8 @@ const manifest: Manifest = {
   "_post.js": { file: "assets/post.js" },
 };
 const sizes = new Map([
-  ["assets/index.js", 90_000],
+  ["assets/index.js", 83_000],
+  ["assets/index.css", 7_000],
   ["assets/Scene.js", 38_000],
   ["assets/vendor.js", 240_000],
   ["assets/textures.js", 2_000],
@@ -30,6 +32,13 @@ const sizes = new Map([
 ]);
 
 describe("checkBudgets", () => {
+  it("counts a chunk's stylesheets with it", () => {
+    const report = checkBudgets(manifest, sizes, 0, [
+      { name: "main", entry: "index.html", limit: 110_000 },
+    ]);
+    expect(report.rows[0].size).toBe(90_000);
+  });
+
   it("adds a lazy chunk's own static imports that are not loaded yet", () => {
     const report = checkBudgets(manifest, sizes, 2_000_000, [
       { name: "main", entry: "index.html", limit: 110_000 },
