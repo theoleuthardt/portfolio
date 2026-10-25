@@ -150,3 +150,22 @@ describe("top", () => {
     expect(load([COFFEE_PID])).toBeLessThan(load([]));
   });
 });
+
+describe("kill with several pids", () => {
+  it("handles every pid, also when one of them is a project", () => {
+    const result = run(
+      `kill 99999 ${COFFEE_PID} ${pidOf(projects[0].id)}`,
+      context,
+    );
+    expect(result.lines.map((line) => line.kind)).toEqual([
+      "error",
+      "muted",
+      "muted",
+    ]);
+    expect(result.state.killed).toEqual([COFFEE_PID]);
+    expect(result.actions).toEqual([
+      { type: "open", projectId: projects[0].id },
+    ]);
+    expect(result.state.status).toBe(1);
+  });
+});

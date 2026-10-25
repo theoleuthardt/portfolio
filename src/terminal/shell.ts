@@ -149,7 +149,10 @@ export function parseLine(input: string): Step[] | { error: string } {
   return steps;
 }
 
-/** A word with its variables replaced; unset variables expand to nothing. */
+/**
+ * A word with its variables replaced; unset variables (and inherited object
+ * properties like `constructor`) expand to nothing.
+ */
 export function expandWord(
   word: Word,
   env: Readonly<Record<string, string>>,
@@ -161,7 +164,9 @@ export function expandWord(
         ? part.text
         : part.variable === "?"
           ? String(status)
-          : (env[part.variable] ?? ""),
+          : Object.prototype.hasOwnProperty.call(env, part.variable)
+            ? env[part.variable]
+            : "",
     )
     .join("");
 }

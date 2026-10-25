@@ -92,12 +92,36 @@ function completePath(
 }
 
 /**
+ * Where the last command of a line starts: after the last `|`, `;`, `&&`
+ * or `||` outside quotes, with the spaces after it.
+ */
+function lastCommandStart(input: string): number {
+  let start = 0;
+  let quote: string | undefined;
+  for (let at = 0; at < input.length; at++) {
+    const char = input[at];
+    if (quote !== undefined) {
+      quote = char === quote ? undefined : quote;
+    } else if (char === "'" || char === '"') {
+      quote = char;
+    } else if (char === "|" || char === ";" || char === "&") {
+      start = at + 1;
+    }
+  }
+  while (start < input.length && /\s/.test(input[start])) {
+    start++;
+  }
+  return start;
+}
+
+/**
  * Tab completion like a shell: the first word completes to a command name
  * (with a trailing space when unique). The last word completes per command:
  * paths through the file system after `ls`, `cat`, `tree`, `head`, `tail`,
  * `wc`, `grep` and `sort`, directories after `cd`, projects and friends'
- * sites (or project paths) after `open`, command names after `man`. Options
- * are sorted alphabetically.
+ * sites (or project paths) after `open`, command names after `man`. Only
+ * the last command of a line completes, after any `|`, `;`, `&&` or `||`.
+ * Options are sorted alphabetically.
  */
 export function complete(
   input: string,
@@ -106,6 +130,17 @@ export function complete(
   cwd: Cwd = "~",
   friendIds: readonly string[] = [],
 ): Completion {
+  const start = lastCommandStart(input);
+  if (start > 0) {
+    const rest = complete(
+      input.slice(start),
+      commands,
+      projectIds,
+      cwd,
+      friendIds,
+    );
+    return { input: input.slice(0, start) + rest.input, options: rest.options };
+  }
   const argument = /^(\s*(\S+)\s+(?:.*\s)?)(\S*)$/.exec(input);
   if (argument) {
     const [, before, raw, partial] = argument;

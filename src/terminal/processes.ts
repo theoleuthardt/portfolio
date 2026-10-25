@@ -273,6 +273,7 @@ function kill(pids: number[], call: Invocation): CommandResult {
   const table = processTable(call.killed, seconds(call));
   const lines: TerminalLine[] = [];
   const killed: number[] = [];
+  const ejected: string[] = [];
   let status = 0;
   for (const pid of pids) {
     const process = table.find((entry) => entry.pid === pid);
@@ -289,15 +290,11 @@ function kill(pids: number[], call: Invocation): CommandResult {
       });
       status = 1;
     } else if (process.project !== undefined) {
-      return {
-        lines: [
-          {
-            kind: "muted",
-            text: `> ${process.project} crashed and was pulled out of the rack for inspection`,
-          },
-        ],
-        action: { type: "open", projectId: process.project },
-      };
+      lines.push({
+        kind: "muted",
+        text: `> ${process.project} crashed and was pulled out of the rack for inspection`,
+      });
+      ejected.push(process.project);
     } else {
       const reaction = REACTIONS.get(pid) ?? { message: "", dies: true };
       if (reaction.message) {
@@ -311,7 +308,10 @@ function kill(pids: number[], call: Invocation): CommandResult {
   return {
     lines,
     status,
-    ...(killed.length > 0 ? { action: { type: "kill", pids: killed } } : {}),
+    actions: [
+      ...(killed.length > 0 ? [{ type: "kill", pids: killed } as const] : []),
+      ...ejected.map((projectId) => ({ type: "open", projectId }) as const),
+    ],
   };
 }
 
@@ -341,12 +341,12 @@ export const processCommands: Record<string, Command> = {
   top: {
     usage: "top",
     description: "shows the processes live; q quits",
-    run: () => ({ lines: [], action: { type: "program", name: "top" } }),
+    run: () => ({ lines: [], actions: [{ type: "program", name: "top" }] }),
   },
   htop: {
     usage: "htop",
     description: "the same as top, for people with taste",
-    run: () => ({ lines: [], action: { type: "program", name: "top" } }),
+    run: () => ({ lines: [], actions: [{ type: "program", name: "top" }] }),
   },
   kill: {
     usage: "kill [-9] <pid...>",

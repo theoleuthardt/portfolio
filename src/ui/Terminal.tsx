@@ -53,6 +53,13 @@ function Prompt({ command, cwd }: { command: string; cwd?: Cwd }) {
   );
 }
 
+/**
+ * Whether only Ctrl is held: Ctrl+Shift, Ctrl+Alt and Cmd shortcuts (hard
+ * reload, devtools) stay with the browser.
+ */
+const plainCtrl = (event: KeyboardEvent<HTMLInputElement>) =>
+  event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey;
+
 /** The typed line with a block cursor on the character under the caret. */
 function EditLine({ line, focused }: { line: Line; focused: boolean }) {
   const before = line.text.slice(0, line.cursor);
@@ -300,7 +307,7 @@ export function Terminal({
       return false;
     }
     const key = event.key.toLowerCase();
-    if (event.ctrlKey && key === "r") {
+    if (plainCtrl(event) && key === "r") {
       event.preventDefault();
       if (hit) {
         setSearch({ ...search, before: hit.index });
@@ -342,14 +349,14 @@ export function Terminal({
     if (event.nativeEvent.isComposing || searching(event)) {
       return;
     }
-    if (event.ctrlKey && event.key.toLowerCase() === "r") {
+    if (plainCtrl(event) && event.key.toLowerCase() === "r") {
       event.preventDefault();
       setSearch({ query: "", original: input });
       setLine({ text: "", cursor: 0 });
       setOptions([]);
       return;
     }
-    if (event.ctrlKey && !event.altKey && !event.metaKey) {
+    if (plainCtrl(event)) {
       if (readline(event.key.toLowerCase())) {
         event.preventDefault();
         setOptions([]);

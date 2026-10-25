@@ -51,20 +51,37 @@ function options(args: string[]): { flags: string; operands: string[] } {
   return { flags, operands };
 }
 
-/** The count of `-n N` or `-N` for head and tail, 10 if absent. */
-function lineCount(args: string[]): { count: number; operands: string[] } {
+/**
+ * The count of `-n N`, `-nN` or `-N` for head and tail (10 if absent) and
+ * the other operands, or the error `tool` prints for a bad count.
+ */
+function lineCount(
+  tool: string,
+  args: string[],
+): { count: number; operands: string[] } | CommandResult {
   const operands: string[] = [];
   let count = 10;
   for (let index = 0; index < args.length; index++) {
     const arg = args[index];
-    if (arg === "-n" && args[index + 1] !== undefined) {
-      count = Number(args[index + 1]);
+    let raw: string | undefined;
+    if (arg === "-n") {
+      raw = args[index + 1];
       index += 1;
-    } else if (/^-n?\d+$/.test(arg)) {
-      count = Number(arg.replace(/^-n?/, ""));
+      if (raw === undefined) {
+        return error(`${tool}: option requires an argument -- 'n'`);
+      }
+    } else if (/^-n.+/.test(arg)) {
+      raw = arg.slice(2);
+    } else if (/^-\d+$/.test(arg)) {
+      raw = arg.slice(1);
     } else {
       operands.push(arg);
+      continue;
     }
+    if (!/^\d+$/.test(raw)) {
+      return error(`${tool}: invalid number of lines: '${raw}'`);
+    }
+    count = Number(raw);
   }
   return { count, operands };
 }
@@ -238,7 +255,7 @@ const cd: Command = {
       }
       return {
         lines: [{ kind: "text", text: absolute(call.oldpwd, "/") }],
-        action: { type: "cd", cwd: call.oldpwd },
+        actions: [{ type: "cd", cwd: call.oldpwd }],
       };
     }
     const path = absolute(target ?? "~", call.cwd);
@@ -249,7 +266,7 @@ const cd: Command = {
     if (node.kind === "file") {
       return error(`bash: cd: ${target}: Not a directory`);
     }
-    return { lines: [], action: { type: "cd", cwd: display(path) } };
+    return { lines: [], actions: [{ type: "cd", cwd: display(path) }] };
   },
 };
 
@@ -337,8 +354,14 @@ const tree: Command = {
   description: "draws a directory as a tree",
   run: ([target = "."], call) => {
     const node = lookup(call.fs, absolute(target, call.cwd));
-    if (node === undefined) {
-      return error(`${target} [error opening dir]`, 2);
+    if (node?.kind !== "dir") {
+      return {
+        lines: [
+          { kind: "error", text: `${target} [error opening dir]` },
+          ...text("", "0 directories, 0 files").lines,
+        ],
+        status: 2,
+      };
     }
     const drawn = treeLines(node, "");
     const { dirs, files } = drawn;
@@ -355,7 +378,11 @@ const head: Command = {
   usage: "head [-n N] [file]",
   description: "prints the first lines of a file or of piped input",
   run: (args, call) => {
-    const { count, operands } = lineCount(args);
+    const parsed = lineCount("head", args);
+    if ("lines" in parsed) {
+      return parsed;
+    }
+    const { count, operands } = parsed;
     const read = input("head", operands, call);
     return {
       lines: [...read.errors, ...text(...read.lines.slice(0, count)).lines],
@@ -368,7 +395,11 @@ const tail: Command = {
   usage: "tail [-n N] [file]",
   description: "prints the last lines of a file or of piped input",
   run: (args, call) => {
-    const { count, operands } = lineCount(args);
+    const parsed = lineCount("tail", args);
+    if ("lines" in parsed) {
+      return parsed;
+    }
+    const { count, operands } = parsed;
     const read = input("tail", operands, call);
     return {
       lines: [
@@ -380,31 +411,46 @@ const tail: Command = {
   },
 };
 
+/** The numbers of a `wc` row for `lines`, in the order l, w, c. */
+function wcRow(lines: readonly string[], flags: string): string {
+  const counts = {
+    l: lines.length,
+    w: lines.join(" ").split(/\s+/).filter(Boolean).length,
+    c: lines.reduce((sum, line) => sum + line.length + 1, 0),
+  };
+  const numbers = [..."lwc"]
+    .filter((flag) => (flags === "" ? "lwc" : flags).includes(flag))
+    .map((flag) => counts[flag as keyof typeof counts]);
+  return numbers.length === 1
+    ? String(numbers[0])
+    : numbers.map((value) => String(value).padStart(7)).join("");
+}
+
 const wc: Command = {
-  usage: "wc [-lwc] [file]",
+  usage: "wc [-lwc] [file...]",
   description: "counts lines, words and characters",
   run: (args, call) => {
     const { flags, operands } = options(args);
-    const read = input("wc", operands, call);
-    const counts = {
-      l: read.lines.length,
-      w: read.lines.join(" ").split(/\s+/).filter(Boolean).length,
-      c: read.lines.reduce((sum, line) => sum + line.length + 1, 0),
-    };
-    const chosen = flags === "" ? "lwc" : flags;
-    const numbers = [..."lwc"]
-      .filter((flag) => chosen.includes(flag))
-      .map((flag) => counts[flag as keyof typeof counts]);
-    const output = [
-      numbers.length === 1
-        ? String(numbers[0])
-        : numbers.map((value) => String(value).padStart(7)).join(""),
-      ...operands.slice(0, 1),
-    ].join(" ");
-    return {
-      lines: [...read.errors, { kind: "text", text: output }],
-      status: read.errors.length > 0 ? 1 : 0,
-    };
+    if (operands.length === 0) {
+      return text(wcRow(call.stdin ?? [], flags));
+    }
+    const lines: TerminalLine[] = [];
+    const all: string[] = [];
+    let status = 0;
+    for (const operand of operands) {
+      const read = readOperand("wc", operand, call);
+      if ("lines" in read) {
+        lines.push(...read.lines);
+        status = 1;
+      } else {
+        all.push(...read);
+        lines.push({ kind: "text", text: `${wcRow(read, flags)} ${operand}` });
+      }
+    }
+    if (operands.length > 1) {
+      lines.push({ kind: "text", text: `${wcRow(all, flags)} total` });
+    }
+    return { lines, status };
   },
 };
 
@@ -426,17 +472,34 @@ const grep: Command = {
         flags.includes("i") ? "i" : "",
       );
     }
-    const read = input("grep", files, call);
-    const matches = read.lines
-      .map((line, index) => ({ line, number: index + 1 }))
-      .filter(({ line }) => matcher.test(line) !== flags.includes("v"))
-      .map(({ line, number }) =>
-        flags.includes("n") ? `${number}:${line}` : line,
-      );
-    return {
-      lines: [...read.errors, ...text(...matches).lines],
-      status: read.errors.length > 0 ? 2 : matches.length > 0 ? 0 : 1,
-    };
+    const sources: { name: string; read: readonly string[] | CommandResult }[] =
+      files.length === 0
+        ? [{ name: "", read: call.stdin ?? [] }]
+        : files.map((name) => ({
+            name,
+            read: readOperand("grep", name, call),
+          }));
+    const output: TerminalLine[] = [];
+    let matched = false;
+    let failed = false;
+    for (const { name, read } of sources) {
+      if ("lines" in read) {
+        output.push(...read.lines);
+        failed = true;
+        continue;
+      }
+      const prefix = files.length > 1 ? `${name}:` : "";
+      read.forEach((line, index) => {
+        if (matcher.test(line) !== flags.includes("v")) {
+          matched = true;
+          output.push({
+            kind: "text",
+            text: `${prefix}${flags.includes("n") ? `${index + 1}:` : ""}${line}`,
+          });
+        }
+      });
+    }
+    return { lines: output, status: failed ? 2 : matched ? 0 : 1 };
   },
 };
 

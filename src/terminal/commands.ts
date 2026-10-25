@@ -118,7 +118,7 @@ function open([name]: string[], call: Invocation): CommandResult {
       lines: [
         { kind: "muted", text: `> opening ${friend.site} in a new tab ...` },
       ],
-      action: { type: "visit", url: friend.url },
+      actions: [{ type: "visit", url: friend.url }],
     };
   }
   const byPath = name.includes("/") || name.startsWith(".");
@@ -143,7 +143,7 @@ function open([name]: string[], call: Invocation): CommandResult {
     lines: [
       { kind: "muted", text: `> ejecting module ${id} ... camera locked` },
     ],
-    action: { type: "open", projectId: id },
+    actions: [{ type: "open", projectId: id }],
   };
 }
 
@@ -164,7 +164,7 @@ function exportVariables(args: string[], call: Invocation): CommandResult {
       return error(`bash: export: \`${arg}': not a valid identifier`);
     }
   }
-  return { lines: [], action: { type: "env", set } };
+  return { lines: [], actions: [{ type: "env", set }] };
 }
 
 const general: Record<string, Command> = {
@@ -183,7 +183,7 @@ const general: Record<string, Command> = {
     description: "closes the open project (or press Esc)",
     run: () => ({
       lines: [{ kind: "muted", text: "> module retracted" }],
-      action: { type: "close" },
+      actions: [{ type: "close" }],
     }),
   },
   friends: {
@@ -250,7 +250,7 @@ const general: Record<string, Command> = {
   unset: {
     usage: "unset <NAME>",
     description: "removes environment variables",
-    run: (args) => ({ lines: [], action: { type: "env", unset: args } }),
+    run: (args) => ({ lines: [], actions: [{ type: "env", unset: args }] }),
   },
   whoami: {
     usage: "whoami",
@@ -280,7 +280,7 @@ const general: Record<string, Command> = {
   clear: {
     usage: "clear",
     description: "clears the screen",
-    run: () => ({ lines: [], action: { type: "clear" } }),
+    run: () => ({ lines: [], actions: [{ type: "clear" }] }),
   },
   exit: {
     usage: "exit",
@@ -449,11 +449,13 @@ function runPipeline(
       lines.push(...result.lines.filter((line) => line.kind === "error"));
       stdin = result.lines.filter((line) => line.kind !== "error").map(asText);
     }
-    if (alone && result.action) {
-      if (isUiAction(result.action)) {
-        actions.push(result.action);
-      } else {
-        next = applyChange(next, result.action);
+    if (alone) {
+      for (const action of result.actions ?? []) {
+        if (isUiAction(action)) {
+          actions.push(action);
+        } else {
+          next = applyChange(next, action);
+        }
       }
     }
     next = { ...next, status: result.status ?? 0 };

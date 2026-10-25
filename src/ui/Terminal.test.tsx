@@ -663,3 +663,15 @@ describe("Terminal top", () => {
     ).toBeNull();
   });
 });
+
+describe("Terminal browser shortcuts", () => {
+  it("leaves Ctrl+Shift shortcuts like the hard reload to the browser", () => {
+    renderBooted(<Terminal />);
+    for (const key of ["R", "K", "L"]) {
+      expect(
+        fireEvent.keyDown(input(), { key, ctrlKey: true, shiftKey: true }),
+      ).toBe(true);
+    }
+    expect(screen.queryByText(/reverse-i-search/)).toBeNull();
+  });
+});

@@ -293,3 +293,44 @@ describe("open", () => {
     expect(result.state.cwd).toBe("~/projects/flashi");
   });
 });
+
+describe("review follow-ups", () => {
+  it("rejects invalid line counts for head and tail", () => {
+    expect(texts("head -n abc projects/flashi/stack.txt")).toEqual([
+      "head: invalid number of lines: 'abc'",
+    ]);
+    expect(texts("tail -n -x projects/flashi/stack.txt")).toEqual([
+      "tail: invalid number of lines: '-x'",
+    ]);
+    expect(texts("head -n")).toEqual([
+      "head: option requires an argument -- 'n'",
+    ]);
+  });
+
+  it("counts several files separately with a total", () => {
+    const stack = flashi?.stack.length ?? 0;
+    expect(texts("wc -l stack.txt links.txt", inFlashi)).toEqual([
+      `${stack} stack.txt`,
+      "2 links.txt",
+      `${stack + 2} total`,
+    ]);
+  });
+
+  it("prefixes grep matches with the file name when searching several files", () => {
+    expect(texts("grep -n repository links.txt stack.txt", inFlashi)).toEqual([
+      `links.txt:1:repository  ${flashi?.repository}`,
+    ]);
+  });
+
+  it("does not expand inherited object properties as variables", () => {
+    expect(texts("echo [$constructor] [$toString]")).toEqual(["[] []"]);
+  });
+
+  it("reports a file given to tree like tree does", () => {
+    expect(texts("tree README.md")).toEqual([
+      "README.md [error opening dir]",
+      "",
+      "0 directories, 0 files",
+    ]);
+  });
+});

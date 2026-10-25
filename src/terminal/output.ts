@@ -31,7 +31,7 @@ export interface CommandResult {
   lines: TerminalLine[];
   /** Exit status; 0 if absent. */
   status?: number;
-  action?: TerminalAction | ShellChange;
+  actions?: readonly (TerminalAction | ShellChange)[];
 }
 
 /** Everything a command may read besides its arguments. */

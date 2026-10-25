@@ -150,3 +150,21 @@ describe("complete relative to the working directory", () => {
     );
   });
 });
+
+describe("complete after shell operators", () => {
+  const all = ["cat", "cd", "grep", "ls", "wc"];
+
+  it("completes a command name after a pipe or a list operator", () => {
+    expect(complete("ls | gr", all, []).input).toBe("ls | grep ");
+    expect(complete("cd projects && l", all, []).input).toBe(
+      "cd projects && ls ",
+    );
+    expect(complete("pwd;c", all, []).options).toEqual(["cat", "cd"]);
+  });
+
+  it("completes paths of the command after the operator", () => {
+    expect(complete("ls; cat proj", all, [], "~").input).toBe(
+      "ls; cat projects/",
+    );
+  });
+});
