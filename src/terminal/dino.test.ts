@@ -39,6 +39,19 @@ describe("dinoStep", () => {
     expect(frozen).toEqual(game);
   });
 
+  it("only collides where the frame draws the dino on the ground", () => {
+    const airborne = {
+      ...newDinoGame(),
+      height: 0.6,
+      velocity: 2,
+      cacti: [4.5],
+    };
+    const next = dinoStep(airborne, 1, false);
+    expect(next.over).toBe(false);
+    const rows = dinoFrame(next);
+    expect(rows[rows.length - 3]).not.toContain("D");
+  });
+
   it("catches collisions in long steps, too", () => {
     expect(dinoStep(newDinoGame(), 3100, false).over).toBe(true);
   });
