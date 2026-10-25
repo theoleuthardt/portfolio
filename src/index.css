@@ -424,14 +424,31 @@
     }
   }
 
-  .boot-logo pre {
-    font-family: ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
-    font-size: 0.5rem;
-    line-height: 1.1;
-    color: var(--color-phosphor);
-    text-shadow:
-      0 0 3px var(--color-phosphor),
-      0 0 14px color-mix(in srgb, var(--color-phosphor) 50%, transparent);
+  .boot-logo svg {
+    height: auto;
+    overflow: visible;
+    filter: drop-shadow(0 0 3px var(--color-phosphor))
+      drop-shadow(
+        0 0 10px color-mix(in srgb, var(--color-phosphor) 45%, transparent)
+      );
+  }
+
+  .boot-logo-wide {
+    width: min(100%, 38rem);
+  }
+
+  .boot-logo-compact {
+    width: min(100%, 22rem);
+  }
+
+  .boot-logo-face {
+    fill: var(--color-phosphor);
+  }
+
+  .boot-logo-shadow {
+    stroke: var(--color-phosphor-dim);
+    stroke-width: 0.22;
+    stroke-linecap: square;
   }
 
   .hud-panel {
@@ -673,10 +690,6 @@
 
     .crt-bezel {
       padding: 1.1rem;
-    }
-
-    .boot-logo pre {
-      font-size: 0.625rem;
     }
 
     .crt-text {
