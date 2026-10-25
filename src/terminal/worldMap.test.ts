@@ -114,6 +114,16 @@ describe("rasterize", () => {
     expect(border).toContain(0);
   });
 
+  it("keeps long segments that cross the view when zoomed far in", () => {
+    const long: World = { ...world, land: [[-200, 0, 200, 0]], borders: [] };
+    const close = rasterize({ lon: 0, lat: 0, zoom: 64 }, cols, rows, long);
+    const y = Math.round(
+      toDot({ lon: 0, lat: 0, zoom: 64 }, cols, rows, 0, 0)[1],
+    );
+    const row = close.dots.slice(y * cols * 2, (y + 1) * cols * 2);
+    expect([...row].every((dot) => dot === 1)).toBe(true);
+  });
+
   it("labels the countries that fit the zoom and never overlaps labels", () => {
     expect(frame.labels.map((label) => label.text)).toContain("Testland");
     expect(frame.labels.map((label) => label.text)).not.toContain("Faraway");

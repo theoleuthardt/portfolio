@@ -151,21 +151,66 @@ export function zoomBy(view: MapView, factor: number): MapView {
 }
 
 /**
- * Draws a line of dots with `value`; borders (2) leave every other dot out
- * and never cover a coastline dot.
+ * The part of the segment from `a` to `b` inside the grid (Liang-Barsky),
+ * or `undefined` if it misses the grid.
+ */
+function clip(
+  [x0, y0]: [number, number],
+  [x1, y1]: [number, number],
+  width: number,
+  height: number,
+): [[number, number], [number, number]] | undefined {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  let start = 0;
+  let end = 1;
+  const edges: [number, number][] = [
+    [-dx, x0 + 1],
+    [dx, width - x0],
+    [-dy, y0 + 1],
+    [dy, height - y0],
+  ];
+  for (const [p, q] of edges) {
+    if (p === 0) {
+      if (q < 0) {
+        return undefined;
+      }
+      continue;
+    }
+    const t = q / p;
+    if (p < 0) {
+      start = Math.max(start, t);
+    } else {
+      end = Math.min(end, t);
+    }
+    if (start > end) {
+      return undefined;
+    }
+  }
+  return [
+    [x0 + dx * start, y0 + dy * start],
+    [x0 + dx * end, y0 + dy * end],
+  ];
+}
+
+/**
+ * Draws a line of dots with `value`, clipped to the grid; borders (2) leave
+ * every other dot out and never cover a coastline dot.
  */
 function line(
   dots: Uint8Array,
   width: number,
   height: number,
-  [x0, y0]: [number, number],
-  [x1, y1]: [number, number],
+  from: [number, number],
+  to: [number, number],
   value: number,
 ) {
-  const steps = Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)));
-  if (steps > width * 4) {
+  const visible = clip(from, to, width, height);
+  if (visible === undefined) {
     return;
   }
+  const [[x0, y0], [x1, y1]] = visible;
+  const steps = Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)));
   for (let step = 0; step <= steps; step++) {
     if (value === 2 && step % 2 === 1) {
       continue;
