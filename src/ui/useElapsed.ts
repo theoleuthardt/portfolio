@@ -17,5 +17,5 @@ export function useElapsed(interval: number, paused = false): number {
     );
     return () => window.clearInterval(timer);
   }, [interval, paused, start]);
-  return elapsed;
+  return paused ? 0 : elapsed;
 }

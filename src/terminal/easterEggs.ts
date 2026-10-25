@@ -214,7 +214,7 @@ export const easterEggCommands: Record<string, Command> = {
     usage: "hack <target>",
     description: "hacks into something; ctrl+c aborts",
     run: ([target]) =>
-      target === undefined
+      !target
         ? error("usage: hack <target>")
         : {
             lines: [],

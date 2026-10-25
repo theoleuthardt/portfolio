@@ -716,17 +716,22 @@ describe("Terminal programs", () => {
   });
 
   it("shows the matrix until q", () => {
-    renderBooted(<Terminal />);
+    const onProgramChange = vi.fn();
+    renderBooted(<Terminal onProgramChange={onProgramChange} />);
     type("matrix");
+    expect(onProgramChange).toHaveBeenLastCalledWith({ name: "matrix" });
     const view = screen.getByRole("region", { name: "matrix" });
     fireEvent.keyDown(view, { key: "q" });
+    expect(onProgramChange).toHaveBeenLastCalledWith(undefined);
     expect(screen.queryByRole("region", { name: "matrix" })).toBeNull();
     expect(input()).toHaveFocus();
   });
 
   it("plays dino: space jumps, q quits", () => {
-    renderBooted(<Terminal />);
+    const onProgramChange = vi.fn();
+    renderBooted(<Terminal onProgramChange={onProgramChange} />);
     type("play dino");
+    expect(onProgramChange).toHaveBeenLastCalledWith({ name: "dino" });
     const view = screen.getByRole("region", { name: "dino game" });
     const before = view.textContent;
     fireEvent.keyDown(view, { key: " " });

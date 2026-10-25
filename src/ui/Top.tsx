@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { topScreen, type TopState } from "../terminal/processes";
 import { ProgramScreen } from "./ProgramScreen";
 import { useElapsed } from "./useElapsed";
@@ -18,8 +19,12 @@ const HEADER_LINES = 6;
  */
 export function Top({ state, onQuit }: TopProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const [opened] = useState(() => new Date());
   useElapsed(REFRESH_MS, reducedMotion);
-  const lines = topScreen({ ...state, now: new Date() });
+  const lines = topScreen({
+    ...state,
+    now: reducedMotion ? opened : new Date(),
+  });
   return (
     <ProgramScreen columns={92} label="top" onQuit={onQuit}>
       <pre>{lines.slice(0, HEADER_LINES).join("\n")}</pre>

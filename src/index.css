@@ -381,7 +381,7 @@
 
   .crt-top pre {
     font-family: inherit;
-    font-size: min(0.9375rem, calc(100cqi / var(--columns) / 0.6));
+    font-size: min(0.9375rem, calc(100cqi / var(--columns, 80) / 0.6));
     white-space: pre;
   }
 

@@ -92,6 +92,7 @@ describe("programs", () => {
       "play: chess: no such game (try: play dino)",
     ]);
     expect(texts("hack")).toEqual(["usage: hack <target>"]);
+    expect(texts('hack ""')).toEqual(["usage: hack <target>"]);
   });
 });
 
