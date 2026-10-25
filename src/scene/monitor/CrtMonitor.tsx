@@ -72,6 +72,12 @@ const KEY_GREY = new Color("#7a776d");
 const KEY_RED = new Color("#a8322a");
 const KEY_LIGHT = new Color("#d6cfba");
 const KEY_ORANGE = new Color("#d08a2c");
+/**
+ * The desk's model unit in metres: the desk, chair and props were modelled
+ * around a screen this wide and keep their real size when the terminal
+ * grows.
+ */
+const DESK_UNIT = 0.36;
 
 /** The outline of the screen unit around a screen of width 1 at the origin. */
 function outline(aspect: number) {
@@ -90,6 +96,12 @@ function outline(aspect: number) {
     centreY: (top + bottom) / 2,
   };
 }
+
+/** The screen unit's outline. */
+const HOUSING = outline(ASPECT);
+
+/** The bottom of the keyboard deck, where the desk top is. */
+const DECK_BOTTOM = HOUSING.bottom - DECK_HEIGHT - 0.01;
 
 function roundedRect(
   shape: Shape,
@@ -380,9 +392,11 @@ const DRAG_TOLERANCE = 5;
  */
 function Postcards({
   top,
+  left,
   onOpen,
 }: {
   top: number;
+  left: number;
   onOpen?: (id: string) => void;
 }) {
   const cards = useMemo(
@@ -401,7 +415,7 @@ function Postcards({
     <mesh
       key={friend.id}
       userData={{ dynamic: true }}
-      position={[1.2 + index * 0.6, top + 0.17, 0.25]}
+      position={[left + index * 0.6, top + 0.17, 0.25]}
       rotation={[-0.35, -0.25, 0]}
       onPointerOver={(event) => {
         event.stopPropagation();
@@ -435,23 +449,26 @@ function Postcards({
 }
 
 /**
- * The desk the terminal stands on, its legs on the floor `floor` units
- * below the screen centre: dark gunmetal with a neon strip along its front
- * edge, a green underglow beneath the keyboard deck, and a chair.
+ * The desk the terminal stands on, in desk units ({@link DESK_UNIT}) from
+ * the screen centre: its top at `top`, its legs on the floor at `floor`,
+ * the props right of the terminal's right edge `right`. Dark gunmetal with
+ * a neon strip along its front edge, and a chair.
  */
 function Desk({
+  top,
   floor,
+  right,
   onOpen,
 }: {
+  top: number;
   floor: number;
+  right: number;
   onOpen?: (id: string) => void;
 }) {
-  const box = outline(ASPECT);
-  const top = box.bottom - DECK_HEIGHT - 0.01;
   const width = 5.6;
   const depth = 2.5;
-  const centreX = box.centreX + 1.05;
-  const centreZ = 0.15;
+  const centreX = 1.2;
+  const centreZ = -0.05;
   const leg = top - 0.04 - floor;
   const seat = floor + 1.33;
   return (
@@ -492,16 +509,7 @@ function Desk({
           toneMapped={false}
         />
       </mesh>
-      <mesh position={[box.centreX, top + 0.004, DECK_FRONT - 0.02]}>
-        <boxGeometry args={[box.width * 0.9, 0.006, 0.01]} />
-        <meshStandardMaterial
-          color={PHOSPHOR}
-          emissive={PHOSPHOR}
-          emissiveIntensity={2.5}
-          toneMapped={false}
-        />
-      </mesh>
-      <group position={[2.6, top, -0.75]} rotation-y={-0.5}>
+      <group position={[right + 1.74, top, -0.75]} rotation-y={-0.5}>
         <mesh position-y={0.04}>
           <cylinderGeometry args={[0.22, 0.26, 0.08, 24]} />
           <meshStandardMaterial
@@ -534,7 +542,7 @@ function Desk({
           color="#ffe2b0"
         />
       </group>
-      <group position={[1.75, top, -0.35]}>
+      <group position={[right + 0.89, top, -0.35]}>
         <mesh position-y={0.17}>
           <cylinderGeometry args={[0.12, 0.11, 0.34, 20]} />
           <meshStandardMaterial color="#1b1e1d" roughness={0.4} />
@@ -547,14 +555,14 @@ function Desk({
       {[0, 0.04, 0.08].map((lift, index) => (
         <mesh
           key={lift}
-          position={[1.95, top + 0.01 + lift * 0.1, 0.35]}
+          position={[right + 1.09, top + 0.01 + lift * 0.1, 0.35]}
           rotation-y={0.3 - index * 0.2}
         >
           <boxGeometry args={[0.6, 0.008, 0.82]} />
           <meshStandardMaterial color="#d9dcd6" roughness={0.9} />
         </mesh>
       ))}
-      <Postcards top={top} onOpen={onOpen} />
+      <Postcards top={top} left={right + 0.34} onOpen={onOpen} />
       <group position={[0.55, 0, 2.25]}>
         <mesh position-y={seat}>
           <boxGeometry args={[1.3, 0.2, 1.2]} />
@@ -714,19 +722,38 @@ export function CrtMonitor({
     <group
       position={TERMINAL_FRAME.centre}
       quaternion={TERMINAL_ORIENTATION}
-      scale={SCREEN.width}
       visible={pose !== "off"}
     >
       <Baked>
-        <ScreenUnit
-          aspect={ASPECT}
-          plastic={plastic}
-          dark={dark}
-          brand={brand}
-          screen={screen}
-        />
-        <Deck aspect={ASPECT} plastic={plastic} />
-        <Desk floor={TERMINAL_FLOOR} onOpen={onOpen} />
+        <group scale={SCREEN.width}>
+          <ScreenUnit
+            aspect={ASPECT}
+            plastic={plastic}
+            dark={dark}
+            brand={brand}
+            screen={screen}
+          />
+          <Deck aspect={ASPECT} plastic={plastic} />
+          <mesh
+            position={[HOUSING.centreX, DECK_BOTTOM + 0.004, DECK_FRONT - 0.02]}
+          >
+            <boxGeometry args={[HOUSING.width * 0.9, 0.006, 0.01]} />
+            <meshStandardMaterial
+              color={PHOSPHOR}
+              emissive={PHOSPHOR}
+              emissiveIntensity={2.5}
+              toneMapped={false}
+            />
+          </mesh>
+        </group>
+        <group scale={DESK_UNIT}>
+          <Desk
+            top={(DECK_BOTTOM * SCREEN.width) / DESK_UNIT}
+            floor={(TERMINAL_FLOOR * SCREEN.width) / DESK_UNIT}
+            right={(HOUSING.right * SCREEN.width) / DESK_UNIT}
+            onOpen={onOpen}
+          />
+        </group>
       </Baked>
     </group>
   );
