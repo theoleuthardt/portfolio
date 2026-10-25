@@ -39,6 +39,10 @@ describe("dinoStep", () => {
     expect(frozen).toEqual(game);
   });
 
+  it("catches collisions in long steps, too", () => {
+    expect(dinoStep(newDinoGame(), 3100, false).over).toBe(true);
+  });
+
   it("survives a cactus by jumping over it", () => {
     let game = newDinoGame();
     let jumped = false;

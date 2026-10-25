@@ -7,6 +7,7 @@ const JUMP_SPEED = 15;
 const GRAVITY = 37.5;
 const HIT_HEIGHT = 0.8;
 const HIGH_SCORE = 1337;
+const MAX_STEP_MS = 50;
 
 /** The state of a dino run. */
 export interface DinoGame {
@@ -44,11 +45,15 @@ export function newDinoGame(): DinoGame {
  * The run `dt` milliseconds later: the dino jumps if asked and on the
  * ground, falls back under gravity, the cacti move left faster and faster
  * with new ones at random gaps, and the run ends when a cactus meets the
- * dino near the ground. A finished run does not change any more.
+ * dino near the ground. Long steps run as 50 ms sub-steps, so no cactus
+ * slips through. A finished run does not change any more.
  */
 export function dinoStep(game: DinoGame, dt: number, jump: boolean): DinoGame {
   if (game.over) {
     return game;
+  }
+  if (dt > MAX_STEP_MS) {
+    return dinoStep(dinoStep(game, MAX_STEP_MS, jump), dt - MAX_STEP_MS, false);
   }
   const seconds = dt / 1000;
   const start = game.height === 0 && jump ? JUMP_SPEED : game.velocity;
