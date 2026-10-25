@@ -53,6 +53,14 @@ describe("checkBudgets", () => {
     expect(report.ok).toBe(false);
   });
 
+  it("fails loudly for an entry that is not in the manifest", () => {
+    expect(() =>
+      checkBudgets(manifest, sizes, 0, [
+        { name: "moved", entry: "src/scene/Moved.tsx", limit: 1 },
+      ]),
+    ).toThrow('budget "moved": "src/scene/Moved.tsx" is not in the manifest');
+  });
+
   it("covers the main bundle, scene, post-processing, props and lab", () => {
     expect(BUDGETS.map((budget) => budget.name)).toEqual([
       "main",

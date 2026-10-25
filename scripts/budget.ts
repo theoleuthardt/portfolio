@@ -65,7 +65,8 @@ function staticClosure(manifest: Manifest, key: string): Set<string> {
  * Checks each loading step against its limit: a step costs its chunk plus
  * every statically imported chunk that no earlier step has loaded yet, in
  * gzip bytes from `sizes` (keyed by output file). The static assets are
- * checked as a whole.
+ * checked as a whole. An entry missing from the manifest throws, so a moved
+ * chunk never slips through unchecked.
  */
 export function checkBudgets(
   manifest: Manifest,
@@ -75,6 +76,9 @@ export function checkBudgets(
 ): { rows: BudgetRow[]; ok: boolean } {
   const loaded = new Set<string>();
   const rows: BudgetRow[] = budgets.map(({ name, entry, limit }) => {
+    if (manifest[entry] === undefined) {
+      throw new Error(`budget "${name}": "${entry}" is not in the manifest`);
+    }
     let size = 0;
     for (const key of staticClosure(manifest, entry)) {
       if (!loaded.has(key)) {
