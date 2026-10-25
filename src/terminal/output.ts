@@ -12,13 +12,17 @@ export type TerminalLine =
 /** A working directory as the prompt shows it, e.g. `~/projects`. */
 export type Cwd = string;
 
+/** A full-screen program running in the terminal. */
+export type Program =
+  { name: "top" | "matrix" | "dino" } | { name: "hack"; target: string };
+
 /** Something the UI or the scene has to do after a command line. */
 export type TerminalAction =
   | { type: "open"; projectId: string }
   | { type: "close" }
   | { type: "clear" }
   | { type: "visit"; url: string }
-  | { type: "program"; name: "top" };
+  | ({ type: "program" } & Program);
 
 /** A change of the shell's own state requested by a builtin. */
 export type ShellChange =

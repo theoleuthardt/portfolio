@@ -149,3 +149,22 @@ export function cancel(session: Session, input: string): Session {
 export function clearScreen(session: Session): Session {
   return { ...session, log: [] };
 }
+
+/**
+ * Adds output to the log entry `entryId` (the newest one if absent), e.g.
+ * what a program leaves behind under the line that started it.
+ */
+export function appendOutput(
+  session: Session,
+  lines: readonly TerminalLine[],
+  entryId: number | undefined = session.log[session.log.length - 1]?.id,
+): Session {
+  return {
+    ...session,
+    log: session.log.map((entry) =>
+      entry.id === entryId
+        ? { ...entry, lines: [...entry.lines, ...lines] }
+        : entry,
+    ),
+  };
+}

@@ -15,6 +15,7 @@ import {
   type TerminalAction,
   type TerminalLine,
 } from "./output";
+import { easterEggCommands } from "./easterEggs";
 import { processCommands } from "./processes";
 import { expandWord, parseLine, type Pipeline } from "./shell";
 import { closestMatch } from "./suggest";
@@ -325,6 +326,7 @@ const registry = new Map<string, Command>([
   ...Object.entries(fileCommands),
   ...Object.entries(general),
   ...Object.entries(processCommands),
+  ...Object.entries(easterEggCommands),
   [
     "man",
     {

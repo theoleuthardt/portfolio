@@ -53,15 +53,23 @@ describe("cd", () => {
 
 describe("ls", () => {
   it("lists home without dotfiles, with -a including them", () => {
-    expect(texts("ls")).toEqual(["README.md", "projects/"]);
+    expect(texts("ls")).toEqual([
+      "README.md",
+      "notes/",
+      "projects/",
+      "todo.txt",
+    ]);
     expect(texts("ls -a")).toEqual([
       "./",
       "../",
       ".bash_history",
       ".bashrc",
       ".profile",
+      ".secret",
       "README.md",
+      "notes/",
       "projects/",
+      "todo.txt",
     ]);
   });
 
@@ -92,10 +100,12 @@ describe("ls", () => {
     expect(long[1]).toMatch(
       /^-rw-r--r-- 1 guest lab +\d+ Oct 24 18:05 README\.md$/,
     );
-    expect(long[2]).toMatch(
-      /^drwxr-xr-x \d+ guest lab +4096 Oct 24 18:05 projects$/,
+    expect(long).toContainEqual(
+      expect.stringMatching(
+        /^drwxr-xr-x \d+ guest lab +4096 Oct 24 18:05 projects$/,
+      ),
     );
-    expect(texts("ls -la")).toHaveLength(8);
+    expect(texts("ls -la")).toHaveLength(11);
     expect(texts("ls -al")).toEqual(texts("ls -l -a"));
   });
 
@@ -155,7 +165,7 @@ describe("tree", () => {
       "0 directories, 3 files",
     ]);
     expect(texts("tree")).toContain(
-      `${projects.length + 1} directories, ${projects.length * 3 + 1} files`,
+      `${projects.length + 2} directories, ${projects.length * 3 + 5} files`,
     );
   });
 });

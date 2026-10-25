@@ -29,6 +29,8 @@ export interface SceneLayerProps {
   monitorPose?: MonitorPose;
   /** Called when the 3D terminal is seated around the screen, or no more. */
   onSeatedChange?: (seated: boolean) => void;
+  /** Sound the lab's alarm, e.g. while the terminal runs `hack`. */
+  alarm?: boolean;
 }
 
 /**
@@ -47,6 +49,7 @@ export function SceneLayer({
   onScreenPlacement,
   monitorPose,
   onSeatedChange,
+  alarm,
 }: SceneLayerProps) {
   const viewport = useViewport();
   if (isPhoneViewport(viewport)) {
@@ -72,6 +75,7 @@ export function SceneLayer({
               onScreenPlacement={onScreenPlacement}
               monitorPose={monitorPose}
               onSeatedChange={onSeatedChange}
+              alarm={alarm}
             />
           </Suspense>
         </SceneErrorBoundary>

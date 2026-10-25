@@ -13,12 +13,14 @@ src/terminal/  pure logic, a small bash: shell (parser: quotes, $VARS,
                | ; && ||), commands (registry and executor), fileCommands
                (ls, cd, cat, tree, head, tail, wc, grep, sort), fs (virtual
                file system from the content), processes (process table, ps,
-               kill, top screen), output (lines, actions), complete (Tab over
+               kill, top screen), easterEggs (neofetch, sudo, rm, fortune,
+               cowsay, play, hack, matrix), hack, dino, matrix (program
+               logic as pure functions of time), output (lines, actions), complete (Tab over
                the file system), history (incl. Ctrl+R search), suggest, expand
                (!!), boot, session (log and shell state), tabTitle
 src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
                ProjectScreen, CrtFrame, BootScreen, useBootSequence,
-               usePrefersReducedMotion, useTabTitle, Top (live process view), SceneLayer (phone / no WebGL / 3D),
+               usePrefersReducedMotion, useTabTitle, ProgramScreen with Top, Hack, Matrix and Dino (full-screen programs), SceneLayer (phone / no WebGL / 3D),
                RackFallback (SVG), SceneErrorBoundary, ProjectPanel, useViewport
 src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                Scene (lazy chunk: Canvas, reflections, light beams, camera rig),
@@ -49,6 +51,8 @@ Looking around (`scene/look.ts`): dragging on the page background turns and tilt
 The lab build-out (`scene/lab/`, its own lazy chunk): cable trays from rack-01 to the back racks and to the switch wall with zip-tied, slightly messy cabling (`catenary`), patch cables on the rack, objects along the walls where the visitor can turn to see them (`LAB` placement, tested), and small life (a robot vacuum, a failing tube, dust in the light beams, a spotlight on the rack while a project is open). Light is green and everything else black; pink and purple accents are gone.
 
 The terminal is a small bash (#102): a command line is parsed into pipelines (`|`) joined by `;`, `&&` and `||`, words keep quotes and expand `$VAR`, `${VAR}` and `$?` just before their command runs, and the executor threads the working directory, `OLDPWD`, the environment, `$?` and the killed processes from step to step. Commands are pure functions from arguments and an invocation (cwd, env, piped stdin, time, file system) to output lines, an exit status and an optional action; actions either change the shell (`cd`, env, kill) or go to the UI (`open`, `close`, `clear`, `visit`, `top`). Only a pipeline of one command may act, like bash's subshells. The file system is generated from the typed content (a home with dotfiles, one directory per project with README, stack and links, a small root). `top` replaces the log with a live view (refreshing every second, still with reduced motion) until q, Escape or Ctrl+C.
+
+Easter eggs (#74): the file system hides a small scavenger hunt (`README.md` hints at `ls -a`, `~/.secret` points to `~/projects/dinogame/highscore.txt`, which points to the hidden `~/notes/.last-note`, which suggests `hack gibson`), `todo.txt` and notes. `neofetch`, `fortune`, `cowsay`, `sudo` and `rm` answer in the terminal; `matrix`, `play dino` and `hack <target>` run as full-screen programs like `top`, whose frames are pure functions of the elapsed time (tested with fake timers). `hack` takes about 21 s through scan, dump, crack, firewall, upload, glitch and ACCESS GRANTED, with an ending per target (hidden ones for `gibson`, `localhost`, `rack-01`, `coffee`), leaves its ending in the log, and aborts with Ctrl+C/q (`^C`, connection reset). While it runs, the terminal reports the program to `App` and the lab's red alarm beacons switch on (steady with reduced motion).
 
 The old page is described in [content-audit.md](content-audit.md).
 

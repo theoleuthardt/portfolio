@@ -104,7 +104,10 @@ describe("complete relative to the working directory", () => {
   const ids = ["flashi", "trust-issues"];
 
   it("offers only directories for cd, at home and inside projects", () => {
-    expect(complete("cd ", all, ids, "~").options).toEqual(["projects/"]);
+    expect(complete("cd ", all, ids, "~").options).toEqual([
+      "notes/",
+      "projects/",
+    ]);
     expect(complete("cd ", all, ids, "~/projects").options).toContain(
       "flashi/",
     );
@@ -133,7 +136,9 @@ describe("complete relative to the working directory", () => {
     ]);
     expect(complete("cat ", all, ids, "~").options).toEqual([
       "README.md",
+      "notes/",
       "projects/",
+      "todo.txt",
     ]);
   });
 

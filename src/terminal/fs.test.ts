@@ -45,7 +45,11 @@ describe("buildFileSystem", () => {
       const names = list(fs, `/home/guest/projects/${project.id}`)?.map(
         (entry) => entry.name,
       );
-      expect(names).toEqual(["README.md", "links.txt", "stack.txt"]);
+      expect(names).toEqual(
+        project.id === "dinogame"
+          ? ["README.md", "highscore.txt", "links.txt", "stack.txt"]
+          : ["README.md", "links.txt", "stack.txt"],
+      );
       expect(
         readFile(fs, `/home/guest/projects/${project.id}/README.md`),
       ).toContain(project.summary);
@@ -55,13 +59,16 @@ describe("buildFileSystem", () => {
     }
   });
 
-  it("has a home with dotfiles, a readme and the projects", () => {
+  it("has a home with dotfiles, a readme, notes, a todo list and the projects", () => {
     expect(list(fs, "/home/guest")?.map((entry) => entry.name)).toEqual([
       ".bash_history",
       ".bashrc",
       ".profile",
+      ".secret",
       "README.md",
+      "notes",
       "projects",
+      "todo.txt",
     ]);
   });
 

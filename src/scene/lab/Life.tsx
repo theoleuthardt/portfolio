@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Group, MeshBasicMaterial, Object3D, SpotLight } from "three";
 import { BEAM_ZS, ROOM } from "../layout";
 import { RACK, RACK_HEIGHT } from "../rack/geometry";
+import { usePrefersReducedMotion } from "../../ui/usePrefersReducedMotion";
 import { approach } from "../rack/focus";
 import { blinkLevel } from "../rack/geometry";
 import { vacuumPose } from "./procedural";
@@ -94,19 +95,110 @@ function RackSpot({ open }: { open: boolean }) {
   );
 }
 
+/** Where the alarm beacons sit: under the ceiling, above the door and the rack. */
+const BEACONS: readonly [number, number, number][] = [
+  [-2.2, ROOM.ceiling - 0.35, -1.5],
+  [ROOM.left + 0.25, 2.55, 0.5],
+  [RACK.x, RACK.floorY + RACK_HEIGHT + 0.25, RACK.z],
+];
+
+/**
+ * The turning head of a beacon: a red spotlight with its target inside the
+ * same group, so the beam turns with the head.
+ */
+function BeaconHead({
+  on,
+  onMount,
+}: {
+  on: boolean;
+  onMount: (group: Group | null) => void;
+}) {
+  const [target] = useState(() => new Object3D());
+  return (
+    <group ref={onMount}>
+      <primitive object={target} position={[3, -1.5, 0]} />
+      <spotLight
+        target={target}
+        angle={0.45}
+        penumbra={0.4}
+        distance={9}
+        intensity={on ? 500 : 0}
+        color="#ff2a1a"
+      />
+    </group>
+  );
+}
+
+/**
+ * Red beacons that switch on and turn while the alarm sounds, with a red
+ * wash over the room; with reduced motion they glow steadily. Lights and
+ * colours are props, so they switch even when frames are rendered on demand.
+ */
+function Alarm({ on, reducedMotion }: { on: boolean; reducedMotion: boolean }) {
+  const heads = useRef<(Group | null)[]>([]);
+  useFrame((_, delta) => {
+    if (on && !reducedMotion) {
+      for (const head of heads.current) {
+        if (head) {
+          head.rotation.y += delta * 6;
+        }
+      }
+    }
+  });
+  return (
+    <group>
+      <pointLight
+        position={[RACK.x - 1, RACK.floorY + RACK_HEIGHT + 1.2, RACK.z + 1]}
+        intensity={on ? 260 : 0}
+        distance={14}
+        color="#ff2a1a"
+      />
+      {BEACONS.map((position, index) => (
+        <group key={index} position={position}>
+          <mesh position-y={-0.08}>
+            <cylinderGeometry args={[0.12, 0.14, 0.06, 20]} />
+            <meshStandardMaterial
+              color="#1b1e1d"
+              metalness={0.7}
+              roughness={0.4}
+            />
+          </mesh>
+          <mesh>
+            <cylinderGeometry args={[0.09, 0.09, 0.18, 20]} />
+            <meshBasicMaterial
+              color={on ? "#ff2a1a" : "#3a0d0a"}
+              toneMapped={false}
+            />
+          </mesh>
+          <BeaconHead
+            on={on}
+            onMount={(group) => {
+              heads.current[index] = group;
+            }}
+          />
+        </group>
+      ))}
+    </group>
+  );
+}
+
 /** Props of {@link Life}. */
 export interface LifeProps {
   /** Whether a project is open, which puts the rack in the spotlight. */
   open: boolean;
+  /** Whether the alarm sounds. */
+  alarm: boolean;
 }
 
 /** The small life of the lab; frozen with reduced motion like all frames. */
-export function Life({ open }: LifeProps) {
+export function Life({ open, alarm }: LifeProps) {
+  const reducedMotion = usePrefersReducedMotion();
   return (
     <group>
       <Vacuum />
       <Dust />
       <RackSpot open={open} />
+      <Alarm on={alarm} reducedMotion={reducedMotion} />
     </group>
   );
 }

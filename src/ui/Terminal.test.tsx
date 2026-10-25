@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { createRef, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bootSteps } from "../terminal/boot";
+import { HACK_DURATION_MS } from "../terminal/hack";
 import {
   BOOT_GLIDE_MS,
   BOOT_HOLD_MS,
@@ -673,5 +674,86 @@ describe("Terminal browser shortcuts", () => {
       ).toBe(true);
     }
     expect(screen.queryByText(/reverse-i-search/)).toBeNull();
+  });
+});
+
+describe("Terminal programs", () => {
+  it("runs a hack, reports it and aborts it with Ctrl+C", () => {
+    const onProgramChange = vi.fn();
+    renderBooted(<Terminal onProgramChange={onProgramChange} />);
+    type("hack nasa");
+    const view = screen.getByRole("region", { name: "hack" });
+    expect(onProgramChange).toHaveBeenLastCalledWith({
+      name: "hack",
+      target: "nasa",
+    });
+    expect(
+      screen.queryByRole("textbox", { name: "terminal input" }),
+    ).toBeNull();
+    fireEvent.keyDown(view, { key: "c", ctrlKey: true });
+    expect(screen.queryByRole("region", { name: "hack" })).toBeNull();
+    expect(within(log()).getByText("^C")).toBeInTheDocument();
+    expect(
+      within(log()).getByText("connection reset by peer"),
+    ).toBeInTheDocument();
+    expect(onProgramChange).toHaveBeenLastCalledWith(undefined);
+    expect(input()).toHaveFocus();
+  });
+
+  it("finishes a hack on its own and leaves the ending in the log", () => {
+    renderBooted(<Terminal />);
+    type("hack gibson");
+    act(() => {
+      vi.advanceTimersByTime(HACK_DURATION_MS + 1000);
+    });
+    expect(screen.queryByRole("region", { name: "hack" })).toBeNull();
+    expect(
+      within(log()).getByText("ACCESS GRANTED: gibson"),
+    ).toBeInTheDocument();
+    expect(
+      within(log()).getByText("Hack the planet! Hack the planet!"),
+    ).toBeInTheDocument();
+  });
+
+  it("shows the matrix until q", () => {
+    const onProgramChange = vi.fn();
+    renderBooted(<Terminal onProgramChange={onProgramChange} />);
+    type("matrix");
+    expect(onProgramChange).toHaveBeenLastCalledWith({ name: "matrix" });
+    const view = screen.getByRole("region", { name: "matrix" });
+    fireEvent.keyDown(view, { key: "q" });
+    expect(onProgramChange).toHaveBeenLastCalledWith(undefined);
+    expect(screen.queryByRole("region", { name: "matrix" })).toBeNull();
+    expect(input()).toHaveFocus();
+  });
+
+  it("plays dino: space jumps, q quits", () => {
+    const onProgramChange = vi.fn();
+    renderBooted(<Terminal onProgramChange={onProgramChange} />);
+    type("play dino");
+    expect(onProgramChange).toHaveBeenLastCalledWith({ name: "dino" });
+    const view = screen.getByRole("region", { name: "dino game" });
+    const before = view.textContent;
+    fireEvent.keyDown(view, { key: " " });
+    act(() => {
+      vi.advanceTimersByTime(200);
+    });
+    expect(view.textContent).not.toBe(before);
+    fireEvent.keyDown(view, { key: "q" });
+    expect(screen.queryByRole("region", { name: "dino game" })).toBeNull();
+  });
+
+  it("keeps a program's output under the line that started it", () => {
+    const ref = createRef<TerminalHandle>();
+    renderBooted(<Terminal ref={ref} />);
+    type("hack nasa");
+    act(() => ref.current?.run("open flashi"));
+    fireEvent.keyDown(screen.getByRole("region", { name: "hack" }), {
+      key: "c",
+      ctrlKey: true,
+    });
+    const text = log().textContent ?? "";
+    expect(text.indexOf("^C")).toBeGreaterThan(text.indexOf("hack nasa"));
+    expect(text.indexOf("^C")).toBeLessThan(text.indexOf("open flashi"));
   });
 });

@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { bootLines } from "./boot";
-import { cancel, clearScreen, createSession, submit } from "./session";
+import {
+  appendOutput,
+  cancel,
+  clearScreen,
+  createSession,
+  submit,
+} from "./session";
 
 describe("session", () => {
   const fresh = createSession();
@@ -136,5 +142,30 @@ describe("session bash behaviour", () => {
     ]);
     expect(session.openProjectId).toBe("dinogame");
     expect(session.log[session.log.length - 1].projectId).toBe("dinogame");
+  });
+});
+
+describe("appendOutput", () => {
+  it("adds lines to the newest log entry", () => {
+    const ran = submit(createSession(), "hack nasa").session;
+    const after = appendOutput(ran, [{ kind: "muted", text: "^C" }]);
+    expect(after.log[after.log.length - 1].lines).toEqual([
+      { kind: "muted", text: "^C" },
+    ]);
+    expect(after.log).toHaveLength(ran.log.length);
+  });
+
+  it("adds lines to a given entry, even when newer ones follow", () => {
+    const ran = submit(createSession(), "hack nasa").session;
+    const hackId = ran.log[ran.log.length - 1].id;
+    const later = submit(ran, "pwd").session;
+    const after = appendOutput(later, [{ kind: "muted", text: "^C" }], hackId);
+    expect(after.log.find((entry) => entry.id === hackId)?.lines).toEqual([
+      { kind: "muted", text: "^C" },
+    ]);
+    expect(after.log[after.log.length - 1].command).toBe("pwd");
+    expect(after.log[after.log.length - 1].lines).toEqual([
+      { kind: "text", text: "/home/guest" },
+    ]);
   });
 });

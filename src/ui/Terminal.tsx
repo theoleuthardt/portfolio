@@ -20,6 +20,7 @@ import {
   type Line,
 } from "../terminal/lineEditor";
 import {
+  appendOutput,
   cancel,
   clearScreen,
   createSession,
@@ -27,11 +28,15 @@ import {
   type LogEntry,
 } from "../terminal/session";
 import type { Cwd } from "../terminal/commands";
+import type { Program } from "../terminal/output";
 import { bootSteps } from "../terminal/boot";
 import { BootScreen } from "./BootScreen";
 import { CrtFrame, type CrtControls } from "./CrtFrame";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
+import { Dino } from "./Dino";
+import { Hack } from "./Hack";
+import { Matrix } from "./Matrix";
 import { Top } from "./Top";
 import { useTabTitle } from "./useTabTitle";
 import {
@@ -101,6 +106,8 @@ export interface TerminalProps {
   controls?: CrtControls;
   /** Draw the 2D monitor housing; off while the 3D monitor surrounds it. */
   housing?: boolean;
+  /** Called when a full-screen program starts, and with `undefined` at its end. */
+  onProgramChange?: (program: Program | undefined) => void;
   /** Show the screen; off while the 3D terminal is still being seated. */
   powered?: boolean;
 }
@@ -126,6 +133,7 @@ export function Terminal({
   controls,
   housing = true,
   powered = true,
+  onProgramChange,
 }: TerminalProps) {
   const [session, setSession] = useState(createSession);
   const [input, setInput] = useState("");
@@ -135,7 +143,8 @@ export function Terminal({
   const idleTab = useRef<string | null>(null);
   const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
-  const [program, setProgram] = useState<"top">();
+  const [program, setProgram] = useState<Program>();
+  const programEntry = useRef<number | undefined>(undefined);
   const [search, setSearch] = useState<{
     query: string;
     before?: number;
@@ -193,6 +202,27 @@ export function Terminal({
     }
   }, [phase, program]);
 
+  const reportProgram = useEffectEvent((running: Program | undefined) =>
+    onProgramChange?.(running),
+  );
+  useEffect(() => reportProgram(program), [program]);
+
+  const exitProgram = (lines: { text: string; muted: boolean }[] = []) => {
+    setProgram(undefined);
+    if (lines.length > 0) {
+      setSession((current) =>
+        appendOutput(
+          current,
+          lines.map(({ text, muted }) => ({
+            kind: muted ? "muted" : "text",
+            text,
+          })),
+          programEntry.current,
+        ),
+      );
+    }
+  };
+
   useEffect(() => {
     logRef.current?.scrollTo?.({ top: logRef.current.scrollHeight });
   }, [session.log, bootReached]);
@@ -226,7 +256,12 @@ export function Terminal({
       if (action.type === "visit") {
         window.open(action.url, "_blank", "noopener,noreferrer");
       } else if (action.type === "program") {
-        setProgram(action.name);
+        programEntry.current = next.log[next.log.length - 1]?.id;
+        setProgram(
+          action.name === "hack"
+            ? { name: "hack", target: action.target }
+            : { name: action.name },
+        );
       }
     }
     setSearch(undefined);
@@ -412,11 +447,17 @@ export function Terminal({
       housing={housing}
       powered={powered}
     >
-      {program === "top" ? (
+      {program?.name === "top" ? (
         <Top
           state={{ killed: session.killed, startedAt: session.startedAt }}
-          onQuit={() => setProgram(undefined)}
+          onQuit={() => exitProgram()}
         />
+      ) : program?.name === "hack" ? (
+        <Hack target={program.target} onExit={exitProgram} />
+      ) : program?.name === "matrix" ? (
+        <Matrix onQuit={() => exitProgram()} />
+      ) : program?.name === "dino" ? (
+        <Dino onQuit={() => exitProgram()} />
       ) : (
         <div
           ref={logRef}
