@@ -1,3 +1,4 @@
+import { about, contacts } from "./about";
 import { friends } from "./friends";
 import { projects as allProjects, type Project } from "./projects";
 
@@ -9,8 +10,8 @@ const escape = (text: string) =>
     .replace(/"/g, "&quot;");
 
 /**
- * The page without JavaScript: a short note and the projects and friends'
- * sites as plain links, built from the typed content at build time.
+ * The page without JavaScript: who Theo is, a short note, and the
+ * projects, friends' sites and contacts as plain links, built from the typed content at build time.
  */
 export function noscriptHtml(
   projects: readonly Project[] = allProjects,
@@ -26,5 +27,14 @@ export function noscriptHtml(
       (friend) => `<a href="${escape(friend.url)}">${escape(friend.site)}</a>`,
     )
     .join(", ");
-  return `<h1>Theo Leuthardt</h1><p>This portfolio is a terminal and needs JavaScript. The projects:</p><ul>${items}</ul><p>Friends: ${sites}</p><p><a href="https://github.com/theoleuthardt">github.com/theoleuthardt</a></p>`;
+  const story = about.paragraphs
+    .map((paragraph) => `<p>${escape(paragraph)}</p>`)
+    .join("");
+  const reach = contacts
+    .map(
+      (contact) =>
+        `<a href="${escape(contact.url)}">${escape(contact.label)}</a>`,
+    )
+    .join(", ");
+  return `<h1>${escape(about.name)}</h1><p>${escape(about.role)}. This portfolio is a terminal and needs JavaScript.</p>${story}<p>The projects:</p><ul>${items}</ul><p>Friends: ${sites}</p><p>Contact: ${reach}</p>`;
 }

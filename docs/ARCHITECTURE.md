@@ -8,7 +8,8 @@ A static single-page app built with Vite, React and TypeScript. `npm run build` 
 index.html → src/main.tsx (fonts, styles) → src/App.tsx → ui/Terminal
 src/content/   projects as typed data (Project, findProject, RACK_UNITS),
                friends' sites (Friend, findFriend: `friends`, `open <site>`),
-               rack layout (rackSlots)
+               about text and contacts (about, contacts: `about`, `contact`,
+               the about server and patch panel), rack layout (rackSlots)
 src/terminal/  pure logic, a small bash: shell (parser: quotes, $VARS,
                | ; && ||), commands (registry and executor), fileCommands
                (ls, cd, cat, tree, head, tail, wc, grep, sort), fs (virtual

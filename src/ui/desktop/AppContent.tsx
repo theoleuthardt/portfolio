@@ -1,4 +1,5 @@
 import { lazy, Suspense, useState } from "react";
+import { about, contacts } from "../../content/about";
 import { friends } from "../../content/friends";
 import { findProject, projects } from "../../content/projects";
 import { NOTES, TRASH } from "../../desktop/apps";
@@ -124,20 +125,22 @@ function Viewer({ payload = "" }: { payload?: string }) {
 function About() {
   return (
     <div className="desk-app">
-      <p className="text-screen-title text-phosphor">Theo Leuthardt</p>
-      <p>
-        The person behind this lab and the {projects.length} projects in its
-        rack.
+      <p className="text-screen-title text-phosphor">
+        {about.name} // {about.role}
       </p>
-      <p>
-        <a
-          href="https://github.com/theoleuthardt"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          &gt; github.com/theoleuthardt ↗
-        </a>
-      </p>
+      {about.paragraphs.map((paragraph) => (
+        <p key={paragraph}>{paragraph}</p>
+      ))}
+      <p>Contact:</p>
+      <ul aria-label="contact">
+        {contacts.map((contact) => (
+          <li key={contact.id}>
+            <a href={contact.url} target="_blank" rel="noopener noreferrer">
+              &gt; {contact.label} ↗
+            </a>
+          </li>
+        ))}
+      </ul>
       <p>Friends:</p>
       <ul aria-label="friends">
         {friends.map((friend) => (

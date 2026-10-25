@@ -1,3 +1,4 @@
+import { about, contacts } from "../content/about";
 import { findFriend, friends } from "../content/friends";
 import { findProject, projects } from "../content/projects";
 import { fileCommands, projectAt, projectIds } from "./fileCommands";
@@ -104,6 +105,32 @@ const projectRows = (): CommandResult => ({
   })),
 });
 
+/** `about`: who Theo is; ejects the about server. */
+const aboutTheo = (): CommandResult => ({
+  lines: [
+    { kind: "text", text: `${about.name} // ${about.role}` },
+    ...about.paragraphs.map((paragraph): TerminalLine => ({
+      kind: "text",
+      text: paragraph,
+    })),
+    { kind: "chips", commands: ["contact", "projects"] },
+  ],
+  actions: [{ type: "open", projectId: "about" }],
+});
+
+/** `contact`: the public channels; lights up the patch panel. */
+const contactLinks = (): CommandResult => ({
+  lines: [
+    { kind: "text", text: "reach Theo at:" },
+    ...contacts.map((contact): TerminalLine => ({
+      kind: "link",
+      label: contact.label,
+      url: contact.url,
+    })),
+  ],
+  actions: [{ type: "open", projectId: "contact" }],
+});
+
 function open([name]: string[], call: Invocation): CommandResult {
   if (name === undefined) {
     return {
@@ -112,6 +139,12 @@ function open([name]: string[], call: Invocation): CommandResult {
         { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
       ],
     };
+  }
+  if (name === "about") {
+    return aboutTheo();
+  }
+  if (name === "contact") {
+    return contactLinks();
   }
   const friend = findFriend(name);
   if (friend !== undefined) {
@@ -186,6 +219,16 @@ const general: Record<string, Command> = {
       lines: [{ kind: "muted", text: "> module retracted" }],
       actions: [{ type: "close" }],
     }),
+  },
+  about: {
+    usage: "about",
+    description: "tells who Theo is and ejects the about server",
+    run: aboutTheo,
+  },
+  contact: {
+    usage: "contact",
+    description: "lists where to reach Theo and lights up the patch panel",
+    run: contactLinks,
   },
   friends: {
     usage: "friends",

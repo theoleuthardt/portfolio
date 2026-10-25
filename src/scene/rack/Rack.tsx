@@ -16,6 +16,7 @@ const HALF_D = RACK.depth / 2;
 /** Props of {@link Rack}. */
 export interface RackProps {
   openProjectId?: string;
+  /** Called with a clicked module's id: a project, `about` or `contact`. */
   onSelectProject?: (projectId: string) => void;
 }
 
@@ -156,9 +157,7 @@ export function Rack({ openProjectId, onSelectProject }: RackProps) {
             open={slot.id === openProjectId}
             reducedMotion={reducedMotion}
             onSelect={
-              project && onSelectProject
-                ? () => onSelectProject(project.id)
-                : undefined
+              onSelectProject ? () => onSelectProject(slot.id) : undefined
             }
           />
         );
