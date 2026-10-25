@@ -202,6 +202,16 @@ export const easterEggCommands: Record<string, Command> = {
     description: "follows the white rabbit; q quits",
     run: () => ({ lines: [], actions: [{ type: "program", name: "matrix" }] }),
   },
+  map: {
+    usage: "map",
+    description: "explores a world map; arrows pan, +/- zoom, q quits",
+    run: () => ({ lines: [], actions: [{ type: "program", name: "map" }] }),
+  },
+  mapscii: {
+    usage: "mapscii",
+    description: "the same as map, as in telnet mapscii.me",
+    run: () => ({ lines: [], actions: [{ type: "program", name: "map" }] }),
+  },
   play: {
     usage: "play dino",
     description: "plays the dino game; space jumps, q quits",

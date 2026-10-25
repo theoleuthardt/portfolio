@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useEffect,
   useEffectEvent,
   useImperativeHandle,
@@ -45,6 +47,7 @@ import {
   useBootSequence,
 } from "./useBootSequence";
 
+const WorldMap = lazy(() => import("./WorldMap"));
 const projectIds = projects.map((project) => project.id);
 const friendIds = friends.map((friend) => friend.id);
 const promptFor = (cwd: Cwd = "~") => `guest@theocloud:${cwd}$`;
@@ -458,6 +461,10 @@ export function Terminal({
         <Matrix onQuit={() => exitProgram()} />
       ) : program?.name === "dino" ? (
         <Dino onQuit={() => exitProgram()} />
+      ) : program?.name === "map" ? (
+        <Suspense fallback={<p className="crt-text">loading the map ...</p>}>
+          <WorldMap onQuit={() => exitProgram()} />
+        </Suspense>
       ) : (
         <div
           ref={logRef}

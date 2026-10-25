@@ -757,3 +757,48 @@ describe("Terminal programs", () => {
     expect(text.indexOf("^C")).toBeLessThan(text.indexOf("open flashi"));
   });
 });
+
+describe("Terminal world map", () => {
+  const world = {
+    land: [[-100, 0, 100, 0]],
+    borders: [],
+    countries: [["Testland", 0, 0, 1]],
+    cities: [],
+  };
+
+  it("opens the map, pans and zooms with the keyboard and quits with q", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: true, json: async () => world })),
+    );
+    renderBooted(<Terminal />);
+    vi.useRealTimers();
+    type("map");
+    const view = await screen.findByRole("region", { name: "world map" });
+    expect(
+      await within(view).findByText("center: 20.00, 0.00 zoom: 1"),
+    ).toBeInTheDocument();
+    fireEvent.keyDown(view, { key: "+" });
+    expect(within(view).getByText(/zoom: 2$/)).toBeInTheDocument();
+    fireEvent.keyDown(view, { key: "ArrowRight" });
+    expect(within(view).queryByText(/center: 20.00, 0.00/)).toBeNull();
+    expect(within(view).getByText(/World map centred on/)).toBeInTheDocument();
+    fireEvent.keyDown(view, { key: "q" });
+    expect(screen.queryByRole("region", { name: "world map" })).toBeNull();
+    expect(input()).toHaveFocus();
+  });
+
+  it("explains when the world data cannot load", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => ({ ok: false, json: async () => ({}) })),
+    );
+    renderBooted(<Terminal />);
+    vi.useRealTimers();
+    type("map");
+    const view = await screen.findByRole("region", { name: "world map" });
+    expect(
+      await within(view).findByText("map: cannot load the world data"),
+    ).toBeInTheDocument();
+  });
+});

@@ -24,6 +24,7 @@ A terminal website inside a Three.js scene. You sit at a worn 1980s CRT terminal
 - **Window keys.** Maximize leans in to the screen, minimize and close stand you up from the desk.
 - **Look around.** While standing, drag to turn and tilt, use the wheel to walk. After a few seconds the view eases back.
 - **Friends.** `friends` lists sites of friends; the postcard on the desk opens one.
+- **Explore.** It is a small bash: pipes, variables, `ls -a`, `top`. Try `neofetch`, `map`, `fortune | cowsay`, `play dino` or `hack mainframe`, and look for hidden files.
 
 Phones and touch tablets get the terminal only, without the 3D scene. Devices without WebGL see a static rack illustration. `prefers-reduced-motion` freezes the camera drift, the blinking and the small life in the lab.
 

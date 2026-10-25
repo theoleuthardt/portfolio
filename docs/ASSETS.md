@@ -44,6 +44,10 @@ Own drawings, no third-party source. Procedural SVG textures (`feTurbulence`) th
 | `crt-rust.svg`   | rust patches in two corners of the housing and the bezel | ~1 KB |
 | `crt-cracks.svg` | hairline cracks in the lower right of the tube glass     | ~1 KB |
 
+## Map data (`public/map/world.json`)
+
+The `map` command's world, built by `node scripts/build-map.ts <folder>` from [Natural Earth](https://www.naturalearthdata.com) 1:110m vector data (public domain): `ne_110m_land`, `ne_110m_admin_0_countries` and `ne_110m_populated_places_simple` from the [natural-earth-vector](https://github.com/nvkelso/natural-earth-vector) GeoJSON. Coordinates are rounded to 0.1° and stored as integers: 148 kB, 55 kB gzipped, loaded only when `map` runs.
+
 ## Adding an asset
 
 1. Only CC0 or equivalently permissive sources.
