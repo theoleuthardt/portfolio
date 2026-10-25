@@ -10,7 +10,7 @@ Theo Leuthardt's personal developer portfolio, served at <https://theocloud.dev>
 
 - **Vite + React + TypeScript** (single-page app, static build in `dist/`)
 - **Three.js** via `@react-three/fiber` and `@react-three/drei` (from epic #18)
-- **Tailwind CSS 4** for the 2D overlay, via `@tailwindcss/vite`; design tokens (colours, fonts, text sizes from `docs/design-concept.md`) live CSS-first in `@theme` in `src/index.css`; use them (`text-phosphor`, `bg-glass`, `text-terminal`, `text-hud`) instead of raw values. `src/design-tokens.test.ts` keeps the colours at WCAG AA. The only font is Share Tech Mono, self-hosted via Fontsource (latin subset, imported in `src/main.tsx`) and set on `html`. One exception: the ASCII boot logo (`.boot-logo`) uses the system monospace font, because the subset has no block or box-drawing glyphs and mixed fonts misalign the art; its OFL licence is served from `public/licenses/`. Hand-written global CSS goes into `@layer base` (or `components`): unlayered rules beat every Tailwind utility, because v4 uses native cascade layers
+- **Tailwind CSS 4** for the 2D overlay, via `@tailwindcss/vite`; design tokens (colours, fonts, text sizes from `docs/design-concept.md`) live CSS-first in `@theme` in `src/index.css`; use them (`text-phosphor`, `bg-glass`, `text-terminal`, `text-hud`) instead of raw values. `src/design-tokens.test.ts` keeps the colours at WCAG AA. The only font is Share Tech Mono, self-hosted via Fontsource (latin subset, imported in `src/main.tsx`) and set on `html`. Glyphs outside the latin subset (block and box-drawing characters) fall back to other fonts with other widths, so terminal art stays plain ASCII; the boot logo is drawn as SVG (`logoShapes`). The font's OFL licence is served from `public/licenses/`. Hand-written global CSS goes into `@layer base` (or `components`): unlayered rules beat every Tailwind utility, because v4 uses native cascade layers
 - **Vitest** + Testing Library (jsdom) for tests; Node version pinned in `.nvmrc` (22)
 - **ESLint 10** (flat config in `eslint.config.js`, typescript-eslint, React Hooks and React Refresh rules) + **Prettier**
 - **GitHub Actions** for CI ([`docs/CI.md`](docs/CI.md)) and the GitHub Pages deployment after green CI ([`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md))
@@ -23,6 +23,7 @@ Default branch: `master`.
 npm ci                 # install exactly what package-lock.json pins
 npm run dev            # Vite dev server
 npm run build          # typecheck (tsc -b) + production build into dist/
+npm run budget         # bundle and asset budget of the last build (also in CI)
 npm run preview        # serve the production build locally
 npm run lint           # ESLint, zero warnings allowed
 npm run typecheck      # TypeScript only
@@ -112,7 +113,7 @@ An issue is done when all of these hold:
 
 - [ ] Acceptance criteria of the issue are met
 - [ ] Tests written first and passing; no test weakened
-- [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build` pass locally
+- [ ] `npm run lint`, `npm run typecheck`, `npm run format:check`, `npm test`, `npm run build`, `npm run budget` pass locally
 - [ ] `npm audit --audit-level=high` reports nothing new
 - [ ] Clean Code and comment rules respected
 - [ ] UI changes checked in the running app (`npm run dev`), including mobile width and `prefers-reduced-motion`

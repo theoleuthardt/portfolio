@@ -4,7 +4,7 @@
 
 | Workflow          | File                                      | Trigger                                                  | What it does                                                                                                        |
 | ----------------- | ----------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| CI                | `.github/workflows/ci.yml`                | every pull request, every push to `master`               | `npm ci`, lint, typecheck, format check, tests, build                                                               |
+| CI                | `.github/workflows/ci.yml`                | every pull request, every push to `master`               | `npm ci`, lint, typecheck, format check, tests, build, bundle budget ([QUALITY.md](QUALITY.md))                     |
 | CI → npm audit    | `.github/workflows/ci.yml` (job `audit`)  | every pull request, every push to `master`               | `npm audit --audit-level=high`: fails on high or critical findings                                                  |
 | Dependency Review | `.github/workflows/dependency-review.yml` | every pull request                                       | fails when the PR adds a dependency with a known high or critical vulnerability; posts a summary comment on failure |
 | Deploy            | `.github/workflows/deploy.yml`            | after a successful CI run for a push to `master`, manual | builds the verified commit and deploys `dist/` to GitHub Pages ([DEPLOYMENT.md](DEPLOYMENT.md))                     |

@@ -138,6 +138,7 @@ const App = () => {
       data-look-surface
       className="relative flex h-dvh flex-col justify-end overflow-hidden bg-void p-2 sm:p-6 lg:justify-start"
     >
+      <h1 className="sr-only">Theo Leuthardt – portfolio terminal</h1>
       <SceneLayer
         webgl={webgl}
         onReady={() => {
