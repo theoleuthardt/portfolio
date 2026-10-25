@@ -108,4 +108,24 @@ describe("accessibility", () => {
     type("top");
     expect(await violations()).toEqual([]);
   });
+
+  it.each([390, 1440])(
+    "has no axe violations on the desktop with windows open at %i px",
+    async (width) => {
+      viewport(width);
+      render(<App />);
+      await screen.findByRole(
+        "textbox",
+        { name: "terminal input" },
+        { timeout: 3000 },
+      );
+      fireEvent.click(screen.getByRole("button", { name: "close terminal" }));
+      for (const app of ["Projects", "Notes", "Trash", "About"]) {
+        fireEvent.click(screen.getByRole("button", { name: app }));
+      }
+      fireEvent.click(screen.getByRole("button", { name: "flashi" }));
+      fireEvent.click(screen.getByRole("button", { name: "TheoCloud" }));
+      expect(await violations()).toEqual([]);
+    },
+  );
 });

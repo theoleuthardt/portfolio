@@ -10,9 +10,6 @@ import { useViewport } from "./ui/useViewport";
 
 const WIDE_SCREEN = 1024;
 
-/** Whether the terminal window is shown, folded into a bar, or closed. */
-type TerminalWindow = "open" | "minimized" | "closed";
-
 /** Longest time the boot waits for the 3D scene before it finishes anyway. */
 export const SCENE_TIMEOUT_MS = 8000;
 
@@ -27,12 +24,13 @@ export const SEAT_TIMEOUT_MS = 2500;
  * reports them seated (or after {@link SEAT_TIMEOUT_MS}). Below 1024 px, while
  * maximized or without the scene, the terminal keeps its 2D housing and
  * shows project screens itself; phones and touch tablets get the terminal
- * only. The boot waits for the scene, at most {@link SCENE_TIMEOUT_MS}. Where
- * the scene is shown, the terminal can be maximized, minimized into a bar or
- * closed behind a button, which stands the visitor up to look around; at
- * the desk, maximizing leans in to the screen for a close look. It
- * stays mounted, so its session survives, and opening a project from the
- * rack brings it back.
+ * only. The boot waits for the scene, at most {@link SCENE_TIMEOUT_MS}.
+ * Minimizing or closing the terminal shows the TheoCloud OS desktop on the
+ * CRT; where the scene is shown, its "stand up" button hides the terminal so
+ * the visitor can look around (at the desk the camera rises), and a `>_`
+ * button sits them down again. At the desk, maximizing leans in to the
+ * screen for a close look. The terminal stays mounted, so its session
+ * survives, and opening a project from the rack brings it back.
  */
 const App = () => {
   const [webgl] = useState(() => supportsWebGL());
@@ -40,24 +38,24 @@ const App = () => {
   const [sceneSettled, setSceneSettled] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const [sceneFailed, setSceneFailed] = useState(false);
-  const [terminalWindow, setTerminalWindow] = useState<TerminalWindow>("open");
+  const [standing, setStanding] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const [seated, setSeated] = useState(false);
   const [seatForced, setSeatForced] = useState(false);
   const [hacking, setHacking] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
-  const restoreButton = useRef<HTMLButtonElement>(null);
+  const sitDownButton = useRef<HTMLButtonElement>(null);
   const windowElement = useRef<HTMLDivElement>(null);
   const connector = useRef<SVGPolylineElement>(null);
   const viewport = useViewport();
   const wide = viewport.width >= WIDE_SCREEN;
   const sceneShown = webgl && !isPhoneViewport(viewport);
   const sceneLoading = sceneShown && !sceneSettled;
-  const windowState = sceneShown ? terminalWindow : "open";
+  const away = sceneShown && standing;
   const deskAvailable = sceneShown && wide && sceneReady && !sceneFailed;
   const monitorPose: MonitorPose = !deskAvailable
     ? "off"
-    : windowState !== "open"
+    : away
       ? "standing"
       : maximized
         ? "close"
@@ -90,12 +88,12 @@ const App = () => {
   }, [waitingForSeat]);
 
   useEffect(() => {
-    if (windowState !== "open") {
-      restoreButton.current?.focus();
+    if (away) {
+      sitDownButton.current?.focus();
     } else if (!waitingForSeat) {
       terminal.current?.focus();
     }
-  }, [windowState, waitingForSeat]);
+  }, [away, waitingForSeat]);
 
   /**
    * Maps the terminal window onto the 3D terminal's screen, drawn at about
@@ -148,12 +146,12 @@ const App = () => {
         onFail={() => setSceneFailed(true)}
         openProjectId={openProjectId}
         onSelectProject={(id) => {
-          setTerminalWindow("open");
+          setStanding(false);
           terminal.current?.run(`open ${id}`);
         }}
         connector={connector}
         promptAnchor={() =>
-          windowState === "open" ? terminal.current?.promptAnchor() : undefined
+          away ? undefined : terminal.current?.promptAnchor()
         }
         onScreenPlacement={placeScreen}
         monitorPose={monitorPose}
@@ -173,7 +171,7 @@ const App = () => {
       <div
         ref={windowElement}
         data-terminal-window
-        hidden={windowState !== "open"}
+        hidden={away}
         inert={waitingForSeat}
         aria-hidden={waitingForSeat || undefined}
         className={
@@ -191,38 +189,24 @@ const App = () => {
           housing={!atScreen}
           onProgramChange={(program) => setHacking(program?.name === "hack")}
           powered={!waitingForSeat}
-          controls={
+          maximize={
             sceneShown
               ? {
-                  onMinimize: () => setTerminalWindow("minimized"),
-                  onClose: () => setTerminalWindow("closed"),
-                  onToggleMaximize: () => setMaximized((current) => !current),
+                  onToggle: () => setMaximized((current) => !current),
                   maximized,
                 }
               : undefined
           }
+          onStandUp={sceneShown ? () => setStanding(true) : undefined}
         />
       </div>
-      {windowState === "minimized" ? (
+      {away ? (
         <button
-          ref={restoreButton}
-          type="button"
-          className="crt-dock"
-          aria-label="restore terminal"
-          onClick={() => setTerminalWindow("open")}
-        >
-          <span className="crt-led" aria-hidden="true" />
-          guest@theocloud — tty1
-          <span aria-hidden="true">▴</span>
-        </button>
-      ) : null}
-      {windowState === "closed" ? (
-        <button
-          ref={restoreButton}
+          ref={sitDownButton}
           type="button"
           className="crt-launcher"
-          aria-label="open terminal"
-          onClick={() => setTerminalWindow("open")}
+          aria-label="sit down at the terminal"
+          onClick={() => setStanding(false)}
         >
           <span aria-hidden="true">&gt;_</span>
         </button>

@@ -1,17 +1,22 @@
 import type { ReactNode } from "react";
 
-/** The window keys of the terminal app; absent where they make no sense. */
+/** How the terminal app's window can be maximized, where it can. */
+export interface CrtMaximize {
+  onToggle: () => void;
+  maximized: boolean;
+}
+
+/** The window keys of the terminal app. */
 export interface CrtControls {
   onMinimize: () => void;
   onClose: () => void;
-  onToggleMaximize: () => void;
-  maximized: boolean;
+  maximize?: CrtMaximize;
 }
 
 /** Props of {@link CrtFrame}. */
 export interface CrtFrameProps {
-  /** Window title of the terminal app on the screen. */
-  title: string;
+  /** Window title of the app on the screen; no title bar if absent. */
+  title?: string;
   children: ReactNode;
   controls?: CrtControls;
   /**
@@ -42,38 +47,42 @@ export function CrtFrame({
     <div className={classes.filter(Boolean).join(" ")}>
       <div className="crt-bezel">
         <div className="crt-glass">
-          <div className="crt-titlebar">
-            <span className="crt-title">{title}</span>
-            {controls ? (
-              <span className="crt-keys">
-                <button
-                  type="button"
-                  className="crt-key"
-                  aria-label="minimize terminal"
-                  onClick={controls.onMinimize}
-                >
-                  <span aria-hidden="true">_</span>
-                </button>
-                <button
-                  type="button"
-                  className="crt-key"
-                  aria-label="maximize terminal"
-                  aria-pressed={controls.maximized}
-                  onClick={controls.onToggleMaximize}
-                >
-                  <span aria-hidden="true">□</span>
-                </button>
-                <button
-                  type="button"
-                  className="crt-key"
-                  aria-label="close terminal"
-                  onClick={controls.onClose}
-                >
-                  <span aria-hidden="true">×</span>
-                </button>
-              </span>
-            ) : null}
-          </div>
+          {title === undefined ? null : (
+            <div className="crt-titlebar">
+              <span className="crt-title">{title}</span>
+              {controls ? (
+                <span className="crt-keys">
+                  <button
+                    type="button"
+                    className="crt-key"
+                    aria-label="minimize terminal"
+                    onClick={controls.onMinimize}
+                  >
+                    <span aria-hidden="true">_</span>
+                  </button>
+                  {controls.maximize ? (
+                    <button
+                      type="button"
+                      className="crt-key"
+                      aria-label="maximize terminal"
+                      aria-pressed={controls.maximize.maximized}
+                      onClick={controls.maximize.onToggle}
+                    >
+                      <span aria-hidden="true">□</span>
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="crt-key"
+                    aria-label="close terminal"
+                    onClick={controls.onClose}
+                  >
+                    <span aria-hidden="true">×</span>
+                  </button>
+                </span>
+              ) : null}
+            </div>
+          )}
           <div className="crt-viewport">{children}</div>
           <span className="crt-roll" aria-hidden="true" />
         </div>
