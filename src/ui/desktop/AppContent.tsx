@@ -24,15 +24,18 @@ export interface AppContentProps {
   onClose: () => void;
   /** Projects show their screen in the window; else the page shows it. */
   inlineProjectScreens: boolean;
+  /** The project the terminal has open. */
+  openProjectId?: string;
   processes: Omit<TopState, "now">;
 }
 
 function Projects({
   onRun,
   inlineProjectScreens,
-}: Pick<AppContentProps, "onRun" | "inlineProjectScreens">) {
-  const [selected, setSelected] = useState<string>();
-  const project = selected === undefined ? undefined : findProject(selected);
+  openProjectId,
+}: Pick<AppContentProps, "onRun" | "inlineProjectScreens" | "openProjectId">) {
+  const project =
+    openProjectId === undefined ? undefined : findProject(openProjectId);
   return (
     <div className="desk-app">
       <ul className="desk-files" aria-label="projects">
@@ -41,11 +44,8 @@ function Projects({
             <button
               type="button"
               className="desk-file"
-              aria-pressed={selected === id}
-              onClick={() => {
-                setSelected(id);
-                onRun(`open ${id}`);
-              }}
+              aria-pressed={openProjectId === id}
+              onClick={() => onRun(`open ${id}`)}
             >
               <PixelIcon name="folder" />
               {id}
@@ -160,12 +160,17 @@ export function AppContent({
   onOpen,
   onClose,
   inlineProjectScreens,
+  openProjectId,
   processes,
 }: AppContentProps) {
   switch (app) {
     case "projects":
       return (
-        <Projects onRun={onRun} inlineProjectScreens={inlineProjectScreens} />
+        <Projects
+          onRun={onRun}
+          inlineProjectScreens={inlineProjectScreens}
+          openProjectId={openProjectId}
+        />
       );
     case "about":
       return <About />;

@@ -495,6 +495,7 @@ export function Terminal({
           onStandUp={onStandUp}
           focusRef={desktopFocus}
           inlineProjectScreens={inlineProjectScreens}
+          openProjectId={session.openProjectId}
           processes={{ killed: session.killed, startedAt: session.startedAt }}
         />
       ) : program?.name === "top" ? (

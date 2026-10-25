@@ -47,6 +47,9 @@ export function AppWindow({
     );
     dragging.current = { x: event.clientX, y: event.clientY };
   };
+  const drop = () => {
+    dragging.current = undefined;
+  };
   return (
     <section
       aria-label={title}
@@ -70,9 +73,9 @@ export function AppWindow({
         className="desk-titlebar"
         onPointerDown={grab}
         onPointerMove={drag}
-        onPointerUp={() => {
-          dragging.current = undefined;
-        }}
+        onPointerUp={drop}
+        onPointerCancel={drop}
+        onLostPointerCapture={drop}
         onDoubleClick={onToggleMaximize}
       >
         <span className="desk-title">{title}</span>

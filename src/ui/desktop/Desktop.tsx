@@ -1,8 +1,10 @@
 import {
   useEffect,
+  useRef,
   useState,
   type Dispatch,
   type KeyboardEvent,
+  type PointerEvent,
   type Ref,
   type SetStateAction,
 } from "react";
@@ -43,6 +45,8 @@ export interface DesktopProps {
   focusRef?: Ref<HTMLButtonElement>;
   /** Projects show their screen in the window; else the page shows it. */
   inlineProjectScreens: boolean;
+  /** The project the terminal has open, shown by the Projects app. */
+  openProjectId?: string;
   processes: Omit<TopState, "now">;
 }
 
@@ -76,7 +80,9 @@ const clock = (date: Date) =>
  * that can be dragged, focused, minimized, maximized and closed, and a
  * taskbar with a start menu, the open windows, the clock and a button to
  * stand up from the desk. Alt+` (and Alt+Tab where the system lets it
- * through) cycles the windows, Escape closes the menu.
+ * through) cycles the windows. Opening the menu moves the focus into it;
+ * Escape closes it and returns to the start button, as does a click
+ * elsewhere (without moving the focus).
  */
 export function Desktop({
   desk,
@@ -87,12 +93,20 @@ export function Desktop({
   onStandUp,
   focusRef,
   inlineProjectScreens,
+  openProjectId,
   processes,
 }: DesktopProps) {
   const [area, setArea] = useState<HTMLElement | null>(null);
   const [menu, setMenu] = useState(false);
+  const menuElement = useRef<HTMLElement>(null);
+  const startButton = useRef<HTMLButtonElement>(null);
   const bounds = useBounds(area);
   useElapsed(30000);
+  useEffect(() => {
+    if (menu) {
+      menuElement.current?.querySelector("button")?.focus();
+    }
+  }, [menu]);
   const top = topWindow(desk);
   const open = (app: AppId | "terminal", payload?: string) => {
     setMenu(false);
@@ -110,6 +124,18 @@ export function Desktop({
       event.preventDefault();
       event.stopPropagation();
       setMenu(false);
+      startButton.current?.focus();
+    }
+  };
+  const closeMenuOutside = (event: PointerEvent<HTMLElement>) => {
+    const target = event.target;
+    if (
+      menu &&
+      target instanceof Node &&
+      !menuElement.current?.contains(target) &&
+      !startButton.current?.contains(target)
+    ) {
+      setMenu(false);
     }
   };
   return (
@@ -118,6 +144,7 @@ export function Desktop({
       aria-label="desktop"
       className="desk"
       onKeyDown={onKeyDown}
+      onPointerDown={closeMenuOutside}
     >
       <ul className="desk-icons" aria-label="apps">
         {LAUNCHERS.map((launcher) => (
@@ -162,6 +189,7 @@ export function Desktop({
             onRun={onRun}
             onOpen={open}
             inlineProjectScreens={inlineProjectScreens}
+            openProjectId={openProjectId}
             onClose={() =>
               setDesk((current) => closeWindow(current, window.id))
             }
@@ -170,7 +198,7 @@ export function Desktop({
         </AppWindow>
       ))}
       {menu ? (
-        <nav className="desk-menu" aria-label="start menu">
+        <nav ref={menuElement} className="desk-menu" aria-label="start menu">
           {LAUNCHERS.map((launcher) => (
             <button
               key={launcher.app}
@@ -197,6 +225,7 @@ export function Desktop({
       ) : null}
       <footer className="desk-taskbar">
         <button
+          ref={startButton}
           type="button"
           className="desk-start"
           aria-expanded={menu}

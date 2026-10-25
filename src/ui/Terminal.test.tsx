@@ -974,6 +974,48 @@ describe("Terminal desktop", () => {
     expect(start).toHaveAttribute("aria-expanded", "false");
   });
 
+  it("takes the keyboard into the start menu and back out", () => {
+    closeTerminal(<Terminal onStandUp={vi.fn()} />);
+    const start = screen.getByRole("button", { name: "TheoCloud" });
+    fireEvent.click(start);
+    const menu = screen.getByRole("navigation", { name: "start menu" });
+    expect(
+      within(menu).getByRole("button", { name: "Terminal" }),
+    ).toHaveFocus();
+    fireEvent.keyDown(menu, { key: "Escape" });
+    expect(start).toHaveFocus();
+  });
+
+  it("closes the start menu on a click elsewhere on the desktop", () => {
+    closeTerminal();
+    const start = screen.getByRole("button", { name: "TheoCloud" });
+    fireEvent.click(start);
+    fireEvent.pointerDown(
+      within(screen.getByRole("navigation", { name: "start menu" })).getByRole(
+        "button",
+        { name: "Notes" },
+      ),
+    );
+    expect(start).toHaveAttribute("aria-expanded", "true");
+    fireEvent.pointerDown(desktop());
+    expect(start).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("shows the project the terminal has open, so Escape closes it there too", () => {
+    closeTerminal();
+    icon("Projects");
+    const projects = screen.getByRole("region", { name: "Projects" });
+    fireEvent.click(within(projects).getByRole("button", { name: "flashi" }));
+    expect(
+      within(projects).getByRole("button", { name: "flashi" }),
+    ).toHaveAttribute("aria-pressed", "true");
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(within(projects).queryByRole("heading")).toBeNull();
+    expect(
+      within(projects).getByRole("button", { name: "flashi" }),
+    ).toHaveAttribute("aria-pressed", "false");
+  });
+
   it("lists the friends' sites in About", () => {
     closeTerminal();
     icon("About");
