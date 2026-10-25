@@ -398,11 +398,9 @@
 
   .crt-map canvas {
     display: block;
-    flex: 1;
-    min-height: 0;
+    flex: none;
     max-width: 100%;
-    object-fit: contain;
-    object-position: left top;
+    height: auto;
     cursor: grab;
   }
 

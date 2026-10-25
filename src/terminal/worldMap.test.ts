@@ -8,6 +8,7 @@ import {
   pan,
   parseWorld,
   rasterize,
+  screenToDot,
   statusLine,
   toDot,
   zoomBy,
@@ -47,6 +48,27 @@ describe("toDot and fromDot", () => {
     const [, north] = toDot(WORLD_VIEW, cols, rows, 0, 50);
     const [, south] = toDot(WORLD_VIEW, cols, rows, 0, -50);
     expect(north).toBeLessThan(south);
+  });
+});
+
+describe("fromDot near the date line", () => {
+  it("wraps the longitude into -180 to 180", () => {
+    const view: MapView = { lon: 170, lat: 0, zoom: 1 };
+    const [lon] = fromDot(view, cols, rows, cols * 2 - 1, rows * 2);
+    expect(lon).toBeGreaterThanOrEqual(-180);
+    expect(lon).toBeLessThan(180);
+    expect(lon).toBeLessThan(0);
+  });
+});
+
+describe("screenToDot", () => {
+  it("converts a pointer position on a scaled canvas into dots", () => {
+    const box = { left: 100, top: 50, width: 240, height: 160 };
+    expect(screenToDot(100, 50, box, 480, 320, 8, 16)).toEqual({ x: 0, y: 0 });
+    expect(screenToDot(340, 210, box, 480, 320, 8, 16)).toEqual({
+      x: 120,
+      y: 80,
+    });
   });
 });
 

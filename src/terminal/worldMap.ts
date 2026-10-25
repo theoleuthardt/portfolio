@@ -87,7 +87,9 @@ export function toDot(
   return [(x - cx) * scale + width / 2, (y - cy) * scale + height / 2];
 }
 
-/** The place under a dot of the grid. */
+const wrap = (lon: number) => ((((lon + 180) % 360) + 360) % 360) - 180;
+
+/** The place under a dot of the grid, longitude wrapped to ±180°. */
 export function fromDot(
   view: MapView,
   cols: number,
@@ -97,10 +99,12 @@ export function fromDot(
 ): [number, number] {
   const { width, height, scale } = grid(view, cols, rows);
   const [cx, cy] = mercator(view.lon, view.lat);
-  return inverse((x - width / 2) / scale + cx, (y - height / 2) / scale + cy);
+  const [lon, lat] = inverse(
+    (x - width / 2) / scale + cx,
+    (y - height / 2) / scale + cy,
+  );
+  return [wrap(lon), lat];
 }
-
-const wrap = (lon: number) => ((((lon + 180) % 360) + 360) % 360) - 180;
 
 /**
  * The view moved by `dx`/`dy` dots: longitude wraps around the date line,
@@ -117,6 +121,28 @@ export function pan(
   const [cx, cy] = mercator(view.lon, view.lat);
   const [lon, lat] = inverse(cx + dx / scale, clamp(cy + dy / scale, 0, 1));
   return { ...view, lon: wrap(lon), lat: clamp(lat, -MAX_LAT, MAX_LAT) };
+}
+
+/**
+ * The dot under a pointer at `clientX`/`clientY` on a canvas of
+ * `canvasWidth` × `canvasHeight` pixels shown in `box` (it may be scaled),
+ * with character cells of `cellWidth` × `cellHeight` canvas pixels.
+ */
+export function screenToDot(
+  clientX: number,
+  clientY: number,
+  box: { left: number; top: number; width: number; height: number },
+  canvasWidth: number,
+  canvasHeight: number,
+  cellWidth: number,
+  cellHeight: number,
+): { x: number; y: number } {
+  const px = ((clientX - box.left) * canvasWidth) / box.width;
+  const py = ((clientY - box.top) * canvasHeight) / box.height;
+  return {
+    x: (px / cellWidth) * DOTS_X,
+    y: (py / cellHeight) * DOTS_Y,
+  };
 }
 
 /** The view zoomed by `factor`, between 1 and 64. */

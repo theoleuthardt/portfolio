@@ -6,6 +6,7 @@ import {
   pan,
   parseWorld,
   rasterize,
+  screenToDot,
   statusLine,
   zoomBy,
   type MapFrame,
@@ -137,13 +138,16 @@ export default function WorldMap({ onQuit }: WorldMapProps) {
   });
   const move = (dx: number, dy: number) =>
     setView((current) => pan(current, dx, dy, cols, rows));
-  const dotAt = (event: PointerEvent<HTMLCanvasElement>) => {
-    const box = event.currentTarget.getBoundingClientRect();
-    return {
-      x: ((event.clientX - box.left) / CELL_WIDTH) * 2,
-      y: ((event.clientY - box.top) / CELL_HEIGHT) * 4,
-    };
-  };
+  const dotAt = (event: PointerEvent<HTMLCanvasElement>) =>
+    screenToDot(
+      event.clientX,
+      event.clientY,
+      event.currentTarget.getBoundingClientRect(),
+      event.currentTarget.width,
+      event.currentTarget.height,
+      CELL_WIDTH,
+      CELL_HEIGHT,
+    );
   const keys: Record<string, () => void> = {
     ArrowLeft: () => move(-PAN_DOTS, 0),
     ArrowRight: () => move(PAN_DOTS, 0),
