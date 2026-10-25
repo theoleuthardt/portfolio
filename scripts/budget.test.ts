@@ -32,6 +32,27 @@ const sizes = new Map([
 ]);
 
 describe("checkBudgets", () => {
+  it("counts a stylesheet shared by two chunks only once", () => {
+    const shared: Manifest = {
+      ...manifest,
+      "src/scene/Scene.tsx": {
+        ...manifest["src/scene/Scene.tsx"],
+        css: ["assets/shared.css"],
+      },
+      "_textures.js": {
+        file: "assets/textures.js",
+        css: ["assets/shared.css"],
+      },
+    };
+    const report = checkBudgets(
+      shared,
+      new Map([...sizes, ["assets/shared.css", 1_000]]),
+      0,
+      [{ name: "scene", entry: "src/scene/Scene.tsx", limit: 300_000 }],
+    );
+    expect(report.rows[0].size).toBe(281_000);
+  });
+
   it("counts a chunk's stylesheets with it", () => {
     const report = checkBudgets(manifest, sizes, 0, [
       { name: "main", entry: "index.html", limit: 110_000 },

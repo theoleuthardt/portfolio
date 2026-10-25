@@ -63,12 +63,12 @@ function staticClosure(manifest: Manifest, key: string): Set<string> {
 }
 
 /**
- * Checks each loading step against its limit: a step costs its chunk (with
- * its stylesheets) plus
- * every statically imported chunk that no earlier step has loaded yet, in
- * gzip bytes from `sizes` (keyed by output file). The static assets are
- * checked as a whole. An entry missing from the manifest throws, so a moved
- * chunk never slips through unchecked.
+ * Checks each loading step against its limit: a step costs every output
+ * file (scripts and stylesheets) of its chunk and of the chunks it imports
+ * statically that no earlier step has loaded yet, in gzip bytes from
+ * `sizes`; a file shared by several chunks counts once. The static assets
+ * are checked as a whole. An entry missing from the manifest throws, so a
+ * moved chunk never slips through unchecked.
  */
 export function checkBudgets(
   manifest: Manifest,
@@ -83,10 +83,10 @@ export function checkBudgets(
     }
     let size = 0;
     for (const key of staticClosure(manifest, entry)) {
-      if (!loaded.has(key)) {
-        loaded.add(key);
-        const { file, css = [] } = manifest[key];
-        for (const output of [file, ...css]) {
+      const { file, css = [] } = manifest[key];
+      for (const output of [file, ...css]) {
+        if (!loaded.has(output)) {
+          loaded.add(output);
           size += sizes.get(output) ?? 0;
         }
       }
