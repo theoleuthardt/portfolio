@@ -802,3 +802,130 @@ describe("Terminal world map", () => {
     ).toBeInTheDocument();
   });
 });
+
+describe("Terminal desktop", () => {
+  const desktop = () => screen.getByRole("region", { name: "desktop" });
+  const icon = (name: string) =>
+    fireEvent.click(
+      within(within(desktop()).getByRole("list", { name: "apps" })).getByRole(
+        "button",
+        { name },
+      ),
+    );
+  const taskbarButton = (name: string) =>
+    within(desktop().querySelector("footer") ?? desktop()).getByRole("button", {
+      name,
+    });
+
+  function closeTerminal(ui: ReactElement = <Terminal />) {
+    const result = renderBooted(ui);
+    fireEvent.click(screen.getByRole("button", { name: "close terminal" }));
+    vi.useRealTimers();
+    return result;
+  }
+
+  it("opens a project from the Projects app and tells the page", () => {
+    const onOpenProjectChange = vi.fn();
+    closeTerminal(<Terminal onOpenProjectChange={onOpenProjectChange} />);
+    icon("Projects");
+    const projects = screen.getByRole("region", { name: "Projects" });
+    fireEvent.click(within(projects).getByRole("button", { name: "flashi" }));
+    expect(
+      within(projects).getByRole("heading", { name: "Flashi" }),
+    ).toBeInTheDocument();
+    expect(onOpenProjectChange).toHaveBeenLastCalledWith("flashi");
+  });
+
+  it("leaves the project screen to the page where it shows projects itself", () => {
+    closeTerminal(<Terminal inlineProjectScreens={false} />);
+    icon("Projects");
+    const projects = screen.getByRole("region", { name: "Projects" });
+    fireEvent.click(within(projects).getByRole("button", { name: "flashi" }));
+    expect(within(projects).queryByRole("heading")).toBeNull();
+  });
+
+  it("opens a note in a viewer window", () => {
+    closeTerminal();
+    icon("Notes");
+    fireEvent.click(
+      within(screen.getByRole("list", { name: "notes" })).getByRole("button", {
+        name: "todo.txt",
+      }),
+    );
+    expect(
+      within(screen.getByRole("region", { name: "~/todo.txt" })).getByText(
+        /\[ \] sleep/,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("keeps the trash full and opens what is in it", () => {
+    closeTerminal();
+    icon("Trash");
+    const trash = screen.getByRole("region", { name: "Trash" });
+    fireEvent.click(within(trash).getByRole("button", { name: "empty trash" }));
+    expect(within(trash).getByRole("status")).toHaveTextContent(
+      "the lab keeps everything. nice try.",
+    );
+    fireEvent.click(within(trash).getByRole("button", { name: "sleep.exe" }));
+    expect(
+      within(screen.getByRole("region", { name: "sleep.exe" })).getByText(
+        /permission denied/,
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("minimizes, restores, cycles and closes windows", () => {
+    closeTerminal();
+    icon("About");
+    icon("Processes");
+    expect(taskbarButton("Processes")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.keyDown(desktop(), { key: "Tab", altKey: true });
+    expect(taskbarButton("About")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "minimize About" }));
+    expect(screen.queryByRole("region", { name: "About" })).toBeNull();
+    expect(taskbarButton("Processes")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(taskbarButton("About"));
+    expect(screen.getByRole("region", { name: "About" })).toBeVisible();
+    fireEvent.click(screen.getByRole("button", { name: "close About" }));
+    expect(screen.queryByRole("region", { name: "About" })).toBeNull();
+    expect(
+      within(desktop().querySelector("footer") ?? desktop()).queryByRole(
+        "button",
+        { name: "About" },
+      ),
+    ).toBeNull();
+  });
+
+  it("opens and closes the start menu, which has no stand up without a desk", () => {
+    closeTerminal();
+    const start = screen.getByRole("button", { name: "TheoCloud" });
+    fireEvent.click(start);
+    expect(start).toHaveAttribute("aria-expanded", "true");
+    const menu = screen.getByRole("navigation", { name: "start menu" });
+    expect(within(menu).queryByRole("button", { name: "Stand up" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "stand up from the desk" }),
+    ).toBeNull();
+    fireEvent.keyDown(menu, { key: "Escape" });
+    expect(start).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("returns to the terminal with its session from a minimized one", () => {
+    renderBooted(<Terminal />);
+    type("cd projects");
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    vi.useRealTimers();
+    fireEvent.click(taskbarButton("terminal"));
+    expect(input()).toHaveFocus();
+    expect(screen.getByText("guest@theocloud: ~/projects")).toBeInTheDocument();
+  });
+
+  it("brings the terminal back when a command comes from outside", () => {
+    const ref = createRef<TerminalHandle>();
+    closeTerminal(<Terminal ref={ref} />);
+    act(() => ref.current?.run("open flashi"));
+    expect(input()).toBeInTheDocument();
+    expect(within(log()).getByText("open flashi")).toBeInTheDocument();
+  });
+});

@@ -241,9 +241,18 @@ describe("terminal window", () => {
   const booted = () =>
     screen.findByRole("textbox", { name: "terminal input" }, { timeout: 3000 });
 
-  it("offers minimize and close only where the scene is shown", async () => {
+  it("offers minimize and close everywhere and maximize only with the scene", async () => {
     viewport(1440);
     const { unmount } = render(<App />);
+    await booted();
+    for (const name of ["minimize", "maximize", "close"]) {
+      expect(
+        screen.getByRole("button", { name: `${name} terminal` }),
+      ).toBeInTheDocument();
+    }
+    unmount();
+    viewport(390);
+    render(<App />);
     await booted();
     expect(
       screen.getByRole("button", { name: "minimize terminal" }),
@@ -251,14 +260,12 @@ describe("terminal window", () => {
     expect(
       screen.getByRole("button", { name: "close terminal" }),
     ).toBeInTheDocument();
-    unmount();
-    viewport(390);
-    render(<App />);
-    await booted();
-    expect(screen.queryByRole("button", { name: /terminal$/ })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "maximize terminal" }),
+    ).toBeNull();
   });
 
-  it("minimizes the terminal into a bar that restores it", async () => {
+  it("minimizes the terminal to the desktop's taskbar, which restores it", async () => {
     viewport(1440);
     render(<App />);
     await booted();
@@ -266,18 +273,18 @@ describe("terminal window", () => {
     expect(
       screen.queryByRole("textbox", { name: "terminal input" }),
     ).toBeNull();
-    const restore = screen.getByRole("button", { name: "restore terminal" });
-    expect(restore).toHaveFocus();
-    fireEvent.click(restore);
+    const desktop = screen.getByRole("region", { name: "desktop" });
+    expect(
+      within(desktop).getByRole("button", { name: "Terminal" }),
+    ).toHaveFocus();
+    fireEvent.click(within(desktop).getByRole("button", { name: "terminal" }));
     expect(
       screen.getByRole("textbox", { name: "terminal input" }),
     ).toHaveFocus();
-    expect(
-      screen.queryByRole("button", { name: "restore terminal" }),
-    ).toBeNull();
+    expect(screen.queryByRole("region", { name: "desktop" })).toBeNull();
   });
 
-  it("closes the terminal behind a button that opens it with its session", async () => {
+  it("closes the terminal to the desktop, whose icon opens it with its session", async () => {
     viewport(1440);
     render(<App />);
     await booted();
@@ -286,9 +293,11 @@ describe("terminal window", () => {
     expect(
       screen.queryByRole("textbox", { name: "terminal input" }),
     ).toBeNull();
-    const reopen = screen.getByRole("button", { name: "open terminal" });
-    expect(reopen).toHaveFocus();
-    fireEvent.click(reopen);
+    const desktop = screen.getByRole("region", { name: "desktop" });
+    expect(
+      within(desktop).queryByRole("button", { name: "terminal" }),
+    ).toBeNull();
+    fireEvent.click(within(desktop).getByRole("button", { name: "Terminal" }));
     expect(
       screen.getByRole("textbox", { name: "terminal input" }),
     ).toHaveFocus();
@@ -465,16 +474,30 @@ describe("3D monitor", () => {
     expect(sceneMock.monitorPose).toBe("seated");
   });
 
-  it("stands up from the desk while the terminal is folded away", async () => {
+  it("stands up from the desktop and sits down at it again", async () => {
     viewport(1440);
     render(<App />);
     await booted();
-    expect(sceneMock.monitorPose).toBe("seated");
     fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
-    expect(sceneMock.monitorPose).toBe("standing");
-    fireEvent.click(screen.getByRole("button", { name: "restore terminal" }));
     expect(sceneMock.monitorPose).toBe("seated");
-    fireEvent.click(screen.getByRole("button", { name: "close terminal" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "stand up from the desk" }),
+    );
+    expect(sceneMock.monitorPose).toBe("standing");
+    const sitDown = screen.getByRole("button", {
+      name: "sit down at the terminal",
+    });
+    expect(sitDown).toHaveFocus();
+    fireEvent.click(sitDown);
+    expect(sceneMock.monitorPose).toBe("seated");
+    expect(screen.getByRole("button", { name: "Terminal" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "TheoCloud" }));
+    fireEvent.click(
+      within(screen.getByRole("navigation", { name: "start menu" })).getByRole(
+        "button",
+        { name: "Stand up" },
+      ),
+    );
     expect(sceneMock.monitorPose).toBe("standing");
   });
 
@@ -482,30 +505,34 @@ describe("3D monitor", () => {
     viewport(1440);
     render(<App />);
     await booted();
-    sceneMock.reportsSeat = false;
     fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
-    fireEvent.click(screen.getByRole("button", { name: "restore terminal" }));
-    expect(
-      screen.queryByRole("textbox", { name: "terminal input" }),
-    ).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: "stand up from the desk" }),
+    );
+    sceneMock.reportsSeat = false;
+    fireEvent.click(
+      screen.getByRole("button", { name: "sit down at the terminal" }),
+    );
+    expect(screen.queryByRole("region", { name: "desktop" })).toBeNull();
     act(() => sceneMock.seat?.());
-    expect(
-      screen.getByRole("textbox", { name: "terminal input" }),
-    ).toHaveFocus();
+    expect(screen.getByRole("button", { name: "Terminal" })).toHaveFocus();
   });
 
   it("shows the screen anyway if the 3D terminal never reports", async () => {
     viewport(1440);
     render(<App />);
     await booted();
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "stand up from the desk" }),
+    );
     sceneMock.reportsSeat = false;
     vi.useFakeTimers();
-    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
-    fireEvent.click(screen.getByRole("button", { name: "restore terminal" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "sit down at the terminal" }),
+    );
     await act(() => vi.advanceTimersByTimeAsync(SEAT_TIMEOUT_MS));
-    expect(
-      screen.getByRole("textbox", { name: "terminal input" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "desktop" })).toBeInTheDocument();
   });
 
   it("maximizes the 2D terminal below 1024 px", async () => {

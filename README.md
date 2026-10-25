@@ -21,7 +21,7 @@ A terminal website inside a Three.js scene. You sit at a worn 1980s CRT terminal
 
 - **Type or click commands.** `help` lists them all; `ls` and `cd projects` work like in bash; `open <project>` ejects a module from the rack and shows the project, `close` (or Esc) retracts it. Tab completes, the arrow keys browse the history, Ctrl+A/E/U/K/W/C/L edit like readline.
 - **Click the rack.** Every module is a project; clicking one runs `open` for it.
-- **Window keys.** Maximize leans in to the screen, minimize and close stand you up from the desk.
+- **Window keys.** Maximize leans in to the screen. Minimize or close the terminal and the CRT shows the TheoCloud OS desktop: projects, the world map, processes, notes, about and a trash that refuses to be emptied, in windows you can drag, stack and Alt+Tab through. Its stand-up button (or "Stand up" in the start menu) gets you up from the desk; `>_` sits you down again.
 - **Look around.** While standing, drag to turn and tilt, use the wheel to walk. After a few seconds the view eases back.
 - **Friends.** `friends` lists sites of friends; the postcard on the desk opens one.
 - **Explore.** It is a small bash: pipes, variables, `ls -a`, `top`. Try `neofetch`, `map`, `fortune | cowsay`, `play dino` or `hack mainframe`, and look for hidden files.

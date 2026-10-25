@@ -33,7 +33,9 @@ import type { Cwd } from "../terminal/commands";
 import type { Program } from "../terminal/output";
 import { bootSteps } from "../terminal/boot";
 import { BootScreen } from "./BootScreen";
-import { CrtFrame, type CrtControls } from "./CrtFrame";
+import { emptyDesk } from "../desktop/windows";
+import { CrtFrame, type CrtMaximize } from "./CrtFrame";
+import { Desktop } from "./desktop/Desktop";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
 import { Dino } from "./Dino";
@@ -105,8 +107,10 @@ export interface TerminalProps {
   holdBoot?: boolean;
   /** Tell visitors that the server rack in the scene is clickable. */
   rackHint?: boolean;
-  /** Minimize and close keys in the monitor housing; none if absent. */
-  controls?: CrtControls;
+  /** The maximize key, where the window can be maximized. */
+  maximize?: CrtMaximize;
+  /** Stands the visitor up from the desk, offered on the desktop. */
+  onStandUp?: () => void;
   /** Draw the 2D monitor housing; off while the 3D monitor surrounds it. */
   housing?: boolean;
   /** Called when a full-screen program starts, and with `undefined` at its end. */
@@ -124,7 +128,9 @@ export interface TerminalProps {
  * Escape closes the open project wherever the focus is. The line edits like
  * bash/readline (Ctrl+A/E/U/K/W, Ctrl+C cancels, Ctrl+L clears the screen,
  * Ctrl+R searches the history backwards) and shows a block cursor; `top`
- * takes over the screen until it quits; the real input is invisible on top of it, so
+ * and the other programs take over the screen until they quit. Minimizing
+ * or closing the terminal shows the TheoCloud OS desktop, whose windows
+ * keep their state while the terminal is open again; the real input is invisible on top of it, so
  * typing, IME and touch keyboards keep working.
  */
 export function Terminal({
@@ -133,7 +139,8 @@ export function Terminal({
   inlineProjectScreens = true,
   holdBoot = false,
   rackHint = false,
-  controls,
+  maximize,
+  onStandUp,
   housing = true,
   powered = true,
   onProgramChange,
@@ -147,6 +154,10 @@ export function Terminal({
   const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const [program, setProgram] = useState<Program>();
+  const [terminalApp, setTerminalApp] = useState<
+    "open" | "minimized" | "closed"
+  >("open");
+  const [desk, setDesk] = useState(emptyDesk);
   const programEntry = useRef<number | undefined>(undefined);
   const [search, setSearch] = useState<{
     query: string;
@@ -154,6 +165,7 @@ export function Terminal({
     original: string;
   }>();
   const inputRef = useRef<HTMLInputElement>(null);
+  const desktopFocus = useRef<HTMLButtonElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
   const booted = bootReached >= bootSteps.length;
@@ -200,10 +212,12 @@ export function Terminal({
   }, [phase]);
 
   useEffect(() => {
-    if (phase === "ready" && program === undefined) {
+    if (terminalApp !== "open") {
+      desktopFocus.current?.focus();
+    } else if (phase === "ready" && program === undefined) {
       inputRef.current?.focus();
     }
-  }, [phase, program]);
+  }, [phase, program, terminalApp]);
 
   const reportProgram = useEffectEvent((running: Program | undefined) =>
     onProgramChange?.(running),
@@ -313,9 +327,13 @@ export function Terminal({
   };
 
   useImperativeHandle(ref, () => ({
-    run: runCommand,
+    run: (command) => {
+      setTerminalApp("open");
+      runCommand(command);
+    },
     promptAnchor: () => inputRef.current?.getBoundingClientRect(),
-    focus: () => inputRef.current?.focus(),
+    focus: () =>
+      (terminalApp === "open" ? inputRef : desktopFocus).current?.focus(),
   }));
 
   const closeOnEscape = useEffectEvent((event: globalThis.KeyboardEvent) => {
@@ -445,12 +463,30 @@ export function Terminal({
 
   return (
     <CrtFrame
-      title={`guest@theocloud: ${session.cwd}`}
-      controls={controls}
+      title={
+        terminalApp === "open" ? `guest@theocloud: ${session.cwd}` : undefined
+      }
+      controls={{
+        onMinimize: () => setTerminalApp("minimized"),
+        onClose: () => setTerminalApp("closed"),
+        maximize,
+      }}
       housing={housing}
       powered={powered}
     >
-      {program?.name === "top" ? (
+      {terminalApp !== "open" ? (
+        <Desktop
+          desk={desk}
+          setDesk={setDesk}
+          terminalMinimized={terminalApp === "minimized"}
+          onOpenTerminal={() => setTerminalApp("open")}
+          onRun={runCommand}
+          onStandUp={onStandUp}
+          focusRef={desktopFocus}
+          inlineProjectScreens={inlineProjectScreens}
+          processes={{ killed: session.killed, startedAt: session.startedAt }}
+        />
+      ) : program?.name === "top" ? (
         <Top
           state={{ killed: session.killed, startedAt: session.startedAt }}
           onQuit={() => exitProgram()}
