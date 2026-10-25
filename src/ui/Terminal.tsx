@@ -240,9 +240,20 @@ export function Terminal({
     }
   };
 
+  /**
+   * Minimizes or closes the terminal for the desktop. A running program
+   * ends with a hangup, as when a real terminal goes away.
+   */
+  const leaveScreen = (state: "minimized" | "closed") => {
+    if (program !== undefined) {
+      exitProgram([{ text: "Hangup", muted: true }]);
+    }
+    setTerminalApp(state);
+  };
+
   useEffect(() => {
     logRef.current?.scrollTo?.({ top: logRef.current.scrollHeight });
-  }, [session.log, bootReached]);
+  }, [session.log, bootReached, terminalApp]);
 
   useEffect(() => {
     if (caretTarget.current !== null) {
@@ -467,8 +478,8 @@ export function Terminal({
         terminalApp === "open" ? `guest@theocloud: ${session.cwd}` : undefined
       }
       controls={{
-        onMinimize: () => setTerminalApp("minimized"),
-        onClose: () => setTerminalApp("closed"),
+        onMinimize: () => leaveScreen("minimized"),
+        onClose: () => leaveScreen("closed"),
         maximize,
       }}
       housing={housing}

@@ -75,8 +75,8 @@ const clock = (date: Date) =>
  * or minimized: a dithered phosphor wallpaper, icons for the apps, windows
  * that can be dragged, focused, minimized, maximized and closed, and a
  * taskbar with a start menu, the open windows, the clock and a button to
- * stand up from the desk. Alt+Tab cycles the windows, Escape closes the
- * menu.
+ * stand up from the desk. Alt+` (and Alt+Tab where the system lets it
+ * through) cycles the windows, Escape closes the menu.
  */
 export function Desktop({
   desk,
@@ -103,7 +103,7 @@ export function Desktop({
     }
   };
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
-    if (event.altKey && event.key === "Tab") {
+    if (event.altKey && (event.key === "Tab" || event.code === "Backquote")) {
       event.preventDefault();
       setDesk(cycleFocus);
     } else if (event.key === "Escape" && menu) {
@@ -182,7 +182,13 @@ export function Desktop({
             </button>
           ))}
           {onStandUp ? (
-            <button type="button" onClick={onStandUp}>
+            <button
+              type="button"
+              onClick={() => {
+                setMenu(false);
+                onStandUp();
+              }}
+            >
               <PixelIcon name="stand" />
               Stand up
             </button>

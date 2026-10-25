@@ -138,19 +138,16 @@ function About() {
           &gt; github.com/theoleuthardt ↗
         </a>
       </p>
-      <p>
-        Friends:{" "}
+      <p>Friends:</p>
+      <ul aria-label="friends">
         {friends.map((friend) => (
-          <a
-            key={friend.id}
-            href={friend.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {friend.site} ↗
-          </a>
+          <li key={friend.id}>
+            <a href={friend.url} target="_blank" rel="noopener noreferrer">
+              &gt; {friend.site} ↗
+            </a>
+          </li>
         ))}
-      </p>
+      </ul>
     </div>
   );
 }

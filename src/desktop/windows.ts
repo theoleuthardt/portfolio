@@ -143,7 +143,7 @@ export function moveWindow(
   }));
 }
 
-/** Alt+Tab: the bottom window that is not minimized comes to the top. */
+/** Alt+`: the bottom window that is not minimized comes to the top. */
 export function cycleFocus(desk: Desk): Desk {
   const visible = desk.windows.filter((window) => !window.minimized);
   return visible.length < 2 ? desk : focusWindow(desk, visible[0].id);

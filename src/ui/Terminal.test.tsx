@@ -921,6 +921,72 @@ describe("Terminal desktop", () => {
     expect(screen.getByText("guest@theocloud: ~/projects")).toBeInTheDocument();
   });
 
+  it("ends a running program with a hangup when the terminal leaves the screen", () => {
+    const onProgramChange = vi.fn();
+    renderBooted(<Terminal onProgramChange={onProgramChange} />);
+    type("hack mainframe");
+    expect(onProgramChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: "hack" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "minimize terminal" }));
+    expect(onProgramChange).toHaveBeenLastCalledWith(undefined);
+    vi.useRealTimers();
+    fireEvent.click(taskbarButton("terminal"));
+    expect(input()).toHaveFocus();
+    expect(within(log()).getByText("Hangup")).toBeInTheDocument();
+  });
+
+  it("scrolls the log to its end when the terminal comes back", () => {
+    const scrollTo = vi.fn();
+    HTMLElement.prototype.scrollTo = scrollTo;
+    try {
+      renderBooted(<Terminal />);
+      fireEvent.click(
+        screen.getByRole("button", { name: "minimize terminal" }),
+      );
+      vi.useRealTimers();
+      scrollTo.mockClear();
+      fireEvent.click(taskbarButton("terminal"));
+      expect(scrollTo).toHaveBeenCalled();
+    } finally {
+      Reflect.deleteProperty(HTMLElement.prototype, "scrollTo");
+    }
+  });
+
+  it("cycles windows with Alt+Backquote, which browsers let through", () => {
+    closeTerminal();
+    icon("About");
+    icon("Processes");
+    fireEvent.keyDown(desktop(), { key: "`", code: "Backquote", altKey: true });
+    expect(taskbarButton("About")).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("closes the start menu when standing up from it", () => {
+    closeTerminal(<Terminal onStandUp={vi.fn()} />);
+    const start = screen.getByRole("button", { name: "TheoCloud" });
+    fireEvent.click(start);
+    fireEvent.click(
+      within(screen.getByRole("navigation", { name: "start menu" })).getByRole(
+        "button",
+        { name: "Stand up" },
+      ),
+    );
+    expect(start).toHaveAttribute("aria-expanded", "false");
+  });
+
+  it("lists the friends' sites in About", () => {
+    closeTerminal();
+    icon("About");
+    expect(
+      within(
+        within(screen.getByRole("region", { name: "About" })).getByRole(
+          "list",
+          { name: "friends" },
+        ),
+      ).getByRole("link", { name: /DomiFolio/ }),
+    ).toHaveAttribute("href", "https://diewilhelms.de/");
+  });
+
   it("brings the terminal back when a command comes from outside", () => {
     const ref = createRef<TerminalHandle>();
     closeTerminal(<Terminal ref={ref} />);
