@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { about, contacts } from "../content/about";
 import { projects } from "../content/projects";
 import { commandNames, run } from "./commands";
 
@@ -129,5 +130,35 @@ describe("run", () => {
         text: `bash: ${name}: command not found`,
       });
     }
+  });
+
+  it("tells who Theo is with about and ejects the about server", () => {
+    const result = run("about", context);
+    const texts = result.lines.map((line) => "text" in line && line.text);
+    expect(texts).toContain(`${about.name} // ${about.role}`);
+    for (const paragraph of about.paragraphs) {
+      expect(texts).toContain(paragraph);
+    }
+    expect(result.actions).toContainEqual({ type: "open", projectId: "about" });
+  });
+
+  it("lists the contacts as links with contact and lights the patch panel", () => {
+    const result = run("contact", context);
+    expect(result.lines.filter((line) => line.kind === "link")).toEqual(
+      contacts.map((contact) => ({
+        kind: "link",
+        label: contact.label,
+        url: contact.url,
+      })),
+    );
+    expect(result.actions).toContainEqual({
+      type: "open",
+      projectId: "contact",
+    });
+  });
+
+  it("opens the about server and the patch panel like the commands", () => {
+    expect(run("open about", context)).toEqual(run("about", context));
+    expect(run("open contact", context)).toEqual(run("contact", context));
   });
 });

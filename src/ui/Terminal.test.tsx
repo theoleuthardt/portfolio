@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { createRef, type ReactElement } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { about, contacts } from "../content/about";
 import { bootSteps } from "../terminal/boot";
 import { HACK_DURATION_MS } from "../terminal/hack";
 import {
@@ -215,7 +216,7 @@ describe("Terminal", () => {
   it("completes with Tab like a terminal and leaves with Shift+Tab", () => {
     renderBooted(<Terminal />);
     expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
-    expect(screen.getByText(/^cat cd clear close/)).toBeInTheDocument();
+    expect(screen.getByText(/^about cat cd clear close/)).toBeInTheDocument();
     fireEvent.change(input(), { target: { value: "xyz" } });
     expect(fireEvent.keyDown(input(), { key: "Tab" })).toBe(false);
     expect(input()).toHaveValue("xyz");
@@ -1043,6 +1044,19 @@ describe("Terminal desktop", () => {
     expect(
       within(projects).getByRole("button", { name: "flashi" }),
     ).toHaveAttribute("aria-pressed", "false");
+  });
+
+  it("tells who Theo is in About, with the contacts", () => {
+    closeTerminal();
+    icon("About");
+    const aboutWindow = screen.getByRole("region", { name: "About" });
+    expect(within(aboutWindow).getByText(about.paragraphs[0])).toBeVisible();
+    const links = within(
+      within(aboutWindow).getByRole("list", { name: "contact" }),
+    ).getAllByRole("link");
+    expect(links.map((link) => link.getAttribute("href"))).toEqual(
+      contacts.map((contact) => contact.url),
+    );
   });
 
   it("lists the friends' sites in About", () => {
