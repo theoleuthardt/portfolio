@@ -91,6 +91,22 @@ describe("checkBudgets", () => {
     ).toThrow('budget "moved": "src/scene/Moved.tsx" is not in the manifest');
   });
 
+  it("fails loudly for a missing import or an unmeasured file", () => {
+    const broken: Manifest = {
+      ...manifest,
+      "src/scene/Scene.tsx": { file: "assets/Scene.js", imports: ["_gone.js"] },
+    };
+    const scene = [
+      { name: "scene", entry: "src/scene/Scene.tsx", limit: 300_000 },
+    ];
+    expect(() => checkBudgets(broken, sizes, 0, scene)).toThrow(
+      '"_gone.js" is imported but not in the manifest',
+    );
+    expect(() => checkBudgets(manifest, new Map(), 0, scene)).toThrow(
+      'no size for "assets/Scene.js"',
+    );
+  });
+
   it("covers the main bundle, scene, post-processing, props and lab", () => {
     expect(BUDGETS.map((budget) => budget.name)).toEqual([
       "main",

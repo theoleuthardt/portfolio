@@ -50,8 +50,11 @@ export const BUDGETS: readonly Budget[] = [
 function staticClosure(manifest: Manifest, key: string): Set<string> {
   const found = new Set<string>();
   const visit = (current: string) => {
-    if (found.has(current) || manifest[current] === undefined) {
+    if (found.has(current)) {
       return;
+    }
+    if (manifest[current] === undefined) {
+      throw new Error(`"${current}" is imported but not in the manifest`);
     }
     found.add(current);
     for (const imported of manifest[current].imports ?? []) {
@@ -67,8 +70,8 @@ function staticClosure(manifest: Manifest, key: string): Set<string> {
  * file (scripts and stylesheets) of its chunk and of the chunks it imports
  * statically that no earlier step has loaded yet, in gzip bytes from
  * `sizes`; a file shared by several chunks counts once. The static assets
- * are checked as a whole. An entry missing from the manifest throws, so a
- * moved chunk never slips through unchecked.
+ * are checked as a whole. An entry or import missing from the manifest, or
+ * an output without a size, throws, so nothing slips through unchecked.
  */
 export function checkBudgets(
   manifest: Manifest,
@@ -87,7 +90,11 @@ export function checkBudgets(
       for (const output of [file, ...css]) {
         if (!loaded.has(output)) {
           loaded.add(output);
-          size += sizes.get(output) ?? 0;
+          const bytes = sizes.get(output);
+          if (bytes === undefined) {
+            throw new Error(`no size for "${output}"`);
+          }
+          size += bytes;
         }
       }
     }
