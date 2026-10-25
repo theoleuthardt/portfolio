@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { cameraPosition, fieldOfView, type RigSettings } from "./cameraRig";
+import {
+  cameraPosition,
+  fieldOfView,
+  frameloopFor,
+  type RigSettings,
+} from "./cameraRig";
 
 const settings: RigSettings = {
   base: [0, 1, 10],
@@ -48,5 +53,16 @@ describe("fieldOfView", () => {
     const horizontal = (fov: number, aspect: number) =>
       2 * Math.atan(Math.tan((fov * Math.PI) / 360) * aspect);
     expect(horizontal(narrow, 0.8)).toBeCloseTo(horizontal(38, 1.6), 5);
+  });
+});
+
+describe("frameloopFor", () => {
+  it("renders always, on demand with reduced motion, and never in a hidden tab", () => {
+    expect(frameloopFor({ hidden: false, reducedMotion: false })).toBe(
+      "always",
+    );
+    expect(frameloopFor({ hidden: false, reducedMotion: true })).toBe("demand");
+    expect(frameloopFor({ hidden: true, reducedMotion: false })).toBe("never");
+    expect(frameloopFor({ hidden: true, reducedMotion: true })).toBe("never");
   });
 });

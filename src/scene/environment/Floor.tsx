@@ -19,7 +19,7 @@ function Tiles() {
       <planeGeometry args={[WIDTH, DEPTH]} />
       <MeshReflectorMaterial
         {...maps}
-        resolution={1024}
+        resolution={512}
         blur={[260, 90]}
         mixBlur={0.9}
         mixStrength={11}

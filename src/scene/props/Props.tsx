@@ -1,4 +1,5 @@
 import { Clone, useGLTF } from "@react-three/drei";
+import { Baked } from "../bake/Baked";
 import { useEffect, useMemo } from "react";
 import { Color } from "three";
 import { InstancedBoxes, type Point3 } from "../environment/InstancedBoxes";
@@ -369,11 +370,12 @@ function LampLights() {
 
 /**
  * Everything in the lab that is not room or rack: models, monitors, sign,
- * stripes. Its own lazy chunk, loaded after the lab is visible.
+ * stripes. Its own lazy chunk, loaded after the lab is visible; everything
+ * is static, so it is baked into a few merged meshes.
  */
 export default function Props() {
   return (
-    <group>
+    <Baked>
       {MODEL_PROPS.map((prop, index) => (
         <Model key={index} {...prop} />
       ))}
@@ -387,7 +389,7 @@ export default function Props() {
       <FloorCables />
       <Signs />
       <LampLights />
-    </group>
+    </Baked>
   );
 }
 

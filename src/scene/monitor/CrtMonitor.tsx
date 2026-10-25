@@ -1,4 +1,5 @@
 import { RoundedBox } from "@react-three/drei";
+import { Baked } from "../bake/Baked";
 import { useFrame, useThree } from "@react-three/fiber";
 import {
   useEffect,
@@ -399,6 +400,7 @@ function Postcards({
   return cards.map(({ friend, texture }, index) => (
     <mesh
       key={friend.id}
+      userData={{ dynamic: true }}
       position={[1.2 + index * 0.6, top + 0.17, 0.25]}
       rotation={[-0.35, -0.25, 0]}
       onPointerOver={(event) => {
@@ -715,15 +717,17 @@ export function CrtMonitor({
       scale={SCREEN.width}
       visible={pose !== "off"}
     >
-      <ScreenUnit
-        aspect={ASPECT}
-        plastic={plastic}
-        dark={dark}
-        brand={brand}
-        screen={screen}
-      />
-      <Deck aspect={ASPECT} plastic={plastic} />
-      <Desk floor={TERMINAL_FLOOR} onOpen={onOpen} />
+      <Baked>
+        <ScreenUnit
+          aspect={ASPECT}
+          plastic={plastic}
+          dark={dark}
+          brand={brand}
+          screen={screen}
+        />
+        <Deck aspect={ASPECT} plastic={plastic} />
+        <Desk floor={TERMINAL_FLOOR} onOpen={onOpen} />
+      </Baked>
     </group>
   );
 }

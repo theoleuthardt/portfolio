@@ -87,7 +87,7 @@ function Vending() {
         position={[0, 0.975, 0.375]}
         color="#1c1220"
       />
-      <mesh position={[-0.1, 1.05, 0.752]}>
+      <mesh position={[-0.1, 1.05, 0.752]} userData={{ dynamic: true }}>
         <planeGeometry args={[0.62, 1.5]} />
         <meshBasicMaterial ref={material} map={front} toneMapped={false} />
       </mesh>
@@ -196,7 +196,7 @@ function Steam() {
     });
   });
   return (
-    <group ref={wisps}>
+    <group ref={wisps} userData={{ dynamic: true }}>
       {[0, 1, 2, 3].map((index) => (
         <mesh key={index}>
           <circleGeometry args={[0.035, 12]} />
@@ -429,7 +429,7 @@ function Cooling() {
         position={[0, 1.72, 0.802]}
         glow={1.6}
       />
-      <group ref={fan} position={[0, 0.85, 0.79]}>
+      <group ref={fan} position={[0, 0.85, 0.79]} userData={{ dynamic: true }}>
         {[0, 1, 2, 3, 4].map((blade) => (
           <Block
             key={blade}

@@ -34,6 +34,7 @@ src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                lab/ (lazy chunk: placement, cable curves and motion as pure
                functions, walls, overhead cabling, small life)
                look (drag/wheel look-around as pure functions)
+               bake/ (merging static meshes per material, Baked)
                props/ (lazy chunk: placed models, monitors, background racks,
                neon sign, wall screens, signs, cables)
 public/textures/ CC0 PBR maps, see ASSETS.md

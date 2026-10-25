@@ -107,13 +107,14 @@ describe("checkBudgets", () => {
     );
   });
 
-  it("covers the main bundle, scene, post-processing, props and lab", () => {
+  it("covers the main bundle, scene, post-processing, props, lab and desk", () => {
     expect(BUDGETS.map((budget) => budget.name)).toEqual([
       "main",
       "scene",
       "post-processing",
       "props",
       "lab",
+      "desk",
     ]);
   });
 });
