@@ -107,7 +107,7 @@ describe("checkBudgets", () => {
     );
   });
 
-  it("covers the main bundle, scene, post-processing, props, lab and desk", () => {
+  it("covers the main bundle, scene, post-processing, props, lab, desk and map", () => {
     expect(BUDGETS.map((budget) => budget.name)).toEqual([
       "main",
       "scene",
@@ -115,6 +115,7 @@ describe("checkBudgets", () => {
       "props",
       "lab",
       "desk",
+      "map",
     ]);
   });
 });

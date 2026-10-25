@@ -389,6 +389,26 @@
     background: color-mix(in srgb, var(--color-phosphor) 22%, transparent);
   }
 
+  .crt-map {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    height: 100%;
+  }
+
+  .crt-map canvas {
+    display: block;
+    flex: none;
+    max-width: 100%;
+    height: auto;
+    cursor: grab;
+  }
+
+  .crt-map-status {
+    background: color-mix(in srgb, var(--color-phosphor) 15%, transparent);
+    padding-inline: 0.4rem;
+  }
+
   .crt-top-header {
     background: var(--color-phosphor);
     color: var(--color-glass);

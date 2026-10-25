@@ -91,6 +91,12 @@ describe("programs", () => {
     expect(texts("play chess")).toEqual([
       "play: chess: no such game (try: play dino)",
     ]);
+    expect(run("map", home).actions).toEqual([
+      { type: "program", name: "map" },
+    ]);
+    expect(run("mapscii", home).actions).toEqual([
+      { type: "program", name: "map" },
+    ]);
     expect(texts("hack")).toEqual(["usage: hack <target>"]);
     expect(texts('hack ""')).toEqual(["usage: hack <target>"]);
   });

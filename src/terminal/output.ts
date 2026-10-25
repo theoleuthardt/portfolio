@@ -14,7 +14,8 @@ export type Cwd = string;
 
 /** A full-screen program running in the terminal. */
 export type Program =
-  { name: "top" | "matrix" | "dino" } | { name: "hack"; target: string };
+  | { name: "top" | "matrix" | "dino" | "map" }
+  | { name: "hack"; target: string };
 
 /** Something the UI or the scene has to do after a command line. */
 export type TerminalAction =
