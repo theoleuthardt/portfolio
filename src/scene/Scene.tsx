@@ -323,6 +323,8 @@ export interface SceneProps {
   monitorPose?: MonitorPose;
   /** Called when the 3D terminal is seated around the screen, or no more. */
   onSeatedChange?: (seated: boolean) => void;
+  /** Sound the lab's alarm, e.g. while the terminal runs `hack`. */
+  alarm?: boolean;
 }
 
 /**
@@ -339,6 +341,7 @@ export default function Scene({
   onScreenPlacement,
   monitorPose = "off",
   onSeatedChange,
+  alarm = false,
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
   const [labReady, setLabReady] = useState(false);
@@ -411,7 +414,7 @@ export default function Scene({
         <SceneErrorBoundary fallback={null}>
           <Suspense fallback={null}>
             <Props />
-            <Lab openProjectId={openProjectId} />
+            <Lab openProjectId={openProjectId} alarm={alarm} />
           </Suspense>
         </SceneErrorBoundary>
       ) : null}

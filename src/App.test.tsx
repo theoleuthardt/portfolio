@@ -21,6 +21,7 @@ const sceneMock = vi.hoisted(() => ({
   promptAnchor: undefined as (() => DOMRect | undefined) | undefined,
   place: undefined as ((placement: Placement | undefined) => void) | undefined,
   monitorPose: undefined as string | undefined,
+  alarm: false as boolean | undefined,
   reportsSeat: true,
   seat: undefined as (() => void) | undefined,
 }));
@@ -35,6 +36,7 @@ vi.mock("./scene/Scene", async () => {
       onScreenPlacement,
       monitorPose,
       onSeatedChange,
+      alarm,
     }: {
       onReady: () => void;
       onSelectProject: (id: string) => void;
@@ -42,7 +44,9 @@ vi.mock("./scene/Scene", async () => {
       onScreenPlacement?: (placement: Placement | undefined) => void;
       monitorPose?: string;
       onSeatedChange?: (seated: boolean) => void;
+      alarm?: boolean;
     }) {
+      sceneMock.alarm = alarm;
       if (sceneMock.fails) {
         throw new Error("WebGL context lost");
       }
@@ -511,5 +515,25 @@ describe("3D monitor", () => {
     fireEvent.click(screen.getByRole("button", { name: "maximize terminal" }));
     expect(sceneMock.monitorPose).toBe("off");
     expect(screen.getByText("THEO-TERM 3270")).toBeInTheDocument();
+  });
+});
+
+describe("lab alarm", () => {
+  it("sounds the alarm in the lab while a hack runs", async () => {
+    viewport(1440);
+    render(<App />);
+    await screen.findByRole(
+      "textbox",
+      { name: "terminal input" },
+      { timeout: 3000 },
+    );
+    expect(sceneMock.alarm).toBe(false);
+    type("hack nasa");
+    expect(sceneMock.alarm).toBe(true);
+    fireEvent.keyDown(screen.getByRole("region", { name: "hack" }), {
+      key: "c",
+      ctrlKey: true,
+    });
+    expect(sceneMock.alarm).toBe(false);
   });
 });

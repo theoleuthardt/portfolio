@@ -32,10 +32,12 @@ describe("run", () => {
     expect(open).toMatchObject({ usage: "open <project>" });
   });
 
-  it("shows the readme and the projects directory for ls at home", () => {
+  it("shows the readme, notes, projects and the todo list for ls at home", () => {
     expect(run("ls", context).lines).toEqual([
       { kind: "text", text: "README.md" },
+      { kind: "dir", name: "notes/", command: "cd notes" },
       { kind: "dir", name: "projects/", command: "cd projects" },
+      { kind: "text", text: "todo.txt" },
     ]);
   });
 

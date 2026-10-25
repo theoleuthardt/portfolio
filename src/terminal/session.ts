@@ -149,3 +149,21 @@ export function cancel(session: Session, input: string): Session {
 export function clearScreen(session: Session): Session {
   return { ...session, log: [] };
 }
+
+/** Adds output to the newest log entry, e.g. what a program leaves behind. */
+export function appendOutput(
+  session: Session,
+  lines: readonly TerminalLine[],
+): Session {
+  const last = session.log[session.log.length - 1];
+  if (last === undefined) {
+    return session;
+  }
+  return {
+    ...session,
+    log: [
+      ...session.log.slice(0, -1),
+      { ...last, lines: [...last.lines, ...lines] },
+    ],
+  };
+}

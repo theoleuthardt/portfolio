@@ -374,15 +374,19 @@
 
   .crt-top:focus-visible {
     outline: 1px dashed
-      color-mix(in srgb, var(--color-phosphor) 50%, transparent);
+      color-mix(in srgb, var(--color-phosphor) 30%, transparent);
     outline-offset: -4px;
     box-shadow: none;
   }
 
   .crt-top pre {
     font-family: inherit;
-    font-size: min(0.8125rem, 1.72cqi);
+    font-size: min(0.9375rem, calc(100cqi / var(--columns) / 0.6));
     white-space: pre;
+  }
+
+  .crt-flash {
+    background: color-mix(in srgb, var(--color-phosphor) 22%, transparent);
   }
 
   .crt-top-header {

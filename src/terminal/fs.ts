@@ -31,6 +31,15 @@ const dir = (entries: Record<string, FsNode>): DirNode => ({
   entries: new Map(Object.entries(entries)),
 });
 
+const HIGHSCORE = file(
+  "DINO RUN - HIGH SCORES",
+  "1. theo     1337",
+  "2. dino      999",
+  "3. guest       0   <- you, so far (play dino)",
+  "",
+  "Clue 2/3: notes are kept in ~/notes, but the last one is hidden.",
+);
+
 function projectDir(project: Project): DirNode {
   const links = [
     `repository  ${project.repository}`,
@@ -49,6 +58,7 @@ function projectDir(project: Project): DirNode {
     ),
     "stack.txt": file(...project.stack),
     "links.txt": file(...links),
+    ...(project.id === "dinogame" ? { "highscore.txt": HIGHSCORE } : {}),
   });
 }
 
@@ -81,12 +91,48 @@ export function buildFileSystem(): DirNode {
           'PS1="\\u@\\h:\\w\\$ "',
         ),
         ".profile": file("[ -f ~/.bashrc ] && . ~/.bashrc"),
+        ".secret": file(
+          "      .--.",
+          "     /.-. '----------.",
+          '     \\\'-\' .--"--""-"-\'',
+          "      '--'",
+          "",
+          "You found the key. It opens nothing, but well done.",
+          "Clue 1/3: the dino keeps its records in its own project",
+          "directory, ~/projects/dinogame.",
+        ),
+        notes: dir({
+          "meeting.txt": file(
+            "standup, 09:00",
+            "- rack-01: fine",
+            "- rack-02: not assembled yet",
+            "- coffee-daemon: at 38% CPU again. someone kill it.",
+          ),
+          "ideas.txt": file(
+            "- a desktop mode on the CRT",
+            "- an explorable world map in the terminal",
+            "- teach the robot vacuum to avoid cables",
+          ),
+          ".last-note": file(
+            "Clue 3/3: some targets are more special than others.",
+            "Try: hack gibson",
+          ),
+        }),
+        "todo.txt": file(
+          "[x] build a server rack in the browser",
+          "[x] make the terminal a real bash",
+          "[ ] sleep",
+          "[ ] fix the flickering tube in the lab (it's a feature)",
+          "[ ] find out who keeps restarting coffee-daemon",
+        ),
         "README.md": file(
           "# Welcome to TheoCloud OS",
           "",
           "This is Theo Leuthardt's lab. The projects live in ~/projects,",
           "one directory each. Try: cd projects, ls, cat flashi/README.md,",
           "open flashi, or just help.",
+          "",
+          "Some files only show with ls -a. Curious?",
           "",
           `Friends of the lab: ${friends.map((friend) => friend.site).join(", ")} (type friends).`,
         ),

@@ -44,6 +44,7 @@ const App = () => {
   const [maximized, setMaximized] = useState(false);
   const [seated, setSeated] = useState(false);
   const [seatForced, setSeatForced] = useState(false);
+  const [hacking, setHacking] = useState(false);
   const terminal = useRef<TerminalHandle>(null);
   const restoreButton = useRef<HTMLButtonElement>(null);
   const windowElement = useRef<HTMLDivElement>(null);
@@ -155,6 +156,7 @@ const App = () => {
         }
         onScreenPlacement={placeScreen}
         monitorPose={monitorPose}
+        alarm={hacking}
         onSeatedChange={(value) => {
           setSeated(value);
           if (!value) {
@@ -186,6 +188,7 @@ const App = () => {
           holdBoot={sceneLoading}
           rackHint={sceneShown}
           housing={!atScreen}
+          onProgramChange={(program) => setHacking(program?.name === "hack")}
           powered={!waitingForSeat}
           controls={
             sceneShown
