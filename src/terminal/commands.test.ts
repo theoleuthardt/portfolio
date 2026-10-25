@@ -6,7 +6,9 @@ const context = { history: ["ls", "open flashi"] };
 
 describe("run", () => {
   it("returns nothing for blank input", () => {
-    expect(run("   ", context)).toEqual({ lines: [] });
+    const result = run("   ", context);
+    expect(result.lines).toEqual([]);
+    expect(result.actions).toEqual([]);
   });
 
   it("explains every command in help", () => {
@@ -30,27 +32,28 @@ describe("run", () => {
     expect(open).toMatchObject({ usage: "open <project>" });
   });
 
-  it("shows the projects directory for ls at home", () => {
+  it("shows the readme and the projects directory for ls at home", () => {
     expect(run("ls", context).lines).toEqual([
+      { kind: "text", text: "README.md" },
       { kind: "dir", name: "projects/", command: "cd projects" },
     ]);
   });
 
-  it("lists every project with its tagline for projects, and for ls in projects/", () => {
-    for (const result of [
-      run("projects", context),
-      run("ls", { ...context, cwd: "~/projects" }),
-    ]) {
-      const listed = result.lines.filter((line) => line.kind === "project");
-      expect(listed.map((line) => line.kind === "project" && line.id)).toEqual(
-        projects.map((project) => project.id),
-      );
-    }
+  it("lists every project with its tagline: in rack order for projects, sorted for ls in projects/", () => {
+    const ids = (input: string, cwd = "~") =>
+      run(input, { ...context, cwd })
+        .lines.filter((line) => line.kind === "project")
+        .map((line) => line.kind === "project" && line.id);
+    const rackOrder = projects.map((project) => project.id);
+    expect(ids("projects")).toEqual(rackOrder);
+    expect(ids("ls", "~/projects")).toEqual([...rackOrder].sort());
   });
 
   it("opens a known project and returns an open action", () => {
     const result = run("open Trust-Issues", context);
-    expect(result.action).toEqual({ type: "open", projectId: "trust-issues" });
+    expect(result.actions).toEqual([
+      { type: "open", projectId: "trust-issues" },
+    ]);
     expect(result.lines[0]).toEqual({
       kind: "muted",
       text: "> ejecting module trust-issues ... camera locked",
@@ -59,7 +62,7 @@ describe("run", () => {
 
   it("offers the projects as a question when open has no argument", () => {
     const result = run("open", context);
-    expect(result.action).toBeUndefined();
+    expect(result.actions).toEqual([]);
     expect(result.lines).toEqual([
       { kind: "text", text: "open which project?" },
       { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
@@ -68,7 +71,7 @@ describe("run", () => {
 
   it("suggests the closest project for a misspelled name", () => {
     const result = run("open flahsi", context);
-    expect(result.action).toBeUndefined();
+    expect(result.actions).toEqual([]);
     expect(result.lines).toContainEqual({
       kind: "error",
       text: "open: no such project: flahsi",
@@ -80,14 +83,13 @@ describe("run", () => {
   });
 
   it("closes the open project", () => {
-    expect(run("close", context).action).toEqual({ type: "close" });
+    expect(run("close", context).actions).toEqual([{ type: "close" }]);
   });
 
   it("clears the screen", () => {
-    expect(run("clear", context)).toEqual({
-      lines: [],
-      action: { type: "clear" },
-    });
+    const result = run("clear", context);
+    expect(result.lines).toEqual([]);
+    expect(result.actions).toEqual([{ type: "clear" }]);
   });
 
   it("prints the numbered history", () => {
@@ -100,15 +102,15 @@ describe("run", () => {
   it("reports unknown commands and suggests the closest one", () => {
     const result = run("hlep", context);
     expect(result.lines).toEqual([
-      { kind: "error", text: "command not found: hlep" },
+      { kind: "error", text: "bash: hlep: command not found" },
       { kind: "muted", text: "did you mean:" },
       { kind: "chips", commands: ["help"] },
     ]);
   });
 
   it("reports unknown commands without a suggestion when nothing is close", () => {
-    expect(run("rm -rf /", context).lines).toEqual([
-      { kind: "error", text: "command not found: rm" },
+    expect(run("xyzzy -rf /", context).lines).toEqual([
+      { kind: "error", text: "bash: xyzzy: command not found" },
       { kind: "muted", text: "type 'help' for a list of commands" },
     ]);
   });
@@ -122,7 +124,7 @@ describe("run", () => {
     ]) {
       expect(run(name, context).lines[0]).toEqual({
         kind: "error",
-        text: `command not found: ${name.toLowerCase()}`,
+        text: `bash: ${name}: command not found`,
       });
     }
   });

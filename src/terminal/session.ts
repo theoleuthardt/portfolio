@@ -1,6 +1,8 @@
 import {
+  DEFAULT_ENV,
   run,
   type Cwd,
+  type ShellState,
   type TerminalAction,
   type TerminalLine,
 } from "./commands";
@@ -20,41 +22,49 @@ export interface LogEntry {
   projectId?: string;
 }
 
-/** Everything the terminal shows and remembers. */
-export interface Session {
+/** Everything the terminal shows and remembers, including the shell. */
+export interface Session extends ShellState {
   log: readonly LogEntry[];
   history: History;
-  cwd: Cwd;
   openProjectId?: string;
   nextId: number;
+  /** When the session started, for `uptime` and `top`. */
+  startedAt: Date;
 }
 
-/** A submitted command's new session and the action for the scene, if any. */
+/** A submitted line's new session and the actions for the UI, in order. */
 export interface Submission {
   session: Session;
-  action?: TerminalAction;
+  actions: TerminalAction[];
 }
 
 /** A new session in the home directory whose log holds the boot output. */
-export function createSession(): Session {
+export function createSession(startedAt: Date = new Date()): Session {
   return {
     log: [{ id: 0, lines: bootLines }],
     history: emptyHistory,
     cwd: "~",
+    env: DEFAULT_ENV,
+    status: 0,
+    killed: [],
     nextId: 1,
+    startedAt,
   };
 }
 
 function openProjectAfter(
   current: string | undefined,
-  action: TerminalAction | undefined,
+  actions: readonly TerminalAction[],
 ): string | undefined {
-  if (action?.type === "open") {
-    return action.projectId;
-  }
-  return action?.type === "close" || action?.type === "clear"
-    ? undefined
-    : current;
+  return actions.reduce<string | undefined>(
+    (open, action) =>
+      action.type === "open"
+        ? action.projectId
+        : action.type === "close" || action.type === "clear"
+          ? undefined
+          : open,
+    current,
+  );
 }
 
 function append(session: Session, entry: Omit<LogEntry, "id">): Session {
@@ -79,39 +89,50 @@ export function submit(
   const expansion = expandHistory(input, session.history.entries);
   if ("error" in expansion) {
     return {
-      session: append(session, {
-        command,
-        cwd: session.cwd,
-        lines: [{ kind: "error", text: expansion.error }],
-      }),
+      session: append(
+        { ...session, status: 1 },
+        {
+          command,
+          cwd: session.cwd,
+          lines: [{ kind: "error", text: expansion.error }],
+        },
+      ),
+      actions: [],
     };
   }
   const history = record(session.history, expansion.input);
-  const { lines, action } = run(expansion.input, {
+  const { lines, actions, state } = run(expansion.input, {
     history: history.entries,
     cwd: session.cwd,
+    oldpwd: session.oldpwd,
+    env: session.env,
+    status: session.status,
+    killed: session.killed,
+    startedAt: session.startedAt,
     now,
   });
   const echoed: TerminalLine[] = expansion.expanded
     ? [{ kind: "muted", text: expansion.input.trim() }, ...lines]
     : lines;
+  const openProjectId = openProjectAfter(session.openProjectId, actions);
+  const opened = actions.some((action) => action.type === "open");
   const next = append(
     { ...session, history },
     {
       command,
       cwd: session.cwd,
       lines: echoed,
-      ...(action?.type === "open" ? { projectId: action.projectId } : {}),
+      ...(opened && openProjectId ? { projectId: openProjectId } : {}),
     },
   );
   return {
     session: {
       ...next,
-      log: action?.type === "clear" ? [] : next.log,
-      cwd: action?.type === "cd" ? action.cwd : session.cwd,
-      openProjectId: openProjectAfter(session.openProjectId, action),
+      ...state,
+      log: actions.some((action) => action.type === "clear") ? [] : next.log,
+      openProjectId,
     },
-    action,
+    actions,
   };
 }
 

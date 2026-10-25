@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { emptyHistory, record, stepBack, stepForward } from "./history";
+import {
+  emptyHistory,
+  record,
+  reverseSearch,
+  stepBack,
+  stepForward,
+} from "./history";
 
 describe("history", () => {
   const withTwo = record(record(emptyHistory, "ls"), "open flashi");
@@ -48,5 +54,39 @@ describe("history", () => {
     const back = stepBack(withTwo, "abc").history;
     const onDraft = stepForward(back).history;
     expect(stepForward(onDraft, "abcxyz").value).toBe("abcxyz");
+  });
+});
+
+describe("reverseSearch", () => {
+  const entries = [
+    "ls",
+    "cd projects",
+    "open flashi",
+    "ls -l",
+    "open dinogame",
+  ];
+
+  it("finds the newest entry containing the query", () => {
+    expect(reverseSearch(entries, "open")).toEqual({
+      index: 4,
+      entry: "open dinogame",
+    });
+    expect(reverseSearch(entries, "ls")).toEqual({ index: 3, entry: "ls -l" });
+  });
+
+  it("continues further back from a given index", () => {
+    expect(reverseSearch(entries, "open", 4)).toEqual({
+      index: 2,
+      entry: "open flashi",
+    });
+    expect(reverseSearch(entries, "open", 2)).toBeUndefined();
+  });
+
+  it("finds nothing for an unknown query and the newest entry for an empty one", () => {
+    expect(reverseSearch(entries, "vim")).toBeUndefined();
+    expect(reverseSearch(entries, "")).toEqual({
+      index: 4,
+      entry: "open dinogame",
+    });
   });
 });

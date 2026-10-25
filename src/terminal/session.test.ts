@@ -39,16 +39,16 @@ describe("session", () => {
   });
 
   it("opens a project, shows its screen and reports the action", () => {
-    const { session, action } = submit(fresh, "open flashi");
-    expect(action).toEqual({ type: "open", projectId: "flashi" });
+    const { session, actions } = submit(fresh, "open flashi");
+    expect(actions).toEqual([{ type: "open", projectId: "flashi" }]);
     expect(session.openProjectId).toBe("flashi");
     expect(session.log[session.log.length - 1].projectId).toBe("flashi");
   });
 
   it("closes the open project", () => {
     const opened = submit(fresh, "open flashi").session;
-    const { session, action } = submit(opened, "close");
-    expect(action).toEqual({ type: "close" });
+    const { session, actions } = submit(opened, "close");
+    expect(actions).toEqual([{ type: "close" }]);
     expect(session.openProjectId).toBeUndefined();
   });
 
@@ -106,5 +106,35 @@ describe("session bash behaviour", () => {
     const withLs = submit(fresh, "ls").session;
     expect(clearScreen(withLs).log).toEqual([]);
     expect(clearScreen(withLs).history.entries).toEqual(["ls"]);
+  });
+
+  it("keeps variables, the last status and the previous directory between lines", () => {
+    const steps = ["export FOO=bar", "cd projects", "cd flashi", "xyzzy"];
+    const session = steps.reduce(
+      (current, line) => submit(current, line).session,
+      fresh,
+    );
+    const lines = (input: string) => {
+      const next = submit(session, input).session;
+      return next.log[next.log.length - 1].lines;
+    };
+    expect(lines("echo $FOO $?")).toEqual([{ kind: "text", text: "bar 127" }]);
+    expect(submit(session, "cd -").session.cwd).toBe("~/projects");
+  });
+
+  it("remembers killed processes", () => {
+    const killed = submit(fresh, "killall coffee-daemon").session;
+    const next = submit(killed, "ps aux | grep coffee").session;
+    expect(next.log[next.log.length - 1].lines).toEqual([]);
+  });
+
+  it("opens the last project of a line and keeps every action in order", () => {
+    const { session, actions } = submit(fresh, "open flashi; open dinogame");
+    expect(actions).toEqual([
+      { type: "open", projectId: "flashi" },
+      { type: "open", projectId: "dinogame" },
+    ]);
+    expect(session.openProjectId).toBe("dinogame");
+    expect(session.log[session.log.length - 1].projectId).toBe("dinogame");
   });
 });

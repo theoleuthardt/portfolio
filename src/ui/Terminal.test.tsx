@@ -576,3 +576,90 @@ describe("Terminal links to friends", () => {
     expect(input()).toHaveValue("open domifolio");
   });
 });
+
+describe("Terminal shell", () => {
+  it("shows the working directory in the prompt after cd", () => {
+    renderBooted(<Terminal />);
+    type("cd projects/flashi");
+    expect(
+      screen.getByText("guest@theocloud:~/projects/flashi$"),
+    ).toBeInTheDocument();
+  });
+
+  it("searches the history backwards with Ctrl+R and runs the hit with Enter", () => {
+    renderBooted(<Terminal />);
+    type("open flashi");
+    type("close");
+    type("pwd");
+    fireEvent.keyDown(input(), { key: "r", ctrlKey: true });
+    fireEvent.change(input(), { target: { value: "fla" } });
+    expect(screen.getByText("(reverse-i-search)`fla':")).toBeInTheDocument();
+    expect(
+      screen.getByText("open flashi", { selector: ".crt-search-hit" }),
+    ).toBeInTheDocument();
+    fireEvent.keyDown(input(), { key: "Enter" });
+    expect(within(log()).getAllByText("open flashi")).toHaveLength(2);
+  });
+
+  it("goes further back with another Ctrl+R and gives up with Escape", () => {
+    renderBooted(<Terminal />);
+    type("open flashi");
+    type("open dinogame");
+    fireEvent.keyDown(input(), { key: "r", ctrlKey: true });
+    fireEvent.change(input(), { target: { value: "open" } });
+    expect(
+      screen.getByText("open dinogame", { selector: ".crt-search-hit" }),
+    ).toBeInTheDocument();
+    fireEvent.keyDown(input(), { key: "r", ctrlKey: true });
+    expect(
+      screen.getByText("open flashi", { selector: ".crt-search-hit" }),
+    ).toBeInTheDocument();
+    fireEvent.keyDown(input(), { key: "Escape" });
+    expect(screen.queryByText(/reverse-i-search/)).toBeNull();
+    expect(input()).toHaveValue("open flashi");
+  });
+});
+
+describe("Terminal top", () => {
+  it("shows the live process view and returns to the prompt with q", () => {
+    renderBooted(<Terminal />);
+    type("top");
+    const view = screen.getByRole("region", { name: "top" });
+    expect(within(view).getByText(/PID USER/)).toBeInTheDocument();
+    expect(within(view).getByText(/coffee-daemon/)).toBeInTheDocument();
+    expect(
+      screen.queryByRole("textbox", { name: "terminal input" }),
+    ).toBeNull();
+    fireEvent.keyDown(view, { key: "q" });
+    expect(screen.queryByRole("region", { name: "top" })).toBeNull();
+    expect(input()).toHaveFocus();
+  });
+
+  it("refreshes every second without reduced motion and quits with Ctrl+C", () => {
+    mockReducedMotion(false);
+    renderBooted(<Terminal />);
+    act(() => {
+      fireEvent.keyDown(window, { key: "x" });
+    });
+    type("top");
+    const view = screen.getByRole("region", { name: "top" });
+    const first = view.textContent;
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(view.textContent).not.toBe(first);
+    fireEvent.keyDown(view, { key: "c", ctrlKey: true });
+    expect(screen.queryByRole("region", { name: "top" })).toBeNull();
+  });
+
+  it("no longer lists a killed daemon", () => {
+    renderBooted(<Terminal />);
+    type("killall coffee-daemon");
+    type("top");
+    expect(
+      within(screen.getByRole("region", { name: "top" })).queryByText(
+        /coffee-daemon/,
+      ),
+    ).toBeNull();
+  });
+});

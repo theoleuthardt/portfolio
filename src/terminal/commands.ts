@@ -1,44 +1,73 @@
 import { findFriend, friends } from "../content/friends";
-import { findProject, projects, type Project } from "../content/projects";
-import { parseCommand } from "./parse";
+import { findProject, projects } from "../content/projects";
+import { fileCommands, projectAt, projectIds } from "./fileCommands";
+import { absolute, buildFileSystem, HOME } from "./fs";
+import {
+  asText,
+  didYouMean,
+  error,
+  text,
+  type Command,
+  type CommandResult,
+  type Cwd,
+  type Invocation,
+  type ShellChange,
+  type TerminalAction,
+  type TerminalLine,
+} from "./output";
+import { processCommands } from "./processes";
+import { expandWord, parseLine, type Pipeline } from "./shell";
 import { closestMatch } from "./suggest";
 
-/** One line of terminal output. */
-export type TerminalLine =
-  | { kind: "text" | "muted" | "error"; text: string }
-  | { kind: "chips"; commands: readonly string[] }
-  | { kind: "command"; name: string; usage: string; description: string }
-  | { kind: "project"; id: string; tagline: string; fork: boolean }
-  | { kind: "dir"; name: string; command: string }
-  | { kind: "link"; label: string; url: string };
+export type { Cwd, TerminalAction, TerminalLine } from "./output";
 
-/** The two directories of the guest's home. */
-export type Cwd = "~" | "~/projects";
+/** The environment of a fresh session. */
+export const DEFAULT_ENV: Readonly<Record<string, string>> = {
+  HOME,
+  USER: "guest",
+  LOGNAME: "guest",
+  SHELL: "/bin/bash",
+  HOSTNAME: "theocloud",
+  TERM: "xterm-256color",
+  LANG: "en_US.UTF-8",
+  EDITOR: "vim",
+  PATH: "/usr/local/bin:/usr/bin:/bin",
+};
 
-/** Something the UI or the scene has to do after a command. */
-export type TerminalAction =
-  | { type: "open"; projectId: string }
-  | { type: "close" }
-  | { type: "clear" }
-  | { type: "cd"; cwd: Cwd }
-  | { type: "visit"; url: string };
-
-/** Output and optional action of one command. */
-export interface CommandResult {
-  lines: TerminalLine[];
-  action?: TerminalAction;
+/** What the shell remembers between command lines. */
+export interface ShellState {
+  cwd: Cwd;
+  oldpwd?: Cwd;
+  env: Readonly<Record<string, string>>;
+  /** Exit status of the last command, `$?`. */
+  status: number;
+  /** Processes killed in this session. */
+  killed: readonly number[];
 }
 
-/** What a command may read besides its arguments. */
+/** What a command line may read; everything but the history is optional. */
 export interface CommandContext {
   history: readonly string[];
   /** Working directory; home if absent. */
   cwd?: Cwd;
-  /** Current time for `date`; the real clock if absent. */
+  oldpwd?: Cwd;
+  /** The environment; {@link DEFAULT_ENV} if absent. */
+  env?: Readonly<Record<string, string>>;
+  status?: number;
+  /** Current time for `date` and `uptime`; the real clock if absent. */
   now?: Date;
+  /** When the session started; `now` if absent. */
+  startedAt?: Date;
+  killed?: readonly number[];
 }
 
-const HOME = "/home/guest";
+/** Output of a command line, the actions for the UI and the new state. */
+export interface LineResult {
+  lines: TerminalLine[];
+  actions: TerminalAction[];
+  state: ShellState;
+}
+
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const MONTHS = [
   "Jan",
@@ -54,44 +83,8 @@ const MONTHS = [
   "Nov",
   "Dec",
 ];
-
-type Path = { dir: Cwd } | { project: Project } | undefined;
-
-/**
- * Resolves a path argument against the working directory: home, the
- * projects directory, or a project inside it. `.` and `..` are normalised
- * (never above home); a bare project id also resolves from home, as a
- * shortcut.
- */
-function resolvePath(arg: string | undefined, cwd: Cwd): Path {
-  const raw = (arg ?? "~").replace(/^\/home\/guest(?=\/|$)/, "~");
-  const fromHome = raw.startsWith("~");
-  const segments: string[] = fromHome || cwd === "~" ? [] : ["projects"];
-  for (const segment of (fromHome ? raw.slice(1) : raw).split("/")) {
-    if (segment === "..") {
-      segments.pop();
-    } else if (segment !== "" && segment !== ".") {
-      segments.push(segment);
-    }
-  }
-  if (raw.startsWith("/") && !fromHome) {
-    return undefined;
-  }
-  if (segments.length === 0) {
-    return { dir: "~" };
-  }
-  if (segments.length === 1 && segments[0] === "projects") {
-    return { dir: "~/projects" };
-  }
-  const id =
-    segments.length === 2 && segments[0] === "projects"
-      ? segments[1]
-      : segments.length === 1 && !raw.includes("/")
-        ? segments[0]
-        : undefined;
-  const project = id === undefined ? undefined : findProject(id);
-  return project ? { project } : undefined;
-}
+const ASSIGNMENT = /^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/s;
+const FILE_SYSTEM = buildFileSystem();
 
 function formatDate(date: Date): string {
   const time = [date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()]
@@ -99,31 +92,6 @@ function formatDate(date: Date): string {
     .join(":");
   const day = String(date.getUTCDate()).padStart(2, " ");
   return `${DAYS[date.getUTCDay()]} ${MONTHS[date.getUTCMonth()]} ${day} ${time} UTC ${date.getUTCFullYear()}`;
-}
-
-const error = (text: string): CommandResult => ({
-  lines: [{ kind: "error", text }],
-});
-
-const text = (...lines: string[]): CommandResult => ({
-  lines: lines.map((line) => ({ kind: "text", text: line })),
-});
-
-type Run = (args: string[], context: CommandContext) => CommandResult;
-
-interface Command {
-  /** How the command is typed, with its arguments. */
-  usage: string;
-  /** What the command does, shown by `help`. */
-  description: string;
-  run: Run;
-}
-
-function didYouMean(command: string): TerminalLine[] {
-  return [
-    { kind: "muted", text: "did you mean:" },
-    { kind: "chips", commands: [command] },
-  ];
 }
 
 const projectRows = (): CommandResult => ({
@@ -135,43 +103,201 @@ const projectRows = (): CommandResult => ({
   })),
 });
 
-const longLine = (project: Project) =>
-  `-rw-r--r-- 1 guest lab ${String(project.units).padStart(2)}U ${project.fork ? "fork" : "own "} ${project.id}`;
+function open([name]: string[], call: Invocation): CommandResult {
+  if (name === undefined) {
+    return {
+      lines: [
+        { kind: "text", text: "open which project?" },
+        { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
+      ],
+    };
+  }
+  const friend = findFriend(name);
+  if (friend !== undefined) {
+    return {
+      lines: [
+        { kind: "muted", text: `> opening ${friend.site} in a new tab ...` },
+      ],
+      action: { type: "visit", url: friend.url },
+    };
+  }
+  const byPath = name.includes("/") || name.startsWith(".");
+  const id = byPath ? projectAt(name, call.cwd) : findProject(name)?.id;
+  if (id === undefined) {
+    if (byPath) {
+      return error(`open: ${name}: not a project directory`);
+    }
+    const suggestion = closestMatch(name, [
+      ...projectIds,
+      ...friends.map((friend) => friend.id),
+    ]);
+    return {
+      lines: [
+        { kind: "error", text: `open: no such project: ${name}` },
+        ...(suggestion === undefined ? [] : didYouMean(`open ${suggestion}`)),
+      ],
+      status: 1,
+    };
+  }
+  return {
+    lines: [
+      { kind: "muted", text: `> ejecting module ${id} ... camera locked` },
+    ],
+    action: { type: "open", projectId: id },
+  };
+}
 
-/**
- * `ls` like bash: at home it shows the `projects/` directory (clickable,
- * runs `cd projects`), inside it the projects; `-l` prints the long format,
- * a project argument lists just that project.
- */
-const list: Run = (args, { cwd = "~" }) => {
-  const options = args
-    .filter((arg) => arg.startsWith("-"))
-    .join("")
-    .replace(/-/g, "");
-  const invalid = [...options].find((option) => !"la".includes(option));
-  if (invalid !== undefined) {
-    return error(`ls: invalid option -- '${invalid}'`);
+function exportVariables(args: string[], call: Invocation): CommandResult {
+  if (args.length === 0) {
+    return text(
+      ...Object.entries(call.env)
+        .sort(([a], [b]) => (a < b ? -1 : 1))
+        .map(([name, value]) => `declare -x ${name}="${value}"`),
+    );
   }
-  const target = args.find((arg) => !arg.startsWith("-"));
-  const path = target === undefined ? { dir: cwd } : resolvePath(target, cwd);
-  if (path === undefined) {
-    return error(`ls: cannot access '${target}': No such file or directory`);
+  const set: Record<string, string> = {};
+  for (const arg of args) {
+    const assignment = ASSIGNMENT.exec(arg);
+    if (assignment) {
+      set[assignment[1]] = assignment[2];
+    } else if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(arg)) {
+      return error(`bash: export: \`${arg}': not a valid identifier`);
+    }
   }
-  const long = options.includes("l");
-  if ("project" in path) {
-    return text(long ? longLine(path.project) : path.project.id);
-  }
-  if (path.dir === "~") {
-    return long
-      ? text(`drwxr-xr-x 2 guest lab ${projects.length} projects/`)
-      : { lines: [{ kind: "dir", name: "projects/", command: "cd projects" }] };
-  }
-  return long ? text(...projects.map(longLine)) : projectRows();
+  return { lines: [], action: { type: "env", set } };
+}
+
+const general: Record<string, Command> = {
+  projects: {
+    usage: "projects",
+    description: "lists the projects from anywhere",
+    run: projectRows,
+  },
+  open: {
+    usage: "open <project>",
+    description: "opens a project and ejects its module from the rack",
+    run: open,
+  },
+  close: {
+    usage: "close",
+    description: "closes the open project (or press Esc)",
+    run: () => ({
+      lines: [{ kind: "muted", text: "> module retracted" }],
+      action: { type: "close" },
+    }),
+  },
+  friends: {
+    usage: "friends",
+    description: "lists the sites of friends of the lab (open <site>)",
+    run: (): CommandResult => ({
+      lines: [
+        { kind: "text", text: "friends of the lab:" },
+        ...friends.flatMap((friend): TerminalLine[] => [
+          { kind: "link", label: friend.site, url: friend.url },
+          { kind: "muted", text: `  ${friend.about}` },
+        ]),
+        {
+          kind: "chips",
+          commands: friends.map((friend) => `open ${friend.id}`),
+        },
+      ],
+    }),
+  },
+  domi: {
+    usage: "domi",
+    description: "says who Domi is and links DomiFolio",
+    run: (): CommandResult => {
+      const domi = friends[0];
+      return {
+        lines: [
+          { kind: "text", text: `${domi.site}: ${domi.about}.` },
+          { kind: "link", label: domi.site, url: domi.url },
+          { kind: "chips", commands: [`open ${domi.id}`] },
+        ],
+      };
+    },
+  },
+  history: {
+    usage: "history",
+    description: "shows the commands you typed",
+    run: (_, { history }) =>
+      text(
+        ...history.map(
+          (entry, index) => `${String(index + 1).padStart(3)}  ${entry}`,
+        ),
+      ),
+  },
+  echo: {
+    usage: "echo [text]",
+    description: "prints its arguments, e.g. echo $HOME",
+    run: (args) => text(args.join(" ")),
+  },
+  env: {
+    usage: "env",
+    description: "prints the environment variables",
+    run: (_, call) =>
+      text(
+        ...Object.entries(call.env)
+          .sort(([a], [b]) => (a < b ? -1 : 1))
+          .map(([name, value]) => `${name}=${value}`),
+      ),
+  },
+  export: {
+    usage: "export [NAME=value]",
+    description: "sets environment variables",
+    run: exportVariables,
+  },
+  unset: {
+    usage: "unset <NAME>",
+    description: "removes environment variables",
+    run: (args) => ({ lines: [], action: { type: "env", unset: args } }),
+  },
+  whoami: {
+    usage: "whoami",
+    description: "prints your user name",
+    run: (_, call) => text(call.env.USER ?? "guest"),
+  },
+  hostname: {
+    usage: "hostname",
+    description: "prints the name of this machine",
+    run: () => text("theocloud"),
+  },
+  uname: {
+    usage: "uname [-a]",
+    description: "prints the name of the system",
+    run: ([flag]) =>
+      text(
+        flag === "-a"
+          ? "TheoCloud rack-01 2.6.0 TheoCloud-OS x86_64 GNU/Linux"
+          : "TheoCloud",
+      ),
+  },
+  date: {
+    usage: "date",
+    description: "prints the current date and time in UTC",
+    run: (_, { now }) => text(formatDate(now)),
+  },
+  clear: {
+    usage: "clear",
+    description: "clears the screen",
+    run: () => ({ lines: [], action: { type: "clear" } }),
+  },
+  exit: {
+    usage: "exit",
+    description: "tries to leave",
+    run: (): CommandResult => ({
+      lines: [
+        { kind: "text", text: "logout" },
+        { kind: "muted", text: "There is no escape. The rack needs you." },
+      ],
+    }),
+  },
 };
 
-const registry = new Map<string, Command>(
-  Object.entries({
-    help: {
+const registry = new Map<string, Command>([
+  [
+    "help",
+    {
       usage: "help",
       description: "lists all commands with what they do",
       run: (): CommandResult => ({
@@ -186,185 +312,22 @@ const registry = new Map<string, Command>(
           })),
           {
             kind: "muted",
-            text: "tab completes, arrow keys browse the history, shift+tab leaves the terminal",
+            text: "pipes (|), lists (; && ||) and $VARIABLES work like in bash",
           },
-        ],
-      }),
-    },
-    ls: {
-      usage: "ls [-l] [dir]",
-      description:
-        "lists a directory: projects/ at home, the projects inside it",
-      run: list,
-    },
-    projects: {
-      usage: "projects",
-      description: "lists the projects from anywhere",
-      run: projectRows,
-    },
-    open: {
-      usage: "open <project>",
-      description: "opens a project and ejects its module from the rack",
-      run: ([name]) => {
-        if (name === undefined) {
-          return {
-            lines: [
-              { kind: "text", text: "open which project?" },
-              { kind: "chips", commands: projects.map((p) => `open ${p.id}`) },
-            ],
-          };
-        }
-        const friend = findFriend(name);
-        if (friend !== undefined) {
-          return {
-            lines: [
-              {
-                kind: "muted",
-                text: `> opening ${friend.site} in a new tab ...`,
-              },
-            ],
-            action: { type: "visit", url: friend.url },
-          };
-        }
-        const project = findProject(name);
-        if (project === undefined) {
-          const suggestion = closestMatch(name, [
-            ...projects.map((p) => p.id),
-            ...friends.map((friend) => friend.id),
-          ]);
-          return {
-            lines: [
-              { kind: "error", text: `open: no such project: ${name}` },
-              ...(suggestion === undefined
-                ? []
-                : didYouMean(`open ${suggestion}`)),
-            ],
-          };
-        }
-        return {
-          lines: [
-            {
-              kind: "muted",
-              text: `> ejecting module ${project.id} ... camera locked`,
-            },
-          ],
-          action: { type: "open", projectId: project.id },
-        };
-      },
-    },
-    friends: {
-      usage: "friends",
-      description: "lists the sites of friends of the lab (open <site>)",
-      run: (): CommandResult => ({
-        lines: [
-          { kind: "text", text: "friends of the lab:" },
-          ...friends.flatMap((friend): TerminalLine[] => [
-            { kind: "link", label: friend.site, url: friend.url },
-            { kind: "muted", text: `  ${friend.about}` },
-          ]),
           {
-            kind: "chips",
-            commands: friends.map((friend) => `open ${friend.id}`),
+            kind: "muted",
+            text: "tab completes, arrow keys and ctrl+r search the history, shift+tab leaves the terminal",
           },
         ],
       }),
     },
-    domi: {
-      usage: "domi",
-      description: "says who Domi is and links DomiFolio",
-      run: (): CommandResult => {
-        const domi = friends[0];
-        return {
-          lines: [
-            { kind: "text", text: `${domi.site}: ${domi.about}.` },
-            { kind: "link", label: domi.site, url: domi.url },
-            { kind: "chips", commands: [`open ${domi.id}`] },
-          ],
-        };
-      },
-    },
-    close: {
-      usage: "close",
-      description: "closes the open project (or press Esc)",
-      run: () => ({
-        lines: [{ kind: "muted", text: "> module retracted" }],
-        action: { type: "close" },
-      }),
-    },
-    history: {
-      usage: "history",
-      description: "shows the commands you typed",
-      run: (_, { history }) => ({
-        lines: history.map((entry, index) => ({
-          kind: "text",
-          text: `${String(index + 1).padStart(3)}  ${entry}`,
-        })),
-      }),
-    },
-    pwd: {
-      usage: "pwd",
-      description: "prints the working directory",
-      run: (_, { cwd = "~" }) => text(cwd.replace("~", HOME)),
-    },
-    cd: {
-      usage: "cd [dir]",
-      description: "changes the working directory (home or projects)",
-      run: ([target], { cwd = "~" }) => {
-        const path = resolvePath(target, cwd);
-        if (path === undefined) {
-          return error(`cd: ${target}: No such file or directory`);
-        }
-        if ("project" in path) {
-          return error(`cd: ${target}: Not a directory`);
-        }
-        return { lines: [], action: { type: "cd", cwd: path.dir } };
-      },
-    },
-    cat: {
-      usage: "cat <project>",
-      description: "prints a project's summary without opening it",
-      run: ([target], { cwd = "~" }) => {
-        if (target === undefined) {
-          return error("cat: missing file operand");
-        }
-        const path = resolvePath(target, cwd);
-        if (path === undefined) {
-          return error(`cat: ${target}: No such file or directory`);
-        }
-        if (!("project" in path)) {
-          return error(`cat: ${target}: Is a directory`);
-        }
-        const { project } = path;
-        return {
-          lines: [
-            { kind: "text", text: `${project.title} - ${project.tagline}` },
-            { kind: "text", text: project.summary },
-            { kind: "muted", text: `stack: ${project.stack.join(", ")}` },
-          ],
-        };
-      },
-    },
-    echo: {
-      usage: "echo [text]",
-      description: "prints its arguments",
-      run: (args) => text(args.join(" ")),
-    },
-    date: {
-      usage: "date",
-      description: "prints the current date and time in UTC",
-      run: (_, { now = new Date() }) => text(formatDate(now)),
-    },
-    uname: {
-      usage: "uname [-a]",
-      description: "prints the name of the system",
-      run: ([flag]) =>
-        text(
-          flag === "-a"
-            ? "TheoCloud rack-01 2.6.0 TheoCloud-OS x86_64 GNU/Linux"
-            : "TheoCloud",
-        ),
-    },
-    man: {
+  ],
+  ...Object.entries(fileCommands),
+  ...Object.entries(general),
+  ...Object.entries(processCommands),
+  [
+    "man",
+    {
       usage: "man <command>",
       description: "shows the manual of a command",
       run: ([name]): CommandResult => {
@@ -373,7 +336,7 @@ const registry = new Map<string, Command>(
         }
         const command = registry.get(name);
         if (command === undefined) {
-          return text(`No manual entry for ${name}`);
+          return error(`No manual entry for ${name}`, 16);
         }
         return text(
           "NAME",
@@ -384,31 +347,17 @@ const registry = new Map<string, Command>(
         );
       },
     },
-    clear: {
-      usage: "clear",
-      description: "clears the screen",
-      run: () => ({ lines: [], action: { type: "clear" } }),
-    },
-  } satisfies Record<string, Command>),
-);
+  ],
+]);
 
 /** Names of all commands, in the order `help` lists them. */
 export const commandNames: readonly string[] = [...registry.keys()];
 
-/** Runs one line of terminal input. */
-export function run(input: string, context: CommandContext): CommandResult {
-  const parsed = parseCommand(input);
-  if (parsed === undefined) {
-    return { lines: [] };
-  }
-  const command = registry.get(parsed.name);
-  if (command !== undefined) {
-    return command.run(parsed.args, context);
-  }
-  const suggestion = closestMatch(parsed.name, commandNames);
+function notFound(name: string): CommandResult {
+  const suggestion = closestMatch(name, commandNames);
   return {
     lines: [
-      { kind: "error", text: `command not found: ${parsed.name}` },
+      { kind: "error", text: `bash: ${name}: command not found` },
       ...(suggestion === undefined
         ? [
             {
@@ -418,5 +367,143 @@ export function run(input: string, context: CommandContext): CommandResult {
           ]
         : didYouMean(suggestion)),
     ],
+    status: 127,
   };
+}
+
+function applyChange(state: ShellState, change: ShellChange): ShellState {
+  switch (change.type) {
+    case "cd":
+      return { ...state, oldpwd: state.cwd, cwd: change.cwd };
+    case "env": {
+      const env = { ...state.env, ...change.set };
+      for (const name of change.unset ?? []) {
+        delete env[name];
+      }
+      return { ...state, env };
+    }
+    case "kill":
+      return { ...state, killed: [...state.killed, ...change.pids] };
+  }
+}
+
+const isUiAction = (
+  action: TerminalAction | ShellChange,
+): action is TerminalAction =>
+  ["open", "close", "clear", "visit", "program"].includes(action.type);
+
+type Base = Pick<Invocation, "history" | "now" | "startedAt" | "fs">;
+
+/**
+ * Runs one pipeline: each command's output is piped into the next as text,
+ * error lines are shown right away, and only a pipeline of one command may
+ * change the shell or act on the UI (like bash's subshells).
+ */
+function runPipeline(
+  pipeline: Pipeline,
+  state: ShellState,
+  base: Base,
+): { lines: TerminalLine[]; actions: TerminalAction[]; state: ShellState } {
+  const lines: TerminalLine[] = [];
+  const actions: TerminalAction[] = [];
+  const alone = pipeline.length === 1;
+  let next = state;
+  let stdin: string[] | undefined;
+  pipeline.forEach((words, index) => {
+    const env = {
+      ...state.env,
+      PWD: absolute(state.cwd, "/"),
+      ...(state.oldpwd ? { OLDPWD: absolute(state.oldpwd, "/") } : {}),
+    };
+    const expanded = words.map((word) => expandWord(word, env, state.status));
+    const assignments: Record<string, string> = {};
+    let first = ASSIGNMENT.exec(expanded[0] ?? "");
+    while (first) {
+      assignments[first[1]] = first[2];
+      expanded.shift();
+      first = ASSIGNMENT.exec(expanded[0] ?? "");
+    }
+    if (expanded.length === 0) {
+      if (alone) {
+        next = applyChange(next, { type: "env", set: assignments });
+      }
+      next = { ...next, status: 0 };
+      stdin = [];
+      return;
+    }
+    const [name, ...args] = expanded;
+    const command = registry.get(name.toLowerCase());
+    const result = command
+      ? command.run(args, {
+          ...base,
+          cwd: state.cwd,
+          oldpwd: state.oldpwd,
+          env: { ...env, ...assignments },
+          killed: state.killed,
+          stdin,
+        })
+      : notFound(name);
+    if (index === pipeline.length - 1) {
+      lines.push(...result.lines);
+    } else {
+      lines.push(...result.lines.filter((line) => line.kind === "error"));
+      stdin = result.lines.filter((line) => line.kind !== "error").map(asText);
+    }
+    if (alone && result.action) {
+      if (isUiAction(result.action)) {
+        actions.push(result.action);
+      } else {
+        next = applyChange(next, result.action);
+      }
+    }
+    next = { ...next, status: result.status ?? 0 };
+  });
+  return { lines, actions, state: next };
+}
+
+/**
+ * Runs one command line like bash: parses it, runs its pipelines in order
+ * (`&&` only after success, `||` only after failure), threads the working
+ * directory, environment and `$?` from step to step, and returns the output,
+ * the actions for the UI and the shell's new state.
+ */
+export function run(input: string, context: CommandContext): LineResult {
+  const now = context.now ?? new Date();
+  let state: ShellState = {
+    cwd: context.cwd ?? "~",
+    oldpwd: context.oldpwd,
+    env: context.env ?? DEFAULT_ENV,
+    status: context.status ?? 0,
+    killed: context.killed ?? [],
+  };
+  const parsed = parseLine(input);
+  if ("error" in parsed) {
+    return {
+      lines: [{ kind: "error", text: parsed.error }],
+      actions: [],
+      state: { ...state, status: 2 },
+    };
+  }
+  const base: Base = {
+    history: context.history,
+    now,
+    startedAt: context.startedAt ?? now,
+    fs: FILE_SYSTEM,
+  };
+  const lines: TerminalLine[] = [];
+  const actions: TerminalAction[] = [];
+  let connector: string | undefined;
+  for (const step of parsed) {
+    const skip =
+      (connector === "&&" && state.status !== 0) ||
+      (connector === "||" && state.status === 0);
+    if (!skip) {
+      const result = runPipeline(step.pipeline, state, base);
+      lines.push(...result.lines);
+      actions.push(...result.actions);
+      state = result.state;
+    }
+    connector = step.then;
+  }
+  return { lines, actions, state };
 }
