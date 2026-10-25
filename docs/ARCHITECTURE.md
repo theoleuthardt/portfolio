@@ -9,13 +9,16 @@ index.html → src/main.tsx (fonts, styles) → src/App.tsx → ui/Terminal
 src/content/   projects as typed data (Project, findProject, RACK_UNITS),
                friends' sites (Friend, findFriend: `friends`, `open <site>`),
                rack layout (rackSlots)
-src/terminal/  pure logic: parse, suggest (did you mean), complete (Tab),
-               history, commands (registry, output lines, actions),
-               boot (boot output), session (log, history, open project),
-               tabTitle (browser tab title per boot phase and prompt)
+src/terminal/  pure logic, a small bash: shell (parser: quotes, $VARS,
+               | ; && ||), commands (registry and executor), fileCommands
+               (ls, cd, cat, tree, head, tail, wc, grep, sort), fs (virtual
+               file system from the content), processes (process table, ps,
+               kill, top screen), output (lines, actions), complete (Tab over
+               the file system), history (incl. Ctrl+R search), suggest, expand
+               (!!), boot, session (log and shell state), tabTitle
 src/ui/        React: Terminal (input, keys, log), TerminalOutput (one line),
                ProjectScreen, CrtFrame, BootScreen, useBootSequence,
-               usePrefersReducedMotion, useTabTitle, SceneLayer (phone / no WebGL / 3D),
+               usePrefersReducedMotion, useTabTitle, Top (live process view), SceneLayer (phone / no WebGL / 3D),
                RackFallback (SVG), SceneErrorBoundary, ProjectPanel, useViewport
 src/scene/     device (phone viewport, WebGL check), cameraRig (pure math),
                Scene (lazy chunk: Canvas, reflections, light beams, camera rig),
@@ -44,6 +47,8 @@ On phones and touch tablets (touch below 1024 px) the CRT terminal is the whole 
 Looking around (`scene/look.ts`): dragging on the page background turns and tilts the view (further to the left, where the side wall is, than to the right), the wheel walks while standing; after 4 s without input the view eases back (instantly with reduced motion). Gestures that start on the terminal or the project panel never count, and a drag never clicks a rack module. The field of view widens on narrower windows (`fieldOfView`), so terminal and rack stay in view.
 
 The lab build-out (`scene/lab/`, its own lazy chunk): cable trays from rack-01 to the back racks and to the switch wall with zip-tied, slightly messy cabling (`catenary`), patch cables on the rack, objects along the walls where the visitor can turn to see them (`LAB` placement, tested), and small life (a robot vacuum, a failing tube, dust in the light beams, a spotlight on the rack while a project is open). Light is green and everything else black; pink and purple accents are gone.
+
+The terminal is a small bash (#102): a command line is parsed into pipelines (`|`) joined by `;`, `&&` and `||`, words keep quotes and expand `$VAR`, `${VAR}` and `$?` just before their command runs, and the executor threads the working directory, `OLDPWD`, the environment, `$?` and the killed processes from step to step. Commands are pure functions from arguments and an invocation (cwd, env, piped stdin, time, file system) to output lines, an exit status and an optional action; actions either change the shell (`cd`, env, kill) or go to the UI (`open`, `close`, `clear`, `visit`, `top`). Only a pipeline of one command may act, like bash's subshells. The file system is generated from the typed content (a home with dotfiles, one directory per project with README, stack and links, a small root). `top` replaces the log with a live view (refreshing every second, still with reduced motion) until q, Escape or Ctrl+C.
 
 The old page is described in [content-audit.md](content-audit.md).
 

@@ -34,10 +34,9 @@ describe("open with a friend's site", () => {
   it("visits the site instead of ejecting a module", () => {
     for (const input of ["open domifolio", "open domi", "open DomiFolio"]) {
       const result = run(input, home);
-      expect(result.action).toEqual({
-        type: "visit",
-        url: "https://diewilhelms.de/",
-      });
+      expect(result.actions).toEqual([
+        { type: "visit", url: "https://diewilhelms.de/" },
+      ]);
       expect(result.lines[0]).toEqual({
         kind: "muted",
         text: "> opening DomiFolio in a new tab ...",

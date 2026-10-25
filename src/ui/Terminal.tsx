@@ -12,7 +12,7 @@ import { friends } from "../content/friends";
 import { findProject, projects } from "../content/projects";
 import { commandNames } from "../terminal/commands";
 import { complete } from "../terminal/complete";
-import { stepBack, stepForward } from "../terminal/history";
+import { reverseSearch, stepBack, stepForward } from "../terminal/history";
 import {
   deleteWordBefore,
   killToEnd,
@@ -32,6 +32,7 @@ import { BootScreen } from "./BootScreen";
 import { CrtFrame, type CrtControls } from "./CrtFrame";
 import { ProjectScreen } from "./ProjectScreen";
 import { TerminalOutput } from "./TerminalOutput";
+import { Top } from "./Top";
 import { useTabTitle } from "./useTabTitle";
 import {
   BOOT_GLIDE_MS,
@@ -51,6 +52,13 @@ function Prompt({ command, cwd }: { command: string; cwd?: Cwd }) {
     </p>
   );
 }
+
+/**
+ * Whether only Ctrl is held: Ctrl+Shift, Ctrl+Alt and Cmd shortcuts (hard
+ * reload, devtools) stay with the browser.
+ */
+const plainCtrl = (event: KeyboardEvent<HTMLInputElement>) =>
+  event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey;
 
 /** The typed line with a block cursor on the character under the caret. */
 function EditLine({ line, focused }: { line: Line; focused: boolean }) {
@@ -104,8 +112,9 @@ export interface TerminalProps {
  * a second Tab that would change nothing moves focus on, Shift+Tab moves it
  * back, so keyboard users can always leave the terminal.
  * Escape closes the open project wherever the focus is. The line edits like
- * bash/readline (Ctrl+A/E/U/K/W, Ctrl+C cancels, Ctrl+L clears the screen)
- * and shows a block cursor; the real input is invisible on top of it, so
+ * bash/readline (Ctrl+A/E/U/K/W, Ctrl+C cancels, Ctrl+L clears the screen,
+ * Ctrl+R searches the history backwards) and shows a block cursor; `top`
+ * takes over the screen until it quits; the real input is invisible on top of it, so
  * typing, IME and touch keyboards keep working.
  */
 export function Terminal({
@@ -126,6 +135,12 @@ export function Terminal({
   const idleTab = useRef<string | null>(null);
   const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
+  const [program, setProgram] = useState<"top">();
+  const [search, setSearch] = useState<{
+    query: string;
+    before?: number;
+    original: string;
+  }>();
   const inputRef = useRef<HTMLInputElement>(null);
   const logRef = useRef<HTMLDivElement>(null);
   const bootReached = useBootSequence(bootSteps.length, holdBoot);
@@ -173,10 +188,10 @@ export function Terminal({
   }, [phase]);
 
   useEffect(() => {
-    if (phase === "ready") {
+    if (phase === "ready" && program === undefined) {
       inputRef.current?.focus();
     }
-  }, [phase]);
+  }, [phase, program]);
 
   useEffect(() => {
     logRef.current?.scrollTo?.({ top: logRef.current.scrollHeight });
@@ -206,10 +221,15 @@ export function Terminal({
   };
 
   const runCommand = (command: string) => {
-    const { session: next, action } = submit(session, command);
-    if (action?.type === "visit") {
-      window.open(action.url, "_blank", "noopener,noreferrer");
+    const { session: next, actions } = submit(session, command);
+    for (const action of actions) {
+      if (action.type === "visit") {
+        window.open(action.url, "_blank", "noopener,noreferrer");
+      } else if (action.type === "program") {
+        setProgram(action.name);
+      }
     }
+    setSearch(undefined);
     setSession(next);
     if (next.openProjectId !== session.openProjectId) {
       onOpenProjectChange?.(next.openProjectId);
@@ -264,6 +284,7 @@ export function Terminal({
     if (
       event.key === "Escape" &&
       !event.isComposing &&
+      !event.defaultPrevented &&
       session.openProjectId !== undefined
     ) {
       runCommand("close");
@@ -275,11 +296,67 @@ export function Terminal({
     return () => window.removeEventListener("keydown", closeOnEscape);
   }, []);
 
+  const hit =
+    search === undefined
+      ? undefined
+      : reverseSearch(session.history.entries, search.query, search.before);
+
+  /** Keys while searching the history with Ctrl+R; returns if handled. */
+  const searching = (event: KeyboardEvent<HTMLInputElement>): boolean => {
+    if (search === undefined) {
+      return false;
+    }
+    const key = event.key.toLowerCase();
+    if (plainCtrl(event) && key === "r") {
+      event.preventDefault();
+      if (hit) {
+        setSearch({ ...search, before: hit.index });
+      }
+      return true;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      runCommand(hit?.entry ?? search.query);
+      return true;
+    }
+    if (event.ctrlKey && (key === "g" || key === "c")) {
+      event.preventDefault();
+      setSearch(undefined);
+      setLine({ text: search.original, cursor: search.original.length });
+      return true;
+    }
+    if (
+      [
+        "Escape",
+        "Tab",
+        "ArrowLeft",
+        "ArrowRight",
+        "ArrowUp",
+        "ArrowDown",
+      ].includes(event.key)
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      const accepted = hit?.entry ?? search.query;
+      setSearch(undefined);
+      setLine({ text: accepted, cursor: accepted.length });
+      return true;
+    }
+    return false;
+  };
+
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.nativeEvent.isComposing) {
+    if (event.nativeEvent.isComposing || searching(event)) {
       return;
     }
-    if (event.ctrlKey && !event.altKey && !event.metaKey) {
+    if (plainCtrl(event) && event.key.toLowerCase() === "r") {
+      event.preventDefault();
+      setSearch({ query: "", original: input });
+      setLine({ text: "", cursor: 0 });
+      setOptions([]);
+      return;
+    }
+    if (plainCtrl(event)) {
       if (readline(event.key.toLowerCase())) {
         event.preventDefault();
         setOptions([]);
@@ -335,84 +412,112 @@ export function Terminal({
       housing={housing}
       powered={powered}
     >
-      <div
-        ref={logRef}
-        data-boot-phase={phase}
-        className={
-          phase === "splash"
-            ? "crt-text boot-splash @container h-full overflow-y-auto"
-            : "crt-text @container h-full overflow-y-auto"
-        }
-        onClick={() => {
-          if (window.getSelection()?.isCollapsed !== false) {
-            inputRef.current?.focus();
+      {program === "top" ? (
+        <Top
+          state={{ killed: session.killed, startedAt: session.startedAt }}
+          onQuit={() => setProgram(undefined)}
+        />
+      ) : (
+        <div
+          ref={logRef}
+          data-boot-phase={phase}
+          className={
+            phase === "splash"
+              ? "crt-text boot-splash @container h-full overflow-y-auto"
+              : "crt-text @container h-full overflow-y-auto"
           }
-        }}
-      >
-        <div role="log" aria-live="polite" aria-label="terminal output">
-          {session.log.map((entry) => {
-            const project =
-              inlineProjectScreens &&
-              entry.id === expandedEntryId &&
-              entry.projectId !== undefined
-                ? findProject(entry.projectId)
-                : undefined;
-            return (
-              <div key={entry.id} className="mb-2">
-                {entry.command === undefined ? (
-                  <div ref={splash} data-boot-entry>
-                    <BootScreen reached={bootReached} />
-                  </div>
+          onClick={() => {
+            if (window.getSelection()?.isCollapsed !== false) {
+              inputRef.current?.focus();
+            }
+          }}
+        >
+          <div role="log" aria-live="polite" aria-label="terminal output">
+            {session.log.map((entry) => {
+              const project =
+                inlineProjectScreens &&
+                entry.id === expandedEntryId &&
+                entry.projectId !== undefined
+                  ? findProject(entry.projectId)
+                  : undefined;
+              return (
+                <div key={entry.id} className="mb-2">
+                  {entry.command === undefined ? (
+                    <div ref={splash} data-boot-entry>
+                      <BootScreen reached={bootReached} />
+                    </div>
+                  ) : (
+                    <Prompt command={entry.command} cwd={entry.cwd} />
+                  )}
+                  {linesOf(entry).map((line, index) => (
+                    <TerminalOutput
+                      key={index}
+                      line={line}
+                      onRun={runCommand}
+                    />
+                  ))}
+                  {rackHint &&
+                  entry.command === undefined &&
+                  phase === "ready" ? (
+                    <p className="text-phosphor-dim">
+                      tip: click a module in the server rack to open a project
+                    </p>
+                  ) : null}
+                  {project ? <ProjectScreen project={project} /> : null}
+                </div>
+              );
+            })}
+          </div>
+          {phase === "ready" ? (
+            <label className="crt-prompt">
+              <span className="text-phosphor-dim">
+                {search
+                  ? `(${hit || search.query === "" ? "" : "failed "}reverse-i-search)\`${search.query}':`
+                  : promptFor(session.cwd)}
+              </span>
+              <span className="crt-edit">
+                {search ? (
+                  <span className="crt-search-hit" aria-hidden="true">
+                    {hit?.entry ?? ""}
+                  </span>
                 ) : (
-                  <Prompt command={entry.command} cwd={entry.cwd} />
+                  <EditLine line={{ text: input, cursor }} focused={focused} />
                 )}
-                {linesOf(entry).map((line, index) => (
-                  <TerminalOutput key={index} line={line} onRun={runCommand} />
-                ))}
-                {rackHint &&
-                entry.command === undefined &&
-                phase === "ready" ? (
-                  <p className="text-phosphor-dim">
-                    tip: click a module in the server rack to open a project
-                  </p>
-                ) : null}
-                {project ? <ProjectScreen project={project} /> : null}
-              </div>
-            );
-          })}
+                <input
+                  ref={inputRef}
+                  aria-label="terminal input"
+                  className="crt-input"
+                  value={input}
+                  onChange={(event) => {
+                    idleTab.current = null;
+                    if (search) {
+                      setSearch({
+                        ...search,
+                        query: event.target.value,
+                        before: undefined,
+                      });
+                    }
+                    setInput(event.target.value);
+                    syncCursor(event.target);
+                    setOptions([]);
+                  }}
+                  onSelect={(event) => syncCursor(event.currentTarget)}
+                  onKeyUp={(event) => syncCursor(event.currentTarget)}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
+                  onKeyDown={onKeyDown}
+                  autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                />
+              </span>
+            </label>
+          ) : null}
+          {options.length > 0 ? (
+            <p className="text-phosphor-dim">{options.join(" ")}</p>
+          ) : null}
         </div>
-        {phase === "ready" ? (
-          <label className="crt-prompt">
-            <span className="text-phosphor-dim">{promptFor(session.cwd)}</span>
-            <span className="crt-edit">
-              <EditLine line={{ text: input, cursor }} focused={focused} />
-              <input
-                ref={inputRef}
-                aria-label="terminal input"
-                className="crt-input"
-                value={input}
-                onChange={(event) => {
-                  idleTab.current = null;
-                  setInput(event.target.value);
-                  syncCursor(event.target);
-                  setOptions([]);
-                }}
-                onSelect={(event) => syncCursor(event.currentTarget)}
-                onKeyUp={(event) => syncCursor(event.currentTarget)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                onKeyDown={onKeyDown}
-                autoComplete="off"
-                autoCapitalize="off"
-                spellCheck={false}
-              />
-            </span>
-          </label>
-        ) : null}
-        {options.length > 0 ? (
-          <p className="text-phosphor-dim">{options.join(" ")}</p>
-        ) : null}
-      </div>
+      )}
     </CrtFrame>
   );
 }

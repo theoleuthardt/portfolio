@@ -66,8 +66,10 @@ describe("complete", () => {
     expect(complete("ls p", commands, projectIds).input).toBe("ls projects/");
   });
 
-  it("completes project ids after cat and command names after man", () => {
-    expect(complete("cat fla", commands, projectIds).input).toBe("cat flashi");
+  it("completes files after cat and command names after man", () => {
+    expect(complete("cat projects/flashi/RE", commands, projectIds).input).toBe(
+      "cat projects/flashi/README.md ",
+    );
     expect(complete("man hist", commands, projectIds).input).toBe(
       "man history",
     );
@@ -101,13 +103,68 @@ describe("complete relative to the working directory", () => {
   const all = ["cat", "cd", "ls", "open"];
   const ids = ["flashi", "trust-issues"];
 
-  it("offers projects/ at home and ../ inside projects for cd", () => {
+  it("offers only directories for cd, at home and inside projects", () => {
     expect(complete("cd ", all, ids, "~").options).toEqual(["projects/"]);
-    expect(complete("cd ", all, ids, "~/projects").options).toEqual(["../"]);
+    expect(complete("cd ", all, ids, "~/projects").options).toContain(
+      "flashi/",
+    );
+    expect(complete("cd fl", all, ids, "~/projects").input).toBe("cd flashi/");
   });
 
-  it("completes project ids for ls inside projects and at home", () => {
-    expect(complete("ls fla", all, ids, "~/projects").input).toBe("ls flashi");
-    expect(complete("ls fla", all, ids, "~").input).toBe("ls flashi");
+  it("completes nested paths and lists the matching names", () => {
+    expect(complete("ls projects/fla", all, ids, "~").input).toBe(
+      "ls projects/flashi/",
+    );
+    expect(complete("ls fla", all, ids, "~/projects").input).toBe("ls flashi/");
+    expect(complete("cat ../../../etc/ho", all, ids, "~/projects").input).toBe(
+      "cat ../../../etc/hostname ",
+    );
+    expect(complete("cat projects/flashi/", all, ids, "~").options).toEqual([
+      "README.md",
+      "links.txt",
+      "stack.txt",
+    ]);
+  });
+
+  it("shows hidden files only when the name starts with a dot", () => {
+    expect(complete("cat .ba", all, ids, "~").options).toEqual([
+      ".bash_history",
+      ".bashrc",
+    ]);
+    expect(complete("cat ", all, ids, "~").options).toEqual([
+      "README.md",
+      "projects/",
+    ]);
+  });
+
+  it("completes the last word, also after earlier arguments", () => {
+    expect(complete("ls -l proj", all, ids, "~").input).toBe("ls -l projects/");
+  });
+
+  it("completes projects, friends and project paths after open", () => {
+    expect(complete("open dom", all, ids, "~", ["domifolio"]).input).toBe(
+      "open domifolio",
+    );
+    expect(complete("open projects/tr", all, ids, "~").input).toBe(
+      "open projects/trust-issues/",
+    );
+  });
+});
+
+describe("complete after shell operators", () => {
+  const all = ["cat", "cd", "grep", "ls", "wc"];
+
+  it("completes a command name after a pipe or a list operator", () => {
+    expect(complete("ls | gr", all, []).input).toBe("ls | grep ");
+    expect(complete("cd projects && l", all, []).input).toBe(
+      "cd projects && ls ",
+    );
+    expect(complete("pwd;c", all, []).options).toEqual(["cat", "cd"]);
+  });
+
+  it("completes paths of the command after the operator", () => {
+    expect(complete("ls; cat proj", all, [], "~").input).toBe(
+      "ls; cat projects/",
+    );
   });
 });

@@ -57,3 +57,26 @@ export function stepForward(history: History, current = ""): HistoryStep {
   }
   return at(history, history.cursor + 1);
 }
+
+/** A history entry found by {@link reverseSearch}, with its index. */
+export interface SearchHit {
+  index: number;
+  entry: string;
+}
+
+/**
+ * Ctrl+R: the newest history entry before `before` (all entries if absent)
+ * that contains `query`.
+ */
+export function reverseSearch(
+  entries: readonly string[],
+  query: string,
+  before: number = entries.length,
+): SearchHit | undefined {
+  for (let index = Math.min(before, entries.length) - 1; index >= 0; index--) {
+    if (entries[index].includes(query)) {
+      return { index, entry: entries[index] };
+    }
+  }
+  return undefined;
+}

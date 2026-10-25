@@ -1,10 +1,23 @@
-import type { Cwd } from "./commands";
+import { absolute, buildFileSystem, list } from "./fs";
+import type { Cwd } from "./output";
 
 /** Result of a tab completion: the new input and the matching options. */
 export interface Completion {
   input: string;
   options: string[];
 }
+
+const FILE_SYSTEM = buildFileSystem();
+const PATH_COMMANDS = new Set([
+  "ls",
+  "cat",
+  "tree",
+  "head",
+  "tail",
+  "wc",
+  "grep",
+  "sort",
+]);
 
 function commonPrefix(words: readonly string[]): string {
   return words.reduce((prefix, word) => {
@@ -16,6 +29,7 @@ function commonPrefix(words: readonly string[]): string {
   });
 }
 
+/** Completes `partial` from `candidates`; a unique match gets `suffix`. */
 function completeWord(
   before: string,
   partial: string,
@@ -39,11 +53,75 @@ function completeWord(
 }
 
 /**
+ * Completes `partial` as a path from `cwd` like bash: the directory part
+ * stays, the last name completes from that directory's entries (directories
+ * with a trailing slash, files with a space when unique, hidden ones only
+ * for names starting with a dot), and the options show the names.
+ */
+function completePath(
+  before: string,
+  partial: string,
+  cwd: Cwd,
+  directoriesOnly: boolean,
+): Completion {
+  const slash = partial.lastIndexOf("/");
+  const directory = partial.slice(0, slash + 1);
+  const name = partial.slice(slash + 1);
+  const entries = (
+    list(FILE_SYSTEM, absolute(directory || ".", cwd)) ?? []
+  ).filter(
+    (entry) =>
+      entry.name.startsWith(name) &&
+      (name.startsWith(".") || !entry.name.startsWith(".")) &&
+      (!directoriesOnly || entry.node.kind === "dir"),
+  );
+  const options = entries.map(
+    (entry) => entry.name + (entry.node.kind === "dir" ? "/" : ""),
+  );
+  if (options.length === 0) {
+    return { input: before + partial, options };
+  }
+  if (options.length === 1) {
+    const [only] = options;
+    return {
+      input: before + directory + only + (only.endsWith("/") ? "" : " "),
+      options,
+    };
+  }
+  return { input: before + directory + commonPrefix(options), options };
+}
+
+/**
+ * Where the last command of a line starts: after the last `|`, `;`, `&&`
+ * or `||` outside quotes, with the spaces after it.
+ */
+function lastCommandStart(input: string): number {
+  let start = 0;
+  let quote: string | undefined;
+  for (let at = 0; at < input.length; at++) {
+    const char = input[at];
+    if (quote !== undefined) {
+      quote = char === quote ? undefined : quote;
+    } else if (char === "'" || char === '"') {
+      quote = char;
+    } else if (char === "|" || char === ";" || char === "&") {
+      start = at + 1;
+    }
+  }
+  while (start < input.length && /\s/.test(input[start])) {
+    start++;
+  }
+  return start;
+}
+
+/**
  * Tab completion like a shell: the first word completes to a command name
- * (with a trailing space when unique); arguments complete per command:
- * project ids after `open` and `cat`, and friends' sites after `open`; after `cd` the directory reachable from
- * `cwd` (`projects/` at home, `../` inside it); after `ls` that directory and
- * the projects; command names after `man`. Options are sorted alphabetically.
+ * (with a trailing space when unique). The last word completes per command:
+ * paths through the file system after `ls`, `cat`, `tree`, `head`, `tail`,
+ * `wc`, `grep` and `sort`, directories after `cd`, projects and friends'
+ * sites (or project paths) after `open`, command names after `man`. Only
+ * the last command of a line completes, after any `|`, `;`, `&&` or `||`.
+ * Options are sorted alphabetically.
  */
 export function complete(
   input: string,
@@ -52,23 +130,36 @@ export function complete(
   cwd: Cwd = "~",
   friendIds: readonly string[] = [],
 ): Completion {
-  const atHome = cwd === "~";
-  const argument = /^(\s*(\S+)\s+)(\S*)$/.exec(input);
-  if (argument) {
-    const [, before, command, partial] = argument;
-    const candidates = new Map<string, readonly string[]>([
-      ["open", [...projectIds, ...friendIds]],
-      ["cat", projectIds],
-      ["cd", atHome ? ["projects/"] : ["../"]],
-      ["ls", atHome ? ["projects/", ...projectIds] : projectIds],
-      ["man", commands],
-    ]);
-    return completeWord(
-      before,
-      partial,
-      candidates.get(command.toLowerCase()) ?? [],
-      "",
+  const start = lastCommandStart(input);
+  if (start > 0) {
+    const rest = complete(
+      input.slice(start),
+      commands,
+      projectIds,
+      cwd,
+      friendIds,
     );
+    return { input: input.slice(0, start) + rest.input, options: rest.options };
+  }
+  const argument = /^(\s*(\S+)\s+(?:.*\s)?)(\S*)$/.exec(input);
+  if (argument) {
+    const [, before, raw, partial] = argument;
+    const command = raw.toLowerCase();
+    if (command === "cd") {
+      return completePath(before, partial, cwd, true);
+    }
+    if (PATH_COMMANDS.has(command)) {
+      return completePath(before, partial, cwd, false);
+    }
+    if (command === "open") {
+      return partial.includes("/") || partial.startsWith(".")
+        ? completePath(before, partial, cwd, true)
+        : completeWord(before, partial, [...projectIds, ...friendIds], "");
+    }
+    if (command === "man") {
+      return completeWord(before, partial, commands, "");
+    }
+    return { input, options: [] };
   }
   const firstWord = /^(\s*)(\S*)$/.exec(input);
   if (firstWord) {
