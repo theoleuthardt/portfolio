@@ -155,7 +155,7 @@ export function seatFocus(seat: Pose, point: Vector3, share = 0.45): Pose {
 export function standUp(seat: Pose): Pose {
   const forward = subtract(seat.target, seat.position);
   const back = normalize([-forward[0], 0, -forward[2]]);
-  const position = add(add(seat.position, [0, 0.55, 0]), scale(back, 0.75));
+  const position = add(add(seat.position, [0, 0.55, 0]), scale(back, 1.05));
   return { position, target: add(seat.target, [0, 0.2, 0]) };
 }
 
@@ -170,7 +170,7 @@ export const SEAT: Pose = {
 
 /** The terminal's screen: its size in metres and where it is in the view. */
 export const SCREEN = {
-  width: 0.36,
+  width: 0.44,
   aspect: 0.75,
   distance: 1.1,
   offset: [-0.16, -0.2] as [number, number],
