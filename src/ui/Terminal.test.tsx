@@ -737,4 +737,18 @@ describe("Terminal programs", () => {
     fireEvent.keyDown(view, { key: "q" });
     expect(screen.queryByRole("region", { name: "dino game" })).toBeNull();
   });
+
+  it("keeps a program's output under the line that started it", () => {
+    const ref = createRef<TerminalHandle>();
+    renderBooted(<Terminal ref={ref} />);
+    type("hack nasa");
+    act(() => ref.current?.run("open flashi"));
+    fireEvent.keyDown(screen.getByRole("region", { name: "hack" }), {
+      key: "c",
+      ctrlKey: true,
+    });
+    const text = log().textContent ?? "";
+    expect(text.indexOf("^C")).toBeGreaterThan(text.indexOf("hack nasa"));
+    expect(text.indexOf("^C")).toBeLessThan(text.indexOf("open flashi"));
+  });
 });

@@ -103,6 +103,33 @@ const BEACONS: readonly [number, number, number][] = [
 ];
 
 /**
+ * The turning head of a beacon: a red spotlight with its target inside the
+ * same group, so the beam turns with the head.
+ */
+function BeaconHead({
+  on,
+  onMount,
+}: {
+  on: boolean;
+  onMount: (group: Group | null) => void;
+}) {
+  const [target] = useState(() => new Object3D());
+  return (
+    <group ref={onMount}>
+      <primitive object={target} position={[3, -1.5, 0]} />
+      <spotLight
+        target={target}
+        angle={0.45}
+        penumbra={0.4}
+        distance={9}
+        intensity={on ? 500 : 0}
+        color="#ff2a1a"
+      />
+    </group>
+  );
+}
+
+/**
  * Red beacons that switch on and turn while the alarm sounds, with a red
  * wash over the room; with reduced motion they glow steadily. Lights and
  * colours are props, so they switch even when frames are rendered on demand.
@@ -143,21 +170,12 @@ function Alarm({ on, reducedMotion }: { on: boolean; reducedMotion: boolean }) {
               toneMapped={false}
             />
           </mesh>
-          <group
-            ref={(group) => {
+          <BeaconHead
+            on={on}
+            onMount={(group) => {
               heads.current[index] = group;
             }}
-          >
-            <spotLight
-              position={[0, 0, 0]}
-              target-position={[3, -1.5, 0]}
-              angle={0.45}
-              penumbra={0.4}
-              distance={9}
-              intensity={on ? 500 : 0}
-              color="#ff2a1a"
-            />
-          </group>
+          />
         </group>
       ))}
     </group>

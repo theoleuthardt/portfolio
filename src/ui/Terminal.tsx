@@ -144,6 +144,7 @@ export function Terminal({
   const [caretMoves, setCaretMoves] = useState(0);
   const [options, setOptions] = useState<string[]>([]);
   const [program, setProgram] = useState<Program>();
+  const programEntry = useRef<number | undefined>(undefined);
   const [search, setSearch] = useState<{
     query: string;
     before?: number;
@@ -216,6 +217,7 @@ export function Terminal({
             kind: muted ? "muted" : "text",
             text,
           })),
+          programEntry.current,
         ),
       );
     }
@@ -254,6 +256,7 @@ export function Terminal({
       if (action.type === "visit") {
         window.open(action.url, "_blank", "noopener,noreferrer");
       } else if (action.type === "program") {
+        programEntry.current = next.log[next.log.length - 1]?.id;
         setProgram(
           action.name === "hack"
             ? { name: "hack", target: action.target }

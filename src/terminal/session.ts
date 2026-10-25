@@ -150,20 +150,21 @@ export function clearScreen(session: Session): Session {
   return { ...session, log: [] };
 }
 
-/** Adds output to the newest log entry, e.g. what a program leaves behind. */
+/**
+ * Adds output to the log entry `entryId` (the newest one if absent), e.g.
+ * what a program leaves behind under the line that started it.
+ */
 export function appendOutput(
   session: Session,
   lines: readonly TerminalLine[],
+  entryId: number | undefined = session.log[session.log.length - 1]?.id,
 ): Session {
-  const last = session.log[session.log.length - 1];
-  if (last === undefined) {
-    return session;
-  }
   return {
     ...session,
-    log: [
-      ...session.log.slice(0, -1),
-      { ...last, lines: [...last.lines, ...lines] },
-    ],
+    log: session.log.map((entry) =>
+      entry.id === entryId
+        ? { ...entry, lines: [...entry.lines, ...lines] }
+        : entry,
+    ),
   };
 }

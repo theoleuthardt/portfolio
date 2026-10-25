@@ -154,4 +154,18 @@ describe("appendOutput", () => {
     ]);
     expect(after.log).toHaveLength(ran.log.length);
   });
+
+  it("adds lines to a given entry, even when newer ones follow", () => {
+    const ran = submit(createSession(), "hack nasa").session;
+    const hackId = ran.log[ran.log.length - 1].id;
+    const later = submit(ran, "pwd").session;
+    const after = appendOutput(later, [{ kind: "muted", text: "^C" }], hackId);
+    expect(after.log.find((entry) => entry.id === hackId)?.lines).toEqual([
+      { kind: "muted", text: "^C" },
+    ]);
+    expect(after.log[after.log.length - 1].command).toBe("pwd");
+    expect(after.log[after.log.length - 1].lines).toEqual([
+      { kind: "text", text: "/home/guest" },
+    ]);
+  });
 });
