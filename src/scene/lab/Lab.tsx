@@ -1,3 +1,4 @@
+import { Baked } from "../bake/Baked";
 import { LeftWall } from "./LeftWall";
 import { Life } from "./Life";
 import { Overhead } from "./Overhead";
@@ -18,9 +19,11 @@ export interface LabProps {
 export default function Lab({ openProjectId, alarm = false }: LabProps) {
   return (
     <group>
-      <LeftWall />
-      <RightWall />
-      <Overhead />
+      <Baked>
+        <LeftWall />
+        <RightWall />
+        <Overhead />
+      </Baked>
       <Life open={openProjectId !== undefined} alarm={alarm} />
     </group>
   );

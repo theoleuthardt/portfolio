@@ -375,7 +375,7 @@ function FlickerTube() {
         metalness={0.7}
         roughness={0.4}
       />
-      <mesh rotation-z={Math.PI / 2}>
+      <mesh rotation-z={Math.PI / 2} userData={{ dynamic: true }}>
         <cylinderGeometry args={[0.025, 0.025, 1.3, 10]} />
         <meshBasicMaterial ref={tube} color="#e6fff4" toneMapped={false} />
       </mesh>

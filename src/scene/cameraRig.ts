@@ -70,3 +70,20 @@ export function fieldOfView(aspect: number): number {
   const halfWidth = Math.tan((BASE_FOV * Math.PI) / 360) * BASE_ASPECT;
   return (2 * Math.atan(halfWidth / aspect) * 180) / Math.PI;
 }
+
+/**
+ * How the canvas renders: every frame normally, only on changes with
+ * reduced motion, and not at all while the tab is hidden.
+ */
+export function frameloopFor({
+  hidden,
+  reducedMotion,
+}: {
+  hidden: boolean;
+  reducedMotion: boolean;
+}): "always" | "demand" | "never" {
+  if (hidden) {
+    return "never";
+  }
+  return reducedMotion ? "demand" : "always";
+}

@@ -6,16 +6,37 @@ How the portfolio is held to its performance and accessibility goals, and the la
 
 `npm run budget` (after `npm run build`, also run in CI) checks every loading step of [design-concept.md](design-concept.md) section 7 against its limit. A step costs its chunk plus every chunk it imports statically that no earlier step has loaded yet, following Vite's build manifest (`dist/.vite/manifest.json`); sizes are gzip in kB (1000 bytes) of the JavaScript and its stylesheets, as Vite reports them. An entry missing from the manifest fails the check.
 
-| Step            | Starts with                 | Limit   | 2026-10-25 |
-| --------------- | --------------------------- | ------- | ---------- |
-| main            | `index.html` (JS and CSS)   | 110 kB  | 101.0 kB   |
-| scene           | `src/scene/Scene.tsx`       | 280 kB  | 279.8 kB   |
-| post-processing | `src/scene/PostEffects.tsx` | 120 kB  | 104.4 kB   |
-| props           | `src/scene/props/Props.tsx` | 40 kB   | 24.7 kB    |
-| lab             | `src/scene/lab/Lab.tsx`     | 20 kB   | 9.3 kB     |
-| assets          | `public/models`, `textures` | 3000 kB | 2519.8 kB  |
+| Step            | Starts with                        | Limit   | 2026-10-25 |
+| --------------- | ---------------------------------- | ------- | ---------- |
+| main            | `index.html` (JS and CSS)          | 110 kB  | 101.0 kB   |
+| scene           | `src/scene/Scene.tsx`              | 280 kB  | 275.8 kB   |
+| post-processing | `src/scene/PostEffects.tsx`        | 120 kB  | 104.4 kB   |
+| props           | `src/scene/props/Props.tsx`        | 40 kB   | 26.9 kB    |
+| lab             | `src/scene/lab/Lab.tsx`            | 20 kB   | 9.4 kB     |
+| desk            | `src/scene/monitor/CrtMonitor.tsx` | 30 kB   | 5.5 kB     |
+| assets          | `public/models`, `textures`        | 3000 kB | 2519.8 kB  |
 
-The scene path is at its limit; #73 makes room before it grows again.
+The desk terminal is its own chunk, loaded only where the visitor sits at it (≥ 1024 px with the scene).
+
+## Runtime
+
+Measured in the sandbox (software rendering) by counting WebGL calls per frame in the built app at 1440 × 900, seated (#73):
+
+| Change                                           | Draw calls per frame | Render target switches |
+| ------------------------------------------------ | -------------------- | ---------------------- |
+| before #73                                       | 1161                 | 64                     |
+| props and lab baked                              | 875                  | 64                     |
+| room and desk baked                              | 820                  | 64                     |
+| fewer lights, reflection at 512 px, step-down on | 800                  | 49                     |
+
+For scale: the floor reflection renders the scene a second time (~445 calls before baking), the lab build-out was ~400 calls and post-processing ~40 calls with 33 render target switches.
+
+- **Baking:** `Baked` (`src/scene/bake/`) merges the static meshes of the room, props, lab and desk per material into one mesh each once they have mounted; anything that moves, changes its material or reacts to the pointer is marked `userData.dynamic` and stays separate. Quantized glTF data is converted to floats first, and a material whose geometries cannot merge keeps its originals.
+- **Rendering only when needed:** `frameloop` is `always`, `demand` with reduced motion, and `never` while the tab is hidden; DPR is clamped to 1–1.75.
+- **Step-down on weak GPUs:** drei's `PerformanceMonitor` drops the DPR to 1 and turns ambient occlusion off when the frame rate declines.
+- **Lights:** the alarm uses one red wash instead of three spotlights, the workbench lamp light is gone; the floor reflection renders at 512 px (it is blurred heavily anyway).
+
+Frame rates on real devices (60 fps on a mid-range laptop, ≥ 30 fps on a tablet) need real hardware: #118.
 
 ## Accessibility
 

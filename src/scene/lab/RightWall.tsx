@@ -83,7 +83,7 @@ function WallFan() {
           roughness={0.35}
         />
       </mesh>
-      <group ref={blades} position-z={0.1}>
+      <group ref={blades} position-z={0.1} userData={{ dynamic: true }}>
         {[0, 1, 2, 3].map((blade) => (
           <Block
             key={blade}
@@ -304,12 +304,6 @@ function Workbench() {
           metalness={0.7}
         />
       </group>
-      <pointLight
-        position={[0, 1.6, 0.5]}
-        intensity={1.6}
-        distance={2.2}
-        color="#fff1d6"
-      />
     </At>
   );
 }

@@ -103,8 +103,8 @@ const BEACONS: readonly [number, number, number][] = [
 ];
 
 /**
- * The turning head of a beacon: a red spotlight with its target inside the
- * same group, so the beam turns with the head.
+ * The turning head of a beacon: a mirror fin that sweeps around while the
+ * alarm sounds (the light itself is one red wash for the whole room).
  */
 function BeaconHead({
   on,
@@ -113,26 +113,24 @@ function BeaconHead({
   on: boolean;
   onMount: (group: Group | null) => void;
 }) {
-  const [target] = useState(() => new Object3D());
   return (
-    <group ref={onMount}>
-      <primitive object={target} position={[3, -1.5, 0]} />
-      <spotLight
-        target={target}
-        angle={0.45}
-        penumbra={0.4}
-        distance={9}
-        intensity={on ? 500 : 0}
-        color="#ff2a1a"
-      />
+    <group ref={onMount} userData={{ dynamic: true }}>
+      <mesh position={[0.05, 0, 0]}>
+        <boxGeometry args={[0.012, 0.15, 0.1]} />
+        <meshBasicMaterial
+          color={on ? "#ffd9d0" : "#2a0b08"}
+          toneMapped={false}
+        />
+      </mesh>
     </group>
   );
 }
 
 /**
- * Red beacons that switch on and turn while the alarm sounds, with a red
- * wash over the room; with reduced motion they glow steadily. Lights and
- * colours are props, so they switch even when frames are rendered on demand.
+ * Red beacons that switch on and turn while the alarm sounds, with one red
+ * light washing over the room; with reduced motion they glow steadily.
+ * Lights and colours are props, so they switch even when frames are
+ * rendered on demand.
  */
 function Alarm({ on, reducedMotion }: { on: boolean; reducedMotion: boolean }) {
   const heads = useRef<(Group | null)[]>([]);
@@ -149,7 +147,7 @@ function Alarm({ on, reducedMotion }: { on: boolean; reducedMotion: boolean }) {
     <group>
       <pointLight
         position={[RACK.x - 1, RACK.floorY + RACK_HEIGHT + 1.2, RACK.z + 1]}
-        intensity={on ? 260 : 0}
+        intensity={on ? 320 : 0}
         distance={14}
         color="#ff2a1a"
       />

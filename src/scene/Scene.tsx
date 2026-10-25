@@ -1,4 +1,9 @@
-import { Environment, Lightformer, SpotLight } from "@react-three/drei";
+import {
+  Environment,
+  Lightformer,
+  PerformanceMonitor,
+  SpotLight,
+} from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import {
   lazy,
@@ -14,17 +19,19 @@ import { SceneErrorBoundary } from "../ui/SceneErrorBoundary";
 import { rackSlots, type RackSlot } from "../content/rack";
 import { PerspectiveCamera, Vector3 } from "three";
 import { usePrefersReducedMotion } from "../ui/usePrefersReducedMotion";
-import { cameraPosition, fieldOfView, LAB_RIG } from "./cameraRig";
+import {
+  cameraPosition,
+  fieldOfView,
+  frameloopFor,
+  LAB_RIG,
+} from "./cameraRig";
+import { useDocumentHidden } from "../ui/useDocumentHidden";
 import { drag, IDLE_LOOK, lookPose, relax, wheel, type Look } from "./look";
 import { LabEnvironment } from "./environment/Environment";
 import { connectorPoints, toScreen } from "./rack/connector";
 import { approach, moduleFront, SLIDE_OUT } from "./rack/focus";
 import { Rack } from "./rack/Rack";
-import {
-  CrtMonitor,
-  type MonitorPose,
-  type ScreenPlacement,
-} from "./monitor/CrtMonitor";
+import type { MonitorPose, ScreenPlacement } from "./monitor/CrtMonitor";
 import { SEAT, seatFocus, standUp, type Pose } from "./monitor/seat";
 import { closePose } from "./monitor/terminal";
 import { BEAM_ZS, ROOM } from "./layout";
@@ -32,6 +39,11 @@ import { BEAM_ZS, ROOM } from "./layout";
 const PostEffects = lazy(() => import("./PostEffects"));
 const Props = lazy(() => import("./props/Props"));
 const Lab = lazy(() => import("./lab/Lab"));
+const CrtMonitor = lazy(() =>
+  import("./monitor/CrtMonitor").then((module) => ({
+    default: module.CrtMonitor,
+  })),
+);
 
 const HAZE = "#041a0b";
 const MINT = "#d4ffdc";
@@ -329,7 +341,8 @@ export interface SceneProps {
 
 /**
  * The Night City lab behind the terminal, loaded lazily on wide screens with
- * WebGL: PBR environment, reflections, volumetric light, post-processing,
+ * WebGL: PBR environment, reflections, volumetric light, post-processing
+ * (resolution and ambient occlusion step down when the frame rate declines),
  * the camera rig and the 3D monitor around the terminal's screen.
  */
 export default function Scene({
@@ -344,6 +357,8 @@ export default function Scene({
   alarm = false,
 }: SceneProps) {
   const reducedMotion = usePrefersReducedMotion();
+  const hidden = useDocumentHidden();
+  const [degraded, setDegraded] = useState(false);
   const [labReady, setLabReady] = useState(false);
   const focusedSlot = SLOTS.find((slot) => slot.id === openProjectId);
   const focus = useMemo(
@@ -357,13 +372,14 @@ export default function Scene({
     <Canvas
       className="!absolute inset-0"
       flat
-      dpr={[1, 1.75]}
+      dpr={degraded ? 1 : [1, 1.75]}
       camera={{ fov: 38, position: LAB_RIG.base }}
-      frameloop={reducedMotion ? "demand" : "always"}
+      frameloop={frameloopFor({ hidden, reducedMotion })}
       eventSource={document.getElementById("root") ?? undefined}
       eventPrefix="client"
       aria-hidden="true"
     >
+      <PerformanceMonitor onDecline={() => setDegraded(true)} />
       <color attach="background" args={[HAZE]} />
       <fogExp2 attach="fog" args={[HAZE, 0.03]} />
       <ambientLight intensity={0.25} color="#8cffa0" />
@@ -419,19 +435,23 @@ export default function Scene({
         </SceneErrorBoundary>
       ) : null}
       <Suspense fallback={null}>
-        <PostEffects />
+        <PostEffects ambientOcclusion={!degraded} />
       </Suspense>
       <CameraRig
         reducedMotion={reducedMotion}
         focus={focus}
         pose={monitorPose}
       />
-      <CrtMonitor
-        pose={monitorPose}
-        onScreenPlacement={onScreenPlacement}
-        onSeatedChange={onSeatedChange}
-        onOpen={onSelectProject}
-      />
+      {monitorPose === "off" ? null : (
+        <Suspense fallback={null}>
+          <CrtMonitor
+            pose={monitorPose}
+            onScreenPlacement={onScreenPlacement}
+            onSeatedChange={onSeatedChange}
+            onOpen={onSelectProject}
+          />
+        </Suspense>
+      )}
       <Connector
         line={connector}
         slot={focusedSlot}

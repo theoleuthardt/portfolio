@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { tabTitle, type TabTitleState } from "../terminal/tabTitle";
+import { useDocumentHidden } from "./useDocumentHidden";
 import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 const BLINK_MS = 530;
@@ -12,19 +13,13 @@ export function useTabTitle(
   state: Omit<TabTitleState, "hidden" | "cursorOn">,
 ): void {
   const reducedMotion = usePrefersReducedMotion();
-  const [hidden, setHidden] = useState(() => document.hidden);
+  const hidden = useDocumentHidden();
   const [cursorOn, setCursorOn] = useState(true);
   const blinking =
     state.phase === "ready" &&
     state.openProjectId === undefined &&
     !hidden &&
     !reducedMotion;
-
-  useEffect(() => {
-    const update = () => setHidden(document.hidden);
-    document.addEventListener("visibilitychange", update);
-    return () => document.removeEventListener("visibilitychange", update);
-  }, []);
 
   useEffect(() => {
     if (!blinking) {

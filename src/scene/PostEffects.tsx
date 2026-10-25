@@ -10,18 +10,28 @@ import { ToneMappingMode } from "postprocessing";
 
 /**
  * Post-processing of the lab, loaded as its own chunk after the scene:
- * ambient occlusion, bloom on everything brighter than white (neon, panels),
+ * ambient occlusion (left out on weak GPUs), bloom on everything brighter
+ * than white (neon, panels),
  * film grain, vignette and ACES tone mapping.
  */
-export default function PostEffects() {
+export default function PostEffects({
+  ambientOcclusion = true,
+}: {
+  /** Off on weak GPUs, where the frame rate has declined. */
+  ambientOcclusion?: boolean;
+}) {
   return (
     <EffectComposer multisampling={0}>
-      <N8AO
-        aoRadius={1.2}
-        intensity={2.2}
-        distanceFalloff={1}
-        quality="medium"
-      />
+      {ambientOcclusion ? (
+        <N8AO
+          aoRadius={1.2}
+          intensity={2.2}
+          distanceFalloff={1}
+          quality="medium"
+        />
+      ) : (
+        <></>
+      )}
       <Bloom
         mipmapBlur
         luminanceThreshold={0.9}

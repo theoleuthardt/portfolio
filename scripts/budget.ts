@@ -32,7 +32,8 @@ export const ASSET_LIMIT = 3_000_000;
 /**
  * The loading steps of `docs/design-concept.md` section 7, in load order:
  * the main bundle, the scene with the shared three/fiber/drei chunk, then
- * post-processing, props and the lab build-out.
+ * post-processing, props, the lab build-out and the desk terminal (only
+ * loaded from 1024 px).
  */
 export const BUDGETS: readonly Budget[] = [
   { name: "main", entry: "index.html", limit: 110_000 },
@@ -44,6 +45,7 @@ export const BUDGETS: readonly Budget[] = [
   },
   { name: "props", entry: "src/scene/props/Props.tsx", limit: 40_000 },
   { name: "lab", entry: "src/scene/lab/Lab.tsx", limit: 20_000 },
+  { name: "desk", entry: "src/scene/monitor/CrtMonitor.tsx", limit: 30_000 },
 ];
 
 /** A chunk and everything it imports statically, as manifest keys. */
