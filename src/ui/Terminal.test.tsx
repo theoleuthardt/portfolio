@@ -986,6 +986,35 @@ describe("Terminal desktop", () => {
     expect(start).toHaveFocus();
   });
 
+  it("keeps the focus on the desktop after picking from the start menu", () => {
+    closeTerminal();
+    const start = screen.getByRole("button", { name: "TheoCloud" });
+    const pick = (app: string) => {
+      fireEvent.click(start);
+      fireEvent.click(
+        within(
+          screen.getByRole("navigation", { name: "start menu" }),
+        ).getByRole("button", { name: app }),
+      );
+    };
+    pick("About");
+    expect(screen.getByRole("region", { name: "About" })).toHaveFocus();
+    pick("About");
+    expect(start).toHaveFocus();
+    pick("Notes");
+    expect(screen.getByRole("region", { name: "Notes" })).toHaveFocus();
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: "`",
+      code: "Backquote",
+      altKey: true,
+    });
+    expect(taskbarButton("About")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(screen.getByRole("button", { name: "close About" }));
+    expect(screen.getByRole("region", { name: "Notes" })).toHaveFocus();
+    fireEvent.click(screen.getByRole("button", { name: "close Notes" }));
+    expect(start).toHaveFocus();
+  });
+
   it("closes the start menu on a click elsewhere on the desktop", () => {
     closeTerminal();
     const start = screen.getByRole("button", { name: "TheoCloud" });

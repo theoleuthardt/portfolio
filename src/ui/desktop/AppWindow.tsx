@@ -64,6 +64,8 @@ export function AppWindow({
               height: window.height,
             }
       }
+      data-window-id={window.id}
+      tabIndex={-1}
       data-maximized={window.maximized || undefined}
       hidden={window.minimized}
       onPointerDown={onFocus}

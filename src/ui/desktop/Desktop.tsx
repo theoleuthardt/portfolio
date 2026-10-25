@@ -81,8 +81,10 @@ const clock = (date: Date) =>
  * taskbar with a start menu, the open windows, the clock and a button to
  * stand up from the desk. Alt+` (and Alt+Tab where the system lets it
  * through) cycles the windows. Opening the menu moves the focus into it;
- * Escape closes it and returns to the start button, as does a click
- * elsewhere (without moving the focus).
+ * Escape or a pick returns it to the start button, and a window that comes
+ * to the top takes it (the start button once none is left), so the keys
+ * keep reaching the desktop. A click
+ * elsewhere closes the menu without moving the focus.
  */
 export function Desktop({
   desk,
@@ -108,8 +110,23 @@ export function Desktop({
     }
   }, [menu]);
   const top = topWindow(desk);
+  const shownTop = useRef(top?.id);
+  useEffect(() => {
+    if (top === undefined && shownTop.current !== undefined) {
+      startButton.current?.focus();
+    } else if (top !== undefined && top.id !== shownTop.current) {
+      area?.querySelector<HTMLElement>(`[data-window-id="${top.id}"]`)?.focus();
+    }
+    shownTop.current = top?.id;
+  }, [top, area]);
+  const leaveMenu = () => {
+    if (menu) {
+      setMenu(false);
+      startButton.current?.focus();
+    }
+  };
   const open = (app: AppId | "terminal", payload?: string) => {
-    setMenu(false);
+    leaveMenu();
     if (app === "terminal") {
       onOpenTerminal();
     } else {
@@ -123,8 +140,7 @@ export function Desktop({
     } else if (event.key === "Escape" && menu) {
       event.preventDefault();
       event.stopPropagation();
-      setMenu(false);
-      startButton.current?.focus();
+      leaveMenu();
     }
   };
   const closeMenuOutside = (event: PointerEvent<HTMLElement>) => {
@@ -213,7 +229,7 @@ export function Desktop({
             <button
               type="button"
               onClick={() => {
-                setMenu(false);
+                leaveMenu();
                 onStandUp();
               }}
             >
